@@ -1,0 +1,6 @@
+{
+  "name": "Zipspeed",
+  "description": "Network speed test & diagnostics app featuring video streaming test, web browsing test, mobile device health, Downdetector outages, regional ISP comparison, background signal scanner with D3 movement heatmap visualization and deadzone notification alerts, and eye-care soft theme.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
