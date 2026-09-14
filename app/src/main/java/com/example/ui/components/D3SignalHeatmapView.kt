@@ -41,6 +41,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -161,17 +163,14 @@ fun D3SignalHeatmapView(
                 }
                 Column {
                     Text(
-                        text = if (language == Language.TH) "D3 Signal Strength Heatmap" else "D3 Signal Strength Heatmap",
+                        text = stringResource(R.string.str_d3_signal_strength_heatmap_51),
                         color = CyberInk,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.testTag("d3_heatmap_title")
                     )
                     Text(
-                        text = if (language == Language.TH)
-                            "แผนที่ความครอบคลุมสัญญาณจากการเคลื่อนที่จริง"
-                        else
-                            "Spatial Wi-Fi coverage map based on movement data",
+                        text = stringResource(R.string.str_spatial_wi_fi_coverage_map_bas_52),
                         color = CyberMuted,
                         fontSize = 11.sp
                     )
@@ -202,9 +201,9 @@ fun D3SignalHeatmapView(
                     )
                     Text(
                         text = if (signalState.isRecordingMovement)
-                            (if (language == Language.TH) "กำลังเดินสแกน..." else "Scanning...")
+                            (stringResource(R.string.str_scanning_53))
                         else
-                            (if (language == Language.TH) "โหมดพร้อมสแกน" else "Ready"),
+                            (stringResource(R.string.str_ready_54)),
                         color = if (signalState.isRecordingMovement) NeonGreen else CyberMuted,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
@@ -227,7 +226,7 @@ fun D3SignalHeatmapView(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = if (language == Language.TH) "จุดที่เก็บข้อมูล" else "Scanned Points",
+                    text = stringResource(R.string.str_scanned_points_55),
                     color = CyberMuted,
                     fontSize = 10.sp
                 )
@@ -243,7 +242,7 @@ fun D3SignalHeatmapView(
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = if (language == Language.TH) "จุดสัญญาณแรงสุด" else "Peak Signal",
+                    text = stringResource(R.string.str_peak_signal_56),
                     color = CyberMuted,
                     fontSize = 10.sp
                 )
@@ -259,7 +258,7 @@ fun D3SignalHeatmapView(
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = if (language == Language.TH) "จุดอับสัญญาณ" else "Deadzone",
+                    text = stringResource(R.string.str_deadzone_57),
                     color = CyberMuted,
                     fontSize = 10.sp
                 )
@@ -275,7 +274,7 @@ fun D3SignalHeatmapView(
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = if (language == Language.TH) "ค่าเฉลี่ย" else "Avg Level",
+                    text = stringResource(R.string.str_avg_level_58),
                     color = CyberMuted,
                     fontSize = 10.sp
                 )
@@ -401,7 +400,7 @@ fun D3SignalHeatmapView(
                         )
                     }
                     Text(
-                        text = "✕ ปิด",
+                        text = "ปิด",
                         color = CyberMuted,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -421,9 +420,9 @@ fun D3SignalHeatmapView(
         ) {
             // Palette Selectors
             listOf(
-                Pair("turbo", "🎨 Turbo"),
-                Pair("eyecare", "🌿 Eye-Care Soft"),
-                Pair("viridis", "🟣 Viridis")
+                Pair("turbo", "Turbo"),
+                Pair("eyecare", "Eye-Care Soft"),
+                Pair("viridis", "Viridis")
             ).forEach { (id, label) ->
                 val active = selectedPalette == id
                 Box(
@@ -456,7 +455,7 @@ fun D3SignalHeatmapView(
                     .padding(horizontal = 8.dp, vertical = 5.dp)
             ) {
                 Text(
-                    text = if (showContours) "✓ เส้นระดับ Contours" else "+ เส้นระดับ Contours",
+                    text = if (showContours) "เส้นระดับ Contours (เปิด)" else "เส้นระดับ Contours (ปิด)",
                     color = if (showContours) NeonPurple else CyberMuted,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
@@ -477,7 +476,7 @@ fun D3SignalHeatmapView(
                     .padding(horizontal = 8.dp, vertical = 5.dp)
             ) {
                 Text(
-                    text = if (showPathTrail) "✓ เส้นทางเดิน (Trail)" else "+ เส้นทางเดิน (Trail)",
+                    text = if (showPathTrail) "เส้นทางเดิน Trail (เปิด)" else "เส้นทางเดิน Trail (ปิด)",
                     color = if (showPathTrail) NeonGreen else CyberMuted,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
@@ -512,9 +511,9 @@ fun D3SignalHeatmapView(
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = if (signalState.isRecordingMovement)
-                        (if (language == Language.TH) "หยุดเดินสแกน" else "Stop Walking")
+                        (stringResource(R.string.str_stop_walking_59))
                     else
-                        (if (language == Language.TH) "เดินสแกนรอบห้อง" else "Walk & Map"),
+                        (stringResource(R.string.str_walk_map_60)),
                     color = if (signalState.isRecordingMovement) Color.White else Color(0xFF071510),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.ExtraBold
@@ -540,7 +539,7 @@ fun D3SignalHeatmapView(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = if (language == Language.TH) "ปักหมุดจุดนี้" else "Pin Spot",
+                    text = stringResource(R.string.str_pin_spot_61),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -573,10 +572,7 @@ fun D3SignalHeatmapView(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (language == Language.TH)
-                    "💡 แตะจุดบนแผนที่เพื่อดูข้อมูลสปีด & ความแรง หรือกดเดินสแกนเพื่อสำรวจจุดอับสัญญาณ"
-                else
-                    "💡 Tap point nodes to inspect signal details or walk to map local deadzones",
+                text = stringResource(R.string.str_tap_point_nodes_to_inspect_sig_62),
                 color = CyberMuted,
                 fontSize = 10.5.sp,
                 lineHeight = 14.sp

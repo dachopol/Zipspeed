@@ -32,6 +32,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -95,13 +97,13 @@ fun ServerSelectionModal(
             ) {
                 Column {
                     Text(
-                        text = if (language == Language.TH) "เลือกเซิร์ฟเวอร์ทดสอบ" else "MANUAL SERVER SELECTION",
+                        text = stringResource(R.string.str_manual_server_selection_48),
                         color = CyberInk,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold
                     )
                     Text(
-                        text = if (language == Language.TH) "เลือกเซิร์ฟเวอร์แบบกำหนดเองหรืออัตโนมัติ" else "Choose a test location or let system auto-assign",
+                        text = stringResource(R.string.str_choose_a_test_location_or_let__49),
                         color = CyberMuted,
                         fontSize = 12.sp
                     )
@@ -133,7 +135,7 @@ fun ServerSelectionModal(
                 onValueChange = { searchQuery = it },
                 placeholder = {
                     Text(
-                        text = if (language == Language.TH) "ค้นหาตามชื่อ เมือง หรือประเทศ..." else "Search server, city or country...",
+                        text = stringResource(R.string.str_search_server_city_or_country_50),
                         color = CyberMuted,
                         fontSize = 13.sp
                     )

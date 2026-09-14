@@ -29,6 +29,8 @@ import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +47,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.R
 import com.example.model.Language
 import com.example.ui.theme.CyberInk
 import com.example.ui.theme.CyberMuted
@@ -179,10 +180,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = if (language == Language.TH)
-                    "วัดความเร็วเน็ตแม่นยำ ทุกที่ ทุกเวลา"
-                else
-                    "Accurate Speed Test Anytime, Anywhere",
+                text = stringResource(R.string.str_accurate_speed_test_anytime_an_82),
                 color = CyberMuted,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
@@ -207,7 +205,7 @@ fun SplashScreen(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = if (language == Language.TH) "เริ่มต้นใช้งาน" else "GET STARTED",
+                text = stringResource(R.string.str_get_started_83),
                 color = Color.White,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.ExtraBold,

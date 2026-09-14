@@ -37,6 +37,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,7 +55,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.engine.NetworkIpInfo
 import com.example.model.Language
-import com.example.model.MobilePerformanceState
 import com.example.model.ServerInfo
 import com.example.model.SpeedTestState
 import com.example.model.SpeedUnit
@@ -62,8 +63,12 @@ import com.example.model.TestPhase
 import com.example.model.VideoTestState
 import com.example.model.WebTestState
 import com.example.ui.components.verticalScrollbar
+import com.example.ui.components.ConnectionInfoCard
+import com.example.ui.components.DowndetectorWidget
+import com.example.ui.components.ExperienceAssessmentView
 import com.example.ui.components.IpAddressCard
 import com.example.ui.components.MetricsGrid
+import com.example.ui.components.QuickShareNavCard
 import com.example.ui.components.ServerMapVisualizer
 import com.example.ui.components.ServerRowCard
 import com.example.ui.components.ShareDetailModal
@@ -96,9 +101,12 @@ fun HomeScreen(
     onStartVideoTest: () -> Unit = {},
     onCancelVideoTest: () -> Unit = {},
     onStartWebTest: () -> Unit = {},
+    onCancelWebTest: () -> Unit = {},
     onOpenServerModal: () -> Unit,
     onRefreshIp: () -> Unit,
     onToggleSpeedUnit: () -> Unit = {},
+    onNavigateToResults: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
@@ -137,7 +145,7 @@ fun HomeScreen(
         ) {
             // Eyebrow Title
             Text(
-                text = if (language == Language.TH) "ประสิทธิภาพเครือข่าย" else "NETWORK PERFORMANCE",
+                text = stringResource(R.string.str_network_performance_63),
                 color = CyberMuted,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
@@ -155,9 +163,9 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(3.dp)
             ) {
                 val modes = listOf(
-                    SubTestMode.SPEED to (if (language == Language.TH) "⚡ สปีด" else "Speed"),
-                    SubTestMode.VIDEO to (if (language == Language.TH) "🎬 วิดีโอ" else "Video"),
-                    SubTestMode.WEB to (if (language == Language.TH) "🌐 เว็บ" else "Web")
+                    SubTestMode.SPEED to (stringResource(R.string.str_speed_64)),
+                    SubTestMode.VIDEO to (stringResource(R.string.str_video_65)),
+                    SubTestMode.WEB to (stringResource(R.string.str_web_66))
                 )
                 modes.forEach { (mode, label) ->
                     val isSelected = selectedTestMode == mode
@@ -196,7 +204,8 @@ fun HomeScreen(
                     WebTestView(
                         webState = webState,
                         language = language,
-                        onStartTest = onStartWebTest
+                        onStartTest = onStartWebTest,
+                        onCancelTest = onCancelWebTest
                     )
                 }
                 SubTestMode.SPEED -> {
@@ -218,12 +227,12 @@ fun HomeScreen(
 
             // Dynamic Status Text & Smooth Color Transition Animation
             val statusText = when (testState.phase) {
-                TestPhase.IDLE -> if (language == Language.TH) "พร้อมทดสอบ" else "Ready to Test"
-                TestPhase.TESTING_PING -> if (language == Language.TH) "กำลังวัดค่าปิง..." else "Testing Ping..."
-                TestPhase.TESTING_DOWNLOAD -> if (language == Language.TH) "กำลังวัดความเร็วดาวน์โหลด..." else "Testing Download..."
-                TestPhase.TESTING_UPLOAD -> if (language == Language.TH) "กำลังวัดความเร็วอัปโหลด..." else "Testing Upload..."
-                TestPhase.COMPLETED -> if (language == Language.TH) "ทดสอบเสร็จสิ้น" else "Test Complete"
-                TestPhase.ERROR -> testState.errorMessage ?: if (language == Language.TH) "ไม่พบการเชื่อมต่ออินเทอร์เน็ต" else "Connection Failed"
+                TestPhase.IDLE -> stringResource(R.string.str_ready_to_test_67)
+                TestPhase.TESTING_PING -> stringResource(R.string.str_testing_ping_68)
+                TestPhase.TESTING_DOWNLOAD -> stringResource(R.string.str_testing_download_69)
+                TestPhase.TESTING_UPLOAD -> stringResource(R.string.str_testing_upload_70)
+                TestPhase.COMPLETED -> stringResource(R.string.str_test_complete_71)
+                TestPhase.ERROR -> testState.errorMessage ?: stringResource(R.string.str_connection_failed_72)
             }
 
             val targetStatusColor = when (testState.phase) {
@@ -276,10 +285,10 @@ fun HomeScreen(
 
             // Primary Action Button (START / CANCEL / UPGRADE) - Prominently placed right below gauge
             val buttonText = when {
-                isRunning -> if (language == Language.TH) "ยกเลิกการทดสอบ" else "CANCEL TEST"
-                testState.phase == TestPhase.ERROR -> if (language == Language.TH) "ลองใหม่อีกครั้ง" else "RETRY TEST"
-                testState.phase == TestPhase.COMPLETED -> if (language == Language.TH) "ทดสอบอีกครั้ง" else "TEST AGAIN"
-                else -> if (language == Language.TH) "เริ่มทดสอบความเร็ว" else "START SPEED TEST"
+                isRunning -> stringResource(R.string.str_cancel_test_73)
+                testState.phase == TestPhase.ERROR -> stringResource(R.string.str_retry_test_74)
+                testState.phase == TestPhase.COMPLETED -> stringResource(R.string.str_test_again_75)
+                else -> stringResource(R.string.str_start_speed_test_76)
             }
 
             val buttonGradient = when {
@@ -336,10 +345,7 @@ fun HomeScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (language == Language.TH)
-                            "เทสแบบแม่นยำ (ปิดแอพพื้นหลังก่อน + เคลียร์ cache)"
-                        else
-                            "Precision Test (Clear Cache First)",
+                        text = stringResource(R.string.str_precision_test_clear_cache_fir_77),
                         color = Color(0xFFE0D7FF),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
@@ -349,158 +355,62 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Connection Metrics Grid
+            // Connection Metrics Grid (Download / Upload / Ping / Latency)
             MetricsGrid(
                 testState = testState,
                 speedUnit = speedUnit,
                 language = language,
-                isProPlan = isProPlan,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
 
-            if (testState.phase == TestPhase.COMPLETED && testState.downloadMbps != null && testState.uploadMbps != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(Color(0xFF2F7BFF), Color(0xFF527DFF))
-                            )
-                        )
-                        .border(1.dp, Color(0x3DFFFFFF), RoundedCornerShape(16.dp))
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = ripple(bounded = true, color = Color.White)
-                        ) {
-                            showShareModal = true
-                        }
-                        .testTag("share_result_button"),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = "Share Report",
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = if (language == Language.TH) "แชร์รายละเอียดผลการทดสอบ" else "Share Test Details",
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.height(10.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Result Trust Details Panel (Item 1 & 2)
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(com.example.ui.theme.CyberPanel)
-                    .border(1.dp, Color(0x1F2F7BFF), RoundedCornerShape(18.dp))
-                    .padding(horizontal = 14.dp, vertical = 12.dp)
-                    .testTag("trust_details_card")
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Wifi,
-                            contentDescription = "Connection Type",
-                            tint = Color(0xFF64B5F6),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = if (language == Language.TH)
-                                "WiFi 5GHz • AIS Fibre 5G"
-                            else
-                                "WiFi 5GHz • AIS Fibre 5G",
-                            color = Color(0xFF90CAF9),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(androidx.compose.foundation.shape.CircleShape)
-                                .background(NeonGreen)
-                        )
-                        Text(
-                            text = if (language == Language.TH) "สถานะเสถียร" else "Optimal Link",
-                            color = NeonGreen,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (language == Language.TH)
-                            "เราท์ติ้ง: ใกล้สุด ${selectedServer.distanceKm}km (${selectedServer.subLocation})"
-                        else
-                            "Routing: Nearest ${selectedServer.distanceKm}km (${selectedServer.subLocation})",
-                        color = CyberMuted,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Text(
-                        text = "${selectedServer.basePingMs}ms",
-                        color = Color(0xFFA9C6FF),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                }
-            }
+            // การประเมินการใช้งาน - ไอคอนตรงกลาง (Web, Gaming, Streaming, Video Call)
+            ExperienceAssessmentView(
+                testState = testState,
+                language = language,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Server Selection Card
-            ServerRowCard(
+            // ข้อมูลการเชื่อมต่อ (ประเภทการเชื่อมต่อ แบบหลาย, ผู้ให้บริการ, เซิร์ฟเวอร์ที่ทดสอบ + Change Server)
+            ConnectionInfoCard(
                 server = selectedServer,
+                ipInfo = ipInfo,
                 language = language,
-                onOpenServerModal = onOpenServerModal
+                onOpenServerModal = onOpenServerModal,
+                modifier = Modifier.padding(vertical = 4.dp)
             )
 
+            Spacer(modifier = Modifier.height(10.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // ฟีเจอร์อื่นๆ: Share (X, Facebook, Link) + RESULTS / SETTINGS Quick Navigation
+            QuickShareNavCard(
+                testState = testState,
+                speedUnit = speedUnit,
+                language = language,
+                onNavigateToResults = onNavigateToResults,
+                onNavigateToSettings = onNavigateToSettings,
+                onOpenFullShareModal = { showShareModal = true },
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // HAVING INTERNET PROBLEMS? Widget จาก Downdetector
+            DowndetectorWidget(
+                language = language,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Interactive Server Location Radar Map
             ServerMapVisualizer(
                 selectedServer = selectedServer,
                 language = language,
-                onSelectServer = { server ->
-                    onOpenServerModal()
-                }
+                onSelectServer = { onOpenServerModal() }
             )
 
             Spacer(modifier = Modifier.height(8.dp))

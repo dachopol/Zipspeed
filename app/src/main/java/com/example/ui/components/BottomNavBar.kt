@@ -28,6 +28,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -84,7 +86,7 @@ fun BottomNavBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             NavItem(
-                label = if (language == Language.TH) "วัดสปีด" else "SPEED",
+                label = stringResource(R.string.str_speed_1),
                 icon = Icons.Default.Speed,
                 isSelected = activeTab == NavTab.HOME,
                 testTag = "nav_home",
@@ -93,7 +95,7 @@ fun BottomNavBar(
             )
 
             NavItem(
-                label = if (language == Language.TH) "ประวัติ" else "HISTORY",
+                label = stringResource(R.string.str_history_2),
                 icon = Icons.Default.History,
                 isSelected = activeTab == NavTab.HISTORY,
                 testTag = "nav_history",
@@ -102,7 +104,7 @@ fun BottomNavBar(
             )
 
             NavItem(
-                label = if (language == Language.TH) "ตั้งค่า" else "SETTINGS",
+                label = stringResource(R.string.str_settings_3),
                 icon = Icons.Default.Settings,
                 isSelected = activeTab == NavTab.SETTINGS,
                 testTag = "nav_settings",

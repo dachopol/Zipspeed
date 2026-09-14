@@ -39,6 +39,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,10 +57,10 @@ import com.example.model.Language
 import com.example.model.VideoResolution
 import com.example.model.VideoTestState
 import com.example.model.WebTestState
-import com.example.ui.theme.CyberInk
+
 import com.example.ui.theme.CyberMuted
 import com.example.ui.theme.CyberPanel
-import com.example.ui.theme.CyberSubtle
+
 import com.example.ui.theme.CyberSurface
 import com.example.ui.theme.GoldPro
 import com.example.ui.theme.NeonAmber
@@ -126,10 +128,10 @@ fun VideoTestView(
                     text = if (videoState.isTesting)
                         "กำลังทดสอบ: ${videoState.currentResolution.label}"
                     else if (videoState.isCompleted)
-                        "ผลการทดสอบ: รองรับสูงสุด ${videoState.maxResolutionPassed?.label ?: "1080p"}"
+                        "ผลการทดสอบ: รองรับสูงสุด ${videoState.maxResolutionPassed?.label ?: "ไม่ผ่าน (เครือข่ายช้ามาก)"}"
                     else
-                        if (language == Language.TH) "พร้อมทดสอบประสิทธิภาพสตรีมมิ่งวิดีโอ" else "Ready to Test Video Streaming",
-                    color = CyberInk,
+                        stringResource(R.string.str_ready_to_test_video_streaming_22),
+                    color = Color.White,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -195,7 +197,7 @@ fun VideoTestView(
                     Icon(Icons.Default.Stop, contentDescription = null, tint = Color.White)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (language == Language.TH) "ยกเลิกการทดสอบ" else "Cancel Test",
+                        text = stringResource(R.string.str_cancel_test_23),
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
@@ -213,7 +215,7 @@ fun VideoTestView(
                     Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (language == Language.TH) "เริ่มทดสอบประสิทธิภาพวิดีโอ" else "Start Video Test",
+                        text = stringResource(R.string.str_start_video_test_24),
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
@@ -223,7 +225,7 @@ fun VideoTestView(
 
         // Supported Resolutions Grid
         Text(
-            text = if (language == Language.TH) "การรองรับความละเอียด (Resolution Support):" else "Resolution Support:",
+            text = stringResource(R.string.str_resolution_support_25),
             color = CyberMuted,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold
@@ -274,7 +276,7 @@ fun VideoTestView(
                         ) {
                             Text(
                                 text = res.label,
-                                color = if (res == VideoResolution.UHD_4K) GoldPro else CyberInk,
+                                color = if (res == VideoResolution.UHD_4K) GoldPro else Color.White,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -298,7 +300,7 @@ fun VideoTestView(
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = if (language == Language.TH) "ลื่นไหล 100%" else "Pass (Smooth)",
+                                text = stringResource(R.string.str_pass_smooth_26),
                                 color = NeonGreen,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
@@ -314,7 +316,7 @@ fun VideoTestView(
                     } else {
                         Text(
                             text = "ต้องการ ${res.minMbps.toInt()} Mbps",
-                            color = CyberSubtle,
+                            color = Color(0xB3FFFFFF),
                             fontSize = 11.sp
                         )
                     }
@@ -332,6 +334,7 @@ fun WebTestView(
     webState: WebTestState,
     language: Language,
     onStartTest: () -> Unit,
+    onCancelTest: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -360,7 +363,7 @@ fun WebTestView(
             ) {
                 Column {
                     Text(
-                        text = if (language == Language.TH) "คะแนนประสิทธิภาพเว็บ" else "WEB BROWSING SCORE",
+                        text = stringResource(R.string.str_web_browsing_score_27),
                         color = CyberMuted,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.ExtraBold,
@@ -369,13 +372,15 @@ fun WebTestView(
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = if (webState.isCompleted) "${webState.overallScore}/100" else "--/100",
-                        color = if (webState.isCompleted) NeonGreen else CyberInk,
+                        color = if (webState.isCompleted) NeonGreen else Color.White,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Black
                     )
                     Text(
                         text = if (webState.isCompleted)
                             (if (webState.overallScore >= 90) "เกรด A+ (โหลดเร็วเป็นพิเศษ)" else "เกรด A (เร็วปกติ)")
+                        else if (webState.isTesting)
+                            "กำลังวัดความเร็วเปิดหน้าเว็บและ CDN..."
                         else
                             "พร้อมทดสอบความเร็วเปิดหน้าเว็บ",
                         color = CyberMuted,
@@ -383,28 +388,45 @@ fun WebTestView(
                     )
                 }
 
-                Button(
-                    onClick = onStartTest,
-                    enabled = !webState.isTesting,
-                    colors = ButtonDefaults.buttonColors(containerColor = NeonBlue),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.testTag("btn_start_web_test")
-                ) {
-                    Icon(Icons.Default.Language, contentDescription = null, tint = Color.White)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = if (webState.isTesting) "กำลังวัด..." else "เริ่มทดสอบ",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp
-                    )
+                if (webState.isTesting) {
+                    Button(
+                        onClick = onCancelTest,
+                        colors = ButtonDefaults.buttonColors(containerColor = NeonRose),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.testTag("btn_cancel_web_test")
+                    ) {
+                        Icon(Icons.Default.Stop, contentDescription = null, tint = Color.White)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = stringResource(R.string.str_cancel_test_23),
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+                } else {
+                    Button(
+                        onClick = onStartTest,
+                        colors = ButtonDefaults.buttonColors(containerColor = NeonBlue),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.testTag("btn_start_web_test")
+                    ) {
+                        Icon(Icons.Default.Language, contentDescription = null, tint = Color.White)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "เริ่มทดสอบ",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
                 }
             }
         }
 
         // List of websites tested
         Text(
-            text = if (language == Language.TH) "ผลการทดสอบแต่ละเว็บไซต์ & CDN:" else "Tested Websites & CDNs:",
+            text = stringResource(R.string.str_tested_websites_cdns_28),
             color = CyberMuted,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold
@@ -425,13 +447,13 @@ fun WebTestView(
                     Column {
                         Text(
                             text = site.name,
-                            color = CyberInk,
+                            color = Color.White,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = "${site.category} (${site.domain})",
-                            color = CyberSubtle,
+                            color = Color(0xB3FFFFFF),
                             fontSize = 11.sp
                         )
                     }
@@ -457,7 +479,7 @@ fun WebTestView(
                         } else {
                             Text(
                                 text = site.statusText,
-                                color = CyberSubtle,
+                                color = Color(0xB3FFFFFF),
                                 fontSize = 12.sp
                             )
                         }

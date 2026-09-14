@@ -592,6 +592,8 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
 
     fun startVideoTest() {
         if (videoTestState.value.isTesting) return
+        cancelSpeedTest()
+        cancelWebTest()
         activeVideoJob?.cancel()
         activeVideoJob = viewModelScope.launch {
             videoTester.runVideoTest(_batterySaver.value)
@@ -600,15 +602,24 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
 
     fun cancelVideoTest() {
         activeVideoJob?.cancel()
+        activeVideoJob = null
         videoTester.cancelTest()
     }
 
     fun startWebTest() {
         if (webTestState.value.isTesting) return
+        cancelSpeedTest()
+        cancelVideoTest()
         activeWebJob?.cancel()
         activeWebJob = viewModelScope.launch {
             webTester.runWebTest()
         }
+    }
+
+    fun cancelWebTest() {
+        activeWebJob?.cancel()
+        activeWebJob = null
+        webTester.cancelTest()
     }
 
     fun refreshMobileScan() {
@@ -800,6 +811,9 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
             _showUpgradeModal.value = true
             return
         }
+
+        cancelVideoTest()
+        cancelWebTest()
 
         activeTestJob?.cancel()
         activeTestJob = viewModelScope.launch {

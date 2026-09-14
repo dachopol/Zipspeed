@@ -11,27 +11,44 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.Language
 import com.example.model.SpeedTestState
 import com.example.model.SpeedUnit
-import com.example.ui.theme.CyberInk
-import com.example.ui.theme.CyberMuted
 import com.example.ui.theme.CyberPanel
 import com.example.ui.theme.NeonBlue
 import com.example.ui.theme.NeonGreen
 import com.example.ui.theme.NeonPurple
+import com.example.ui.theme.ZipspeedPanel
+import com.example.ui.theme.ZipspeedTextPrimary
+import com.example.ui.theme.ZipspeedTextPrimary
 import java.util.Locale
 
 @Composable
@@ -39,11 +56,9 @@ fun MetricsGrid(
     testState: SpeedTestState,
     speedUnit: SpeedUnit,
     language: Language,
-    isProPlan: Boolean,
+    isProPlan: Boolean = true,
     modifier: Modifier = Modifier
 ) {
-    val pingText = testState.pingMs?.let { "$it ms" } ?: "—"
-
     val downloadVal = testState.downloadMbps?.let {
         if (speedUnit == SpeedUnit.MB_S) it / 8.0 else it
     }
@@ -54,101 +69,96 @@ fun MetricsGrid(
     }
     val uploadText = uploadVal?.let { String.format(Locale.US, "%.1f", it) } ?: "—"
 
-    val pingLabel = if (language == Language.TH) "ปิง" else "PING"
-    val downloadLabel = if (language == Language.TH) "ดาวน์โหลด" else "DOWNLOAD"
-    val uploadLabel = if (language == Language.TH) "อัปโหลด" else "UPLOAD"
+    val pingText = testState.pingMs?.toString() ?: "—"
+    val jitterText = testState.jitterMs?.toString() ?: "—"
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        // TOP ROW: Download and Upload
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // PING CARD
-            MetricCard(
-                label = pingLabel,
-                value = pingText,
-                accentColor = NeonBlue,
-                modifier = Modifier.weight(1f).testTag("metric_ping")
-            )
-
             // DOWNLOAD CARD
-            MetricCard(
-                label = downloadLabel,
+            BigMetricCard(
+                label = "Download", // Or stringResource(R.string.str_download_43) if you prefer
                 value = downloadText,
-                accentColor = NeonGreen,
+                unit = speedUnit.label,
+                isDownload = true,
                 modifier = Modifier.weight(1f).testTag("metric_download")
             )
 
             // UPLOAD CARD
-            MetricCard(
-                label = uploadLabel,
+            BigMetricCard(
+                label = "Upload", // Or stringResource(R.string.str_upload_44)
                 value = uploadText,
-                accentColor = NeonPurple,
+                unit = speedUnit.label,
+                isDownload = false,
                 modifier = Modifier.weight(1f).testTag("metric_upload")
             )
         }
 
-        if (isProPlan && (testState.jitterMs != null || testState.packetLossPercent != null)) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                MetricCard(
-                    label = if (language == Language.TH) "จิทเทอร์ (JITTER)" else "JITTER",
-                    value = testState.jitterMs?.let { "$it ms" } ?: "—",
-                    accentColor = Color(0xFFFFB74D),
-                    modifier = Modifier.weight(1f)
+        // SECOND ROW: Ping and Jitter
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(ZipspeedPanel) // Dark blue-ish background from image
+                .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(12.dp))
+                .padding(vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // PING
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Timer, // Assuming we have some clock/timer icon, using ic_speed for now or a material icon
+                    contentDescription = null,
+                    tint = ZipspeedTextPrimary,
+                    modifier = Modifier.size(16.dp)
                 )
-
-                MetricCard(
-                    label = if (language == Language.TH) "การสูญเสียแพ็กเก็ต" else "PACKET LOSS",
-                    value = testState.packetLossPercent?.let { String.format(Locale.US, "%.1f%%", it) } ?: "0.0%",
-                    accentColor = Color(0xFFFF5252),
-                    modifier = Modifier.weight(1f)
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = buildAnnotatedString {
+                        append("Ping ")
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = ZipspeedTextPrimary)) {
+                            append("$pingText ms")
+                        }
+                    },
+                    fontFamily = FontFamily.SansSerif,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = ZipspeedTextPrimary
                 )
             }
-        }
 
-        // Real File Download Speed Conversion Banner (Mbps vs MB/s calculation)
-        testState.downloadMbps?.let { dlMbps ->
-            val realFileSpeedMBs = dlMbps / 8.0
-            Spacer(modifier = Modifier.height(8.dp))
-            Column(
+            // DIVIDER
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0x2210B981))
-                    .border(1.dp, NeonGreen.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
-                    .testTag("real_file_download_banner")
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (language == Language.TH) "โหลดไฟล์จริง (Real Download Speed):" else "Actual File Download Speed:",
-                        color = NeonGreen,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = String.format(Locale.US, "%.2f MB/s", realFileSpeedMBs),
-                        color = Color.White,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                }
-                Spacer(modifier = Modifier.height(3.dp))
+                    .width(1.dp)
+                    .height(18.dp)
+                    .background(Color(0x33FFFFFF))
+            )
+
+            // JITTER
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Timeline, // Assuming some wave icon, using ic_chart for now
+                    contentDescription = null,
+                    tint = ZipspeedTextPrimary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = if (language == Language.TH)
-                        "(${String.format(Locale.US, "%.1f", dlMbps)} Mbps ÷ 8 = โหลดไฟล์จริง ${String.format(Locale.US, "%.2f", realFileSpeedMBs)} MB/s ไม่โอเวอร์)"
-                    else
-                        "(${String.format(Locale.US, "%.1f", dlMbps)} Mbps ÷ 8 = ${String.format(Locale.US, "%.2f", realFileSpeedMBs)} MB/s actual file speed)",
-                    color = CyberMuted,
-                    fontSize = 11.sp
+                    text = buildAnnotatedString {
+                        append("Jitter ")
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = ZipspeedTextPrimary)) {
+                            append("$jitterText ms")
+                        }
+                    },
+                    fontFamily = FontFamily.SansSerif,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = ZipspeedTextPrimary
                 )
             }
         }
@@ -156,51 +166,76 @@ fun MetricsGrid(
 }
 
 @Composable
-private fun MetricCard(
+private fun BigMetricCard(
     label: String,
     value: String,
-    accentColor: Color,
+    unit: String,
+    isDownload: Boolean,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(18.dp))
-            .background(CyberPanel)
-            .border(
-                width = 1.dp,
-                brush = Brush.verticalGradient(
-                    listOf(accentColor.copy(alpha = 0.5f), Color(0x14FFFFFF))
-                ),
-                shape = RoundedCornerShape(18.dp)
-            )
-            .padding(vertical = 12.dp, horizontal = 10.dp),
+            .clip(RoundedCornerShape(16.dp))
+            .background(ZipspeedPanel) // Dark blue-ish background matching the image
+            .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(16.dp))
+            .padding(vertical = 16.dp, horizontal = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Label (.label-th)
+        Text(
+            text = label,
+            fontFamily = FontFamily.SansSerif,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
+            color = ZipspeedTextPrimary,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Big Number and Unit Row
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp)
+            horizontalArrangement = Arrangement.Center
         ) {
+            // Icon
             Box(
                 modifier = Modifier
-                    .size(6.dp)
-                    .clip(androidx.compose.foundation.shape.CircleShape)
-                    .background(accentColor)
-            )
+                    .size(24.dp)
+                    .border(1.dp, ZipspeedTextPrimary, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (isDownload) Icons.Filled.ArrowDownward else Icons.Filled.ArrowUpward,
+                    contentDescription = null,
+                    tint = ZipspeedTextPrimary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Big Number (.number-big)
             Text(
-                text = label,
-                color = CyberMuted,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.6.sp
+                text = value,
+                fontFamily = FontFamily.SansSerif, // Can't easily use Saira/Kanit if not bundled, but SansSerif matches closest available
+                fontSize = 52.sp,
+                fontWeight = FontWeight.Light,
+                lineHeight = 52.sp,
+                color = ZipspeedTextPrimary,
+                letterSpacing = (-1).sp
+            )
+
+            Spacer(modifier = Modifier.width(6.dp))
+
+            // Unit (.unit)
+            Text(
+                text = unit.uppercase(Locale.getDefault()),
+                fontFamily = FontFamily.SansSerif,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = ZipspeedTextPrimary
             )
         }
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = value,
-            color = CyberInk,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.ExtraBold,
-            letterSpacing = (-0.2).sp
-        )
     }
 }

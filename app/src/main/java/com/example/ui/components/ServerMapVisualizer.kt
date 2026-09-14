@@ -31,6 +31,8 @@ import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -125,13 +127,13 @@ fun ServerMapVisualizer(
                 }
                 Column {
                     Text(
-                        text = if (language == Language.TH) "แผนที่ตำแหน่งเซิร์ฟเวอร์" else "TEST SERVER RADAR MAP",
+                        text = stringResource(R.string.str_test_server_radar_map_14),
                         color = CyberInk,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.ExtraBold
                     )
                     Text(
-                        text = if (language == Language.TH) "การเส้นทางเครือข่ายความหน่วงต่ำ" else "Network Routing & Latency Visualization",
+                        text = stringResource(R.string.str_network_routing_latency_visual_15),
                         color = CyberMuted,
                         fontSize = 10.sp
                     )
@@ -341,7 +343,7 @@ fun ServerMapVisualizer(
                     modifier = Modifier.size(14.dp)
                 )
                 Text(
-                    text = if (language == Language.TH) "Bangkok → ${selectedServer.subLocation}" else "Bangkok → ${selectedServer.subLocation}",
+                    text = stringResource(R.string.str_bangkok_selectedserver_subloca_16),
                     color = CyberInk,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold

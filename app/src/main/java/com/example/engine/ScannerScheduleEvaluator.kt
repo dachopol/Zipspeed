@@ -62,6 +62,7 @@ object ScannerScheduleEvaluator {
         val (effectiveStartH, effectiveStartM, effectiveEndH, effectiveEndM) = when (config.preset) {
             SchedulePreset.DAYTIME -> listOf(8, 0, 22, 0)
             SchedulePreset.WORK_HOURS -> listOf(9, 0, 18, 0)
+            SchedulePreset.NIGHT_SHIFT -> listOf(22, 0, 6, 0)
             SchedulePreset.CUSTOM -> listOf(config.startHour, config.startMinute, config.endHour, config.endMinute)
             SchedulePreset.ALL_DAY -> listOf(0, 0, 23, 59)
         }

@@ -80,15 +80,13 @@ class GreetingScreenshotTest {
             ipInfo = realisticIpInfo,
             speedUnit = SpeedUnit.MBPS,
             language = Language.EN,
-            isProPlan = true,
             reducedMotion = true,
             isPrecisionMode = false,
             onStartTest = {},
             onStartPrecisionTest = {},
             onCancelTest = {},
             onOpenServerModal = {},
-            onRefreshIp = {},
-            onOpenAdModal = {}
+            onRefreshIp = {}
           )
         }
       }

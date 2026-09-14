@@ -34,6 +34,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -110,7 +112,7 @@ fun IpAddressCard(
                 }
 
                 Text(
-                    text = if (language == Language.TH) "ไอพีแอดเดรส (IP ADDRESS)" else "IP ADDRESS",
+                    text = stringResource(R.string.str_ip_address_4),
                     color = CyberMuted,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.ExtraBold,
@@ -145,7 +147,7 @@ fun IpAddressCard(
         ) {
             Column {
                 Text(
-                    text = if (language == Language.TH) "ไอพีสาธารณะ (Public IP)" else "Public IP",
+                    text = stringResource(R.string.str_public_ip_5),
                     color = CyberMuted,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium
@@ -168,7 +170,7 @@ fun IpAddressCard(
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         val clip = ClipData.newPlainText("IP Address", ipInfo.publicIp)
                         clipboard.setPrimaryClip(clip)
-                        val msg = if (language == Language.TH) "คัดลอก IP แล้ว: ${ipInfo.publicIp}" else "IP Copied: ${ipInfo.publicIp}"
+                        val msg = context.getString(R.string.str_ip_copied_ipinfo_publicip_6, ipInfo.publicIp)
                         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                     }
                     .padding(horizontal = 10.dp, vertical = 6.dp)
@@ -183,7 +185,7 @@ fun IpAddressCard(
                     modifier = Modifier.size(13.dp)
                 )
                 Text(
-                    text = if (language == Language.TH) "คัดลอก" else "COPY",
+                    text = stringResource(R.string.str_copy_7),
                     color = Color(0xFFA9C6FF),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
@@ -214,7 +216,7 @@ fun IpAddressCard(
                     modifier = Modifier.size(14.dp)
                 )
                 Text(
-                    text = "${if (language == Language.TH) "ไอพีภายใน" else "Local IP"}: ${ipInfo.localIp}",
+                    text = "${stringResource(R.string.str_local_ip_8)}: ${ipInfo.localIp}",
                     color = CyberMuted,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium

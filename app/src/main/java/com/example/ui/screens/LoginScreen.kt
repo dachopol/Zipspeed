@@ -21,6 +21,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +34,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.R
 import com.example.model.Language
 import com.example.model.UserProfile
 import com.example.ui.theme.CyberInk
@@ -74,7 +75,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = if (language == Language.TH) "เข้าสู่ระบบ Zipspeed" else "Welcome to Zipspeed",
+            text = stringResource(R.string.str_welcome_to_zipspeed_112),
             color = CyberInk,
             fontSize = 26.sp,
             fontWeight = FontWeight.ExtraBold,
@@ -84,10 +85,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = if (language == Language.TH)
-                "ซิงค์ประวัติการวัดความเร็วและปลดล็อกฟีเจอร์พิเศษ"
-            else
-                "Sync test history and unlock special features across devices.",
+            text = stringResource(R.string.str_sync_test_history_and_unlock_s_113),
             color = CyberMuted,
             fontSize = 14.sp,
             textAlign = TextAlign.Center,
@@ -98,7 +96,7 @@ fun LoginScreen(
 
         // Google Login
         SocialLoginButton(
-            text = if (language == Language.TH) "เข้าสู่ระบบด้วย Google" else "Continue with Google",
+            text = stringResource(R.string.str_continue_with_google_114),
             iconColor = Color(0xFF4285F4),
             iconChar = "G",
             testTag = "login_google_button",
@@ -117,7 +115,7 @@ fun LoginScreen(
 
         // Facebook Login
         SocialLoginButton(
-            text = if (language == Language.TH) "เข้าสู่ระบบด้วย Facebook" else "Continue with Facebook",
+            text = stringResource(R.string.str_continue_with_facebook_115),
             iconColor = Color(0xFF1877F2),
             iconChar = "f",
             testTag = "login_facebook_button",
@@ -135,10 +133,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = if (language == Language.TH)
-                "หรือทดลองใช้งานโดยไม่เข้าสู่ระบบ"
-            else
-                "or try out the app without logging in",
+            text = stringResource(R.string.str_or_try_out_the_app_without_log_116),
             color = CyberMuted,
             fontSize = 12.sp
         )
@@ -153,7 +148,7 @@ fun LoginScreen(
                 .testTag("login_skip_button")
         ) {
             Text(
-                text = if (language == Language.TH) "ข้าม / ใช้งานในฐานะผู้ใช้ทั่วไป" else "Skip / Continue as Guest",
+                text = stringResource(R.string.str_skip_continue_as_guest_117),
                 color = Color(0xFFA9C6FF),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold

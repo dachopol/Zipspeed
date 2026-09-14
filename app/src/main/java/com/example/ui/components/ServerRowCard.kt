@@ -20,6 +20,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -80,10 +82,7 @@ fun ServerRowCard(
 
             Column {
                 Text(
-                    text = if (language == Language.TH)
-                        "Server: ใกล้สุด ${server.distanceKm}km - ${server.subLocation}"
-                    else
-                        "Server: Nearest ${server.distanceKm}km - ${server.subLocation}",
+                    text = stringResource(R.string.str_server_nearest_server_distance_13),
                     color = CyberMuted,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,

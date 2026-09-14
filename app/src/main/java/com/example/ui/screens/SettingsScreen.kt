@@ -32,6 +32,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -85,7 +87,7 @@ fun SettingsScreen(
             .testTag("settings_screen")
     ) {
         Text(
-            text = if (language == Language.TH) "ตั้งค่า & การสนับสนุน" else "SETTINGS & SUPPORT",
+            text = stringResource(R.string.str_settings_support_95),
             color = CyberInk,
             fontSize = 20.sp,
             fontWeight = FontWeight.ExtraBold,
@@ -114,7 +116,7 @@ fun SettingsScreen(
                     modifier = Modifier.size(18.dp)
                 )
                 Text(
-                    text = if (language == Language.TH) "การตั้งค่าทั่วไป" else "GENERAL PREFERENCES",
+                    text = stringResource(R.string.str_general_preferences_96),
                     color = CyberMuted,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.ExtraBold,
@@ -126,8 +128,8 @@ fun SettingsScreen(
 
             // Language setting
             SettingsRow(
-                title = if (language == Language.TH) "ภาษาแอป" else "App Language",
-                subtitle = if (language == Language.TH) "ไทย / English" else "English / Thai",
+                title = stringResource(R.string.str_app_language_97),
+                subtitle = stringResource(R.string.str_english_thai_98),
                 trailing = {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -157,8 +159,8 @@ fun SettingsScreen(
 
             // Unit setting
             SettingsRow(
-                title = if (language == Language.TH) "หน่วยวัดความเร็ว" else "Speed Unit",
-                subtitle = if (language == Language.TH) "Mbps หรือ MB/s" else "Mbps or MB/s",
+                title = stringResource(R.string.str_speed_unit_99),
+                subtitle = stringResource(R.string.str_mbps_or_mb_s_100),
                 trailing = {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -188,7 +190,7 @@ fun SettingsScreen(
 
             // Server Selection row
             SettingsRow(
-                title = if (language == Language.TH) "เซิร์ฟเวอร์ทดสอบ" else "Test Server",
+                title = stringResource(R.string.str_test_server_101),
                 subtitle = "${selectedServer.name} (${selectedServer.basePingMs}ms)",
                 onClick = onOpenServerModal,
                 trailing = {
@@ -223,7 +225,7 @@ fun SettingsScreen(
                     modifier = Modifier.size(18.dp)
                 )
                 Text(
-                    text = if (language == Language.TH) "ตัวเลือกประสิทธิภาพ & ระบบ" else "PERFORMANCE & SYSTEM",
+                    text = stringResource(R.string.str_performance_system_102),
                     color = CyberMuted,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.ExtraBold,
@@ -235,8 +237,8 @@ fun SettingsScreen(
 
             // Auto-Save Toggle
             SettingsRow(
-                title = if (language == Language.TH) "บันทึกประวัติอัตโนมัติ" else "Auto-Save History",
-                subtitle = if (language == Language.TH) "บันทึกผลการทดสอบลง Room Database" else "Save test results automatically to database",
+                title = stringResource(R.string.str_auto_save_history_103),
+                subtitle = stringResource(R.string.str_save_test_results_automaticall_104),
                 trailing = {
                     Switch(
                         checked = autoSaveHistory,
@@ -256,8 +258,8 @@ fun SettingsScreen(
 
             // Reduced Motion Toggle
             SettingsRow(
-                title = if (language == Language.TH) "ลดการเคลื่อนไหว (Reduced Motion)" else "Reduced Motion",
-                subtitle = if (language == Language.TH) "ปิดการหมุนและเอฟเฟกต์แอนิเมชัน" else "Disable gauge rotation & visual animations",
+                title = stringResource(R.string.str_reduced_motion_105),
+                subtitle = stringResource(R.string.str_disable_gauge_rotation_visual__106),
                 trailing = {
                     Switch(
                         checked = reducedMotion,
@@ -277,11 +279,8 @@ fun SettingsScreen(
 
             // Battery Saver Mode Toggle
             SettingsRow(
-                title = if (language == Language.TH) "โหมดประหยัดพลังงาน (Battery Saver)" else "Battery Saver Mode",
-                subtitle = if (language == Language.TH)
-                    "ลดการใช้แบตเตอรี่ขณะทำการทดสอบสปีด"
-                else
-                    "Reduce battery drain during high-throughput tests",
+                title = stringResource(R.string.str_battery_saver_mode_107),
+                subtitle = stringResource(R.string.str_reduce_battery_drain_during_hi_108),
                 trailing = {
                     Switch(
                         checked = batterySaver,
@@ -320,7 +319,7 @@ fun SettingsScreen(
                     modifier = Modifier.size(18.dp)
                 )
                 Text(
-                    text = if (language == Language.TH) "คำถามที่พบบ่อย (FAQ)" else "FREQUENTLY ASKED QUESTIONS",
+                    text = stringResource(R.string.str_frequently_asked_questions_109),
                     color = CyberMuted,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.ExtraBold,
@@ -434,7 +433,7 @@ fun SettingsScreen(
                     )
                     Column {
                         Text(
-                            text = if (language == Language.TH) "ติดต่อฝ่ายสนับสนุน & ส่งข้อเสนอแนะ" else "Contact Support & Feedback",
+                            text = stringResource(R.string.str_contact_support_feedback_110),
                             color = NeonBlue,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold
@@ -447,7 +446,7 @@ fun SettingsScreen(
                     }
                 }
                 Text(
-                    text = if (showFeedbackNotice) "✓ ส่งแล้ว" else "ติดต่อ",
+                    text = if (showFeedbackNotice) "ส่งแล้ว" else "ติดต่อ",
                     color = NeonGreen,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
@@ -475,10 +474,7 @@ fun SettingsScreen(
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = if (language == Language.TH)
-                    "เวอร์ชัน: v${com.example.BuildConfig.VERSION_NAME} (Build ${com.example.BuildConfig.VERSION_CODE})"
-                else
-                    "Version: v${com.example.BuildConfig.VERSION_NAME} (Build ${com.example.BuildConfig.VERSION_CODE})",
+                text = stringResource(R.string.str_version_v_com_example_buildcon_111, com.example.BuildConfig.VERSION_NAME, com.example.BuildConfig.VERSION_CODE),
                 color = NeonGreen,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.ExtraBold,

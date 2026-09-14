@@ -39,6 +39,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.Language
 import com.example.model.SpeedUnit
+import com.example.util.startActivitySafely
 import com.example.ui.theme.CyberInk
 import com.example.ui.theme.CyberMuted
 import com.example.ui.theme.CyberPanel
@@ -96,9 +99,9 @@ fun ShareDetailModal(
     val ulStr = String.format(Locale.US, "%.1f", ulVal)
 
     val networkRating = when {
-        reportData.downloadMbps >= 500 -> if (language == Language.TH) "เร็วระดับ 5G / Fiber Ultra" else "Ultra Fast 5G/Fiber"
-        reportData.downloadMbps >= 100 -> if (language == Language.TH) "ความเร็วสูงเยี่ยม" else "High Speed Performance"
-        else -> if (language == Language.TH) "ความเร็วใช้งานปกติ" else "Standard Broadband"
+        reportData.downloadMbps >= 500 -> stringResource(R.string.str_ultra_fast_5g_fiber_29)
+        reportData.downloadMbps >= 100 -> stringResource(R.string.str_high_speed_performance_30)
+        else -> stringResource(R.string.str_standard_broadband_31)
     }
 
     val shareTextSummary = remember(reportData, speedUnit, language) {
@@ -134,9 +137,9 @@ fun ShareDetailModal(
         }
         val chooser = Intent.createChooser(
             sendIntent,
-            if (language == Language.TH) "แชร์รายละเอียดผลการทดสอบ" else "Share Speed Test Details"
+            context.getString(R.string.str_share_speed_test_details_32)
         )
-        context.startActivity(chooser)
+        context.startActivitySafely(chooser)
     }
 
     fun copyToClipboard(text: String) {
@@ -145,7 +148,7 @@ fun ShareDetailModal(
         clipboard.setPrimaryClip(clip)
         Toast.makeText(
             context,
-            if (language == Language.TH) "คัดลอกรายละเอียดเรียบร้อยแล้ว!" else "Detailed report copied to clipboard!",
+            context.getString(R.string.str_detailed_report_copied_to_clip_33),
             Toast.LENGTH_SHORT
         ).show()
     }
@@ -188,7 +191,7 @@ fun ShareDetailModal(
                     }
                     Column {
                         Text(
-                            text = if (language == Language.TH) "แชร์รายละเอียดผลการทดสอบ" else "Detailed Speed Test Report",
+                            text = stringResource(R.string.str_detailed_speed_test_report_34),
                             color = CyberInk,
                             fontSize = 17.sp,
                             fontWeight = FontWeight.ExtraBold,
@@ -284,7 +287,7 @@ fun ShareDetailModal(
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = if (language == Language.TH) "ดาวน์โหลด" else "DOWNLOAD",
+                                text = stringResource(R.string.str_download_35),
                                 color = CyberMuted,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
@@ -324,7 +327,7 @@ fun ShareDetailModal(
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = if (language == Language.TH) "อัปโหลด" else "UPLOAD",
+                                text = stringResource(R.string.str_upload_36),
                                 color = CyberMuted,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
@@ -405,7 +408,7 @@ fun ShareDetailModal(
 
             // Action Buttons
             Text(
-                text = if (language == Language.TH) "ช่องทางการแชร์" else "SHARE OPTIONS",
+                text = stringResource(R.string.str_share_options_37),
                 color = CyberMuted,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
@@ -418,8 +421,8 @@ fun ShareDetailModal(
             ShareActionButton(
                 icon = Icons.Default.Share,
                 iconColor = NeonBlue,
-                title = if (language == Language.TH) "แชร์เข้าแอป (LINE / Social / Message)" else "Share via App (LINE / Social / Chat)",
-                description = if (language == Language.TH) "ส่งสรุปผลการทดสอบไปยังแอปแชทหรือโซเชียลมิเดีย" else "Send formatted summary to messaging & social apps.",
+                title = stringResource(R.string.str_share_via_app_line_social_chat_38),
+                description = stringResource(R.string.str_send_formatted_summary_to_mess_39),
                 onClick = {
                     doShareIntent(shareTextSummary)
                     onDismiss()
@@ -433,8 +436,8 @@ fun ShareDetailModal(
             ShareActionButton(
                 icon = Icons.Default.ContentCopy,
                 iconColor = NeonGreen,
-                title = if (language == Language.TH) "คัดลอกรายละเอียด (Copy Summary)" else "Copy Detailed Summary",
-                description = if (language == Language.TH) "คัดลอกข้อความสรุปผลลัพธ์ลงคลิปบอร์ด" else "Copy text report to clipboard.",
+                title = stringResource(R.string.str_copy_detailed_summary_40),
+                description = stringResource(R.string.str_copy_text_report_to_clipboard_41),
                 onClick = {
                     copyToClipboard(shareTextSummary)
                     onDismiss()

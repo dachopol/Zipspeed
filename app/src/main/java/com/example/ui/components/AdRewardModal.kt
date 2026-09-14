@@ -28,6 +28,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -86,7 +88,7 @@ fun AdRewardModal(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (language == Language.TH) "รับสิทธิ์ PRO ฟรี!" else "GET FREE PRO ACCESS!",
+                    text = stringResource(R.string.str_get_free_pro_access_17),
                     color = GoldPro,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.ExtraBold
@@ -104,10 +106,7 @@ fun AdRewardModal(
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = if (language == Language.TH)
-                    "ชมวิดีโอสั้นเพื่อรับสิทธิ์ใช้งาน Zipspeed PRO ฟรี 1 ชั่วโมง"
-                else
-                    "Watch a short video to unlock Zipspeed PRO features for 1 hour.",
+                text = stringResource(R.string.str_watch_a_short_video_to_unlock__18),
                 color = CyberMuted,
                 fontSize = 13.sp
             )
@@ -146,9 +145,9 @@ fun AdRewardModal(
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = if (progressAnim < 1.0f)
-                            (if (language == Language.TH) "กำลังโหลดสปอนเซอร์... ${(progressAnim * 100).toInt()}%" else "Loading sponsor... ${(progressAnim * 100).toInt()}%")
+                            (stringResource(R.string.str_loading_sponsor_progressanim_1_19, (progressAnim * 100).toInt()))
                         else
-                            (if (language == Language.TH) "โฆษณาพร้อมรับชมแล้ว!" else "Ad Ready to View!"),
+                            (stringResource(R.string.str_ad_ready_to_view_20)),
                         color = CyberInk,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
@@ -192,7 +191,7 @@ fun AdRewardModal(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
-                    text = if (language == Language.TH) "รับสิทธิ์ PRO ทันที" else "CLAIM PRO NOW",
+                    text = stringResource(R.string.str_claim_pro_now_21),
                     color = Color(0xFF071510),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.ExtraBold

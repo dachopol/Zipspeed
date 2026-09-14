@@ -38,6 +38,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +64,7 @@ import com.example.ui.theme.CyberPanel
 import com.example.ui.theme.NeonBlue
 import com.example.ui.theme.NeonGreen
 import com.example.ui.theme.NeonPurple
+import com.example.util.startActivitySafely
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -89,9 +92,9 @@ fun HistoryScreen(
         }
         val chooser = Intent.createChooser(
             sendIntent,
-            if (language == Language.TH) "ส่งออกประวัติการทดสอบ Zipspeed" else "Export Zipspeed Test History"
+            context.getString(R.string.str_export_zipspeed_test_history_84)
         )
-        context.startActivity(chooser)
+        context.startActivitySafely(chooser)
     }
 
     Column(
@@ -107,7 +110,7 @@ fun HistoryScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (language == Language.TH) "ประวัติการทดสอบ" else "TEST HISTORY",
+                text = stringResource(R.string.str_test_history_85),
                 color = CyberInk,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold,
@@ -131,7 +134,7 @@ fun HistoryScreen(
                         )
                         Spacer(modifier = Modifier.size(4.dp))
                         Text(
-                            text = if (language == Language.TH) "ส่งออก" else "EXPORT",
+                            text = stringResource(R.string.str_export_86),
                             color = NeonBlue,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
@@ -150,7 +153,7 @@ fun HistoryScreen(
                         )
                         Spacer(modifier = Modifier.size(4.dp))
                         Text(
-                            text = if (language == Language.TH) "ล้าง" else "CLEAR",
+                            text = stringResource(R.string.str_clear_87),
                             color = Color(0xFFFF5252),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
@@ -192,7 +195,7 @@ fun HistoryScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = if (language == Language.TH) "ยังไม่มีประวัติการทดสอบ" else "No Test History Yet",
+                        text = stringResource(R.string.str_no_test_history_yet_88),
                         color = CyberInk,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
@@ -201,10 +204,7 @@ fun HistoryScreen(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = if (language == Language.TH)
-                            "กดปุ่ม 'เริ่มทดสอบความเร็ว' เพื่อบันทึกผลการวัดผลครั้งแรก"
-                        else
-                            "Tap 'START SPEED TEST' to save your first measurement.",
+                        text = stringResource(R.string.str_tap_start_speed_test_to_save_y_89),
                         color = CyberMuted,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Normal
@@ -298,7 +298,7 @@ private fun ExportOptionsModal(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (language == Language.TH) "เลือกรูปแบบการส่งออก" else "Export Format",
+                    text = stringResource(R.string.str_export_format_90),
                     color = CyberInk,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.ExtraBold
@@ -317,11 +317,8 @@ private fun ExportOptionsModal(
 
             // Option 1: Text Summary
             ExportOptionCard(
-                title = if (language == Language.TH) "สรุปข้อความ (Text Summary)" else "Text Summary",
-                description = if (language == Language.TH)
-                    "ส่งออกเป็นสรุปอ่านง่าย สำหรับแชร์ในแชทหรือส่งอีเมล"
-                else
-                    "Human-readable summary ideal for messaging apps or emails.",
+                title = stringResource(R.string.str_text_summary_91),
+                description = stringResource(R.string.str_human_readable_summary_ideal_f_92),
                 icon = Icons.Default.Description,
                 iconColor = NeonBlue,
                 onClick = onExportText,
@@ -332,11 +329,8 @@ private fun ExportOptionsModal(
 
             // Option 2: JSON File Data
             ExportOptionCard(
-                title = if (language == Language.TH) "ไฟล์ข้อมูล JSON (JSON Format)" else "JSON Data Format",
-                description = if (language == Language.TH)
-                    "ส่งออกในรูปแบบ JSON ครบถ้วน สำหรับสำรองข้อมูลหรือนำไปประมวลผลต่อ"
-                else
-                    "Full raw JSON data for backup, analysis, or data control.",
+                title = stringResource(R.string.str_json_data_format_93),
+                description = stringResource(R.string.str_full_raw_json_data_for_backup__94),
                 icon = Icons.Default.Code,
                 iconColor = NeonGreen,
                 onClick = onExportJson,

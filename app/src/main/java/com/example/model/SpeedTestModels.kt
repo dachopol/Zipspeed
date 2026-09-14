@@ -32,6 +32,8 @@ data class SpeedTestState(
     val pingMs: Int? = null,
     val jitterMs: Int? = null,
     val packetLossPercent: Double? = null,
+    val downloadLatencyMs: Int? = null,
+    val uploadLatencyMs: Int? = null,
     val downloadMbps: Double? = null,
     val uploadMbps: Double? = null,
     val errorMessage: String? = null

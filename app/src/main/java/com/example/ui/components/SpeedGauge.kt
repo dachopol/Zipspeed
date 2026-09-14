@@ -161,32 +161,19 @@ fun SpeedGauge(
 
     val targetNeedleFraction = calculateSpeedFraction(speedValue)
 
-    // Dynamic mechanical tick vibration as needle revs across dial notches during active testing
-    val lastNotch = remember { mutableIntStateOf(0) }
-    val lastTickTime = remember { mutableLongStateOf(0L) }
-
-    LaunchedEffect(targetNeedleFraction, isTesting) {
-        if (isTesting && targetNeedleFraction > 0.02f) {
-            val currentNotch = (targetNeedleFraction * 24).toInt()
-            val now = System.currentTimeMillis()
-            if (currentNotch != lastNotch.intValue && now - lastTickTime.longValue >= 60L) {
-                lastNotch.intValue = currentNotch
-                lastTickTime.longValue = now
-                triggerHaptic(1)
-            }
-        } else if (!isTesting) {
-            lastNotch.intValue = 0
-        }
-    }
-
     // Spring-based physics animation for the gauge needle with natural mechanical damping and responsiveness
     val needleSpringSpec: AnimationSpec<Float> = remember(isTesting, reducedMotion) {
         if (reducedMotion) {
-            tween(durationMillis = 100, easing = LinearEasing)
+            spring(
+                dampingRatio = Spring.DampingRatioNoBouncy,
+                stiffness = Spring.StiffnessMedium,
+                visibilityThreshold = 0.0001f
+            )
         } else {
             spring(
-                dampingRatio = if (isTesting) 0.64f else 0.78f, // Natural underdamping for organic recoil during speed jumps
-                stiffness = if (isTesting) 360f else 280f       // Fast physical response tracking live bandwidth fluctuations
+                dampingRatio = if (isTesting) 0.70f else 0.82f, // Fluid mechanical damping: organic recoil on surges, smooth settle
+                stiffness = if (isTesting) 340f else 240f,       // High physical responsiveness tracking live bandwidth without lag
+                visibilityThreshold = 0.0001f                    // Sub-pixel continuous physics, zero premature snap
             )
         }
     }
@@ -194,25 +181,37 @@ fun SpeedGauge(
     val animatedNeedleFraction by animateFloatAsState(
         targetValue = targetNeedleFraction,
         animationSpec = needleSpringSpec,
+        visibilityThreshold = 0.0001f,
         label = "animatedNeedleFraction"
     )
 
     val animatedSpeed by animateFloatAsState(
         targetValue = speedValue.toFloat(),
         animationSpec = if (reducedMotion) {
-            tween(durationMillis = 100, easing = LinearEasing)
+            spring(
+                dampingRatio = Spring.DampingRatioNoBouncy,
+                stiffness = Spring.StiffnessMedium,
+                visibilityThreshold = 0.05f
+            )
         } else {
             spring(
-                dampingRatio = if (isTesting) 0.68f else 0.80f,
-                stiffness = if (isTesting) 360f else 280f
+                dampingRatio = if (isTesting) 0.75f else 0.86f,
+                stiffness = if (isTesting) 340f else 240f,
+                visibilityThreshold = 0.05f
             )
         },
+        visibilityThreshold = 0.05f,
         label = "animatedSpeed"
     )
 
     val animatedProgress by animateFloatAsState(
         targetValue = progressFraction.coerceIn(0f, 1f),
-        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessLow,
+            visibilityThreshold = 0.001f
+        ),
+        visibilityThreshold = 0.001f,
         label = "animatedProgress"
     )
 
@@ -269,21 +268,6 @@ fun SpeedGauge(
                 repeatMode = RepeatMode.Reverse
             ),
             label = "spark"
-        )
-    }
-
-    // Micro-vibration flutter simulating organic analog needle response to real-time packet stream fluctuations
-    val needleFlutter by if (reducedMotion || !isTesting || speedValue <= 0.5) {
-        androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
-    } else {
-        infiniteTransition.animateFloat(
-            initialValue = -0.003f,
-            targetValue = 0.003f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(80, easing = LinearEasing),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "needleFlutter"
         )
     }
 
@@ -408,8 +392,8 @@ fun SpeedGauge(
                 style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
             )
 
-            // Current needle angle based on real-time spring physics animated fraction with organic packet flutter
-            val effectiveNeedleFraction = (animatedNeedleFraction + needleFlutter).coerceIn(0f, 1f)
+            // Current needle angle driven directly by spring physics animation for smooth, fluid motion
+            val effectiveNeedleFraction = animatedNeedleFraction.coerceIn(0f, 1f)
             val currentNeedleAngle = startAngle + (effectiveNeedleFraction * sweepAngle)
 
             // 2. Speed Scale Tick Marks along the arc

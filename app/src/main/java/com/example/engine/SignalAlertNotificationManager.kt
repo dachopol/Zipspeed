@@ -96,7 +96,7 @@ object SignalAlertNotificationManager {
 
         val displayZone = if (zoneName.isNotBlank()) zoneName else "บริเวณจุดปัจจุบัน"
 
-        val title = "⚠️ เข้าสู่พื้นที่จุดอับสัญญาณ! ($displayZone)"
+        val title = "เข้าสู่พื้นที่จุดอับสัญญาณ! ($displayZone)"
         val shortText = "สัญญาณลดลงเหลือ $dbm dBm (ต่ำกว่าเกณฑ์ $thresholdDbm dBm)"
         val expandedText = "ตรวจพบความแรงสัญญาณลดลงผิดปกติที่ $dbm dBm ใน $displayZone ซึ่งตรงกับจุดอับสัญญาณตามข้อมูล Heatmap แนะนำเข้าใกล้เราเตอร์หรือเชื่อมต่อจุด Mesh Wi-Fi"
 

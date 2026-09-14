@@ -26,6 +26,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -87,7 +89,7 @@ fun UpgradeModal(
                         )
                     }
                     Text(
-                        text = if (language == Language.TH) "Zipspeed PRO" else "Zipspeed PRO",
+                        text = stringResource(R.string.str_zipspeed_pro_9),
                         color = CyberInk,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.ExtraBold
@@ -106,10 +108,7 @@ fun UpgradeModal(
             Spacer(modifier = Modifier.height(14.dp))
 
             Text(
-                text = if (language == Language.TH)
-                    "ปลดล็อกฟีเจอร์ระดับพรีเมียมสำหรับการทดสอบเครือข่ายความเร็วสูง"
-                else
-                    "Unlock premium capabilities for high-throughput network diagnostics.",
+                text = stringResource(R.string.str_unlock_premium_capabilities_fo_10),
                 color = CyberMuted,
                 fontSize = 14.sp,
                 lineHeight = 20.sp
@@ -154,9 +153,9 @@ fun UpgradeModal(
             Spacer(modifier = Modifier.height(24.dp))
 
             val btnText = if (isProPlan) {
-                if (language == Language.TH) "สลับเป็น FREE PLAN" else "SWITCH TO FREE PLAN"
+                stringResource(R.string.str_switch_to_free_plan_11)
             } else {
-                if (language == Language.TH) "อัปเกรดเป็น PRO PLAN" else "UPGRADE TO PRO PLAN"
+                stringResource(R.string.str_upgrade_to_pro_plan_12)
             }
 
             val btnBg = if (isProPlan) {
