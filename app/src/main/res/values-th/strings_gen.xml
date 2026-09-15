@@ -5,14 +5,14 @@
     <string name="str_settings_3">ตั้งค่า</string>
     <string name="str_ip_address_4">ไอพีแอดเดรส (IP ADDRESS)</string>
     <string name="str_public_ip_5">ไอพีสาธารณะ (Public IP)</string>
-    <string name="str_ip_copied_ipinfo_publicip_6">คัดลอก IP แล้ว: ${ipInfo.publicIp}</string>
+    <string name="str_ip_copied_ipinfo_publicip_6">คัดลอก IP แล้ว: %1$s</string>
     <string name="str_copy_7">คัดลอก</string>
     <string name="str_local_ip_8">ไอพีภายใน</string>
     <string name="str_zipspeed_pro_9">Zipspeed PRO</string>
     <string name="str_unlock_premium_capabilities_fo_10">ปลดล็อกฟีเจอร์ระดับพรีเมียมสำหรับการทดสอบเครือข่ายความเร็วสูง</string>
     <string name="str_switch_to_free_plan_11">สลับเป็น FREE PLAN</string>
     <string name="str_upgrade_to_pro_plan_12">อัปเกรดเป็น PRO PLAN</string>
-    <string name="str_server_nearest_server_distance_13">Server: ใกล้สุด ${server.distanceKm}km - ${server.subLocation}</string>
+    <string name="str_server_nearest_server_distance_13">Server: ใกล้สุด %1$dkm - %2$s</string>
     <string name="str_test_server_radar_map_14">แผนที่ตำแหน่งเซิร์ฟเวอร์</string>
     <string name="str_network_routing_latency_visual_15">การเส้นทางเครือข่ายความหน่วงต่ำ</string>
     <string name="str_bangkok_selectedserver_subloca_16">Bangkok → %1$s</string>
@@ -80,7 +80,7 @@
     <string name="str_share_test_details_78">แชร์รายละเอียดผลการทดสอบ</string>
     <string name="str_wifi_5ghz_ais_fibre_5g_79">WiFi 5GHz • AIS Fibre 5G</string>
     <string name="str_optimal_link_80">สถานะเสถียร</string>
-    <string name="str_routing_nearest_selectedserver_81">เราท์ติ้ง: ใกล้สุด ${selectedServer.distanceKm}km (${selectedServer.subLocation})</string>
+    <string name="str_routing_nearest_selectedserver_81">เราท์ติ้ง: ใกล้สุด %1$dkm (%2$s)</string>
     <string name="str_accurate_speed_test_anytime_an_82">วัดความเร็วเน็ตแม่นยำ ทุกที่ ทุกเวลา</string>
     <string name="str_get_started_83">เริ่มต้นใช้งาน</string>
     <string name="str_export_zipspeed_test_history_84">ส่งออกประวัติการทดสอบ Zipspeed</string>
@@ -110,7 +110,7 @@
     <string name="str_reduce_battery_drain_during_hi_108">ลดการใช้แบตเตอรี่ขณะทำการทดสอบสปีด</string>
     <string name="str_frequently_asked_questions_109">คำถามที่พบบ่อย (FAQ)</string>
     <string name="str_contact_support_feedback_110">ติดต่อฝ่ายสนับสนุน &amp; ส่งข้อเสนอแนะ</string>
-    <string name="str_version_v_com_example_buildcon_111">เวอร์ชัน: v${com.example.BuildConfig.VERSION_NAME} (Build ${com.example.BuildConfig.VERSION_CODE})</string>
+    <string name="str_version_v_com_example_buildcon_111">เวอร์ชัน: v%1$s (Build %2$d)</string>
     <string name="str_welcome_to_zipspeed_112">เข้าสู่ระบบ Zipspeed</string>
     <string name="str_sync_test_history_and_unlock_s_113">ซิงค์ประวัติการวัดความเร็วและปลดล็อกฟีเจอร์พิเศษ</string>
     <string name="str_continue_with_google_114">เข้าสู่ระบบด้วย Google</string>
