@@ -57,12 +57,12 @@ class NetworkSpeedTester {
         server: ServerInfo,
         isPro: Boolean,
         batterySaver: Boolean = false
-    ): SpeedTestState = coroutineScope {
+    ): SpeedTestState = kotlinx.coroutines.supervisorScope {
         cancelAllActiveCalls()
         _state.value = SpeedTestState(phase = TestPhase.TESTING_PING, liveSpeed = 0.0)
 
         val pollDelayMs = if (batterySaver) 70L else 40L
-        val pingDelayMs = if (batterySaver) 80L else 50L
+        val pingDelayMs = if (batterySaver) 80L else 40L
 
         // 1. PING & JITTER PHASE
         val pingResults = mutableListOf<Long>()
@@ -73,7 +73,7 @@ class NetworkSpeedTester {
             val startTime = System.currentTimeMillis()
             var measuredPing: Long = -1L
 
-            withTimeoutOrNull(900L) {
+            withTimeoutOrNull(450L) {
                 try {
                     val request = Request.Builder()
                         .url(pingUrl)
@@ -83,9 +83,6 @@ class NetworkSpeedTester {
 
                     val call = client.newCall(request)
                     activeCalls.add(call)
-                    val cancelHandler = coroutineContext.job.invokeOnCompletion {
-                        try { call.cancel() } catch (_: Exception) {}
-                    }
 
                     try {
                         withContext(Dispatchers.IO) {
@@ -94,7 +91,6 @@ class NetworkSpeedTester {
                             }
                         }
                     } finally {
-                        cancelHandler.dispose()
                         activeCalls.remove(call)
                     }
                 } catch (_: Exception) {
@@ -136,10 +132,10 @@ class NetworkSpeedTester {
             )
         }
 
-        delay(80)
+        delay(60)
 
         // 2. REAL DOWNLOAD MEASUREMENT
-        val downloadDurationMs = if (batterySaver) 2600L else 3800L
+        val downloadDurationMs = if (batterySaver) 2600L else 3600L
         val downloadUrl = "https://speed.cloudflare.com/__down?bytes=15000000"
         val totalDownloadedBytes = AtomicLong(0L)
         val isDownloadingActive = AtomicBoolean(true)
@@ -148,6 +144,7 @@ class NetworkSpeedTester {
         val downloadWorkers = (1..numThreads).map {
             launch(Dispatchers.IO) {
                 val buffer = ByteArray(16384)
+                var errorCount = 0
                 while (isDownloadingActive.get() && isActive) {
                     try {
                         val request = Request.Builder()
@@ -160,6 +157,7 @@ class NetworkSpeedTester {
                         activeCalls.add(call)
                         try {
                             call.execute().use { response ->
+                                errorCount = 0
                                 val stream = response.body?.byteStream()
                                 if (stream != null) {
                                     var bytesRead = 0
@@ -172,7 +170,9 @@ class NetworkSpeedTester {
                             activeCalls.remove(call)
                         }
                     } catch (_: Exception) {
-                        delay(40)
+                        errorCount++
+                        val waitMs = if (errorCount > 2) 250L else 50L
+                        delay(waitMs)
                     }
                 }
             }
@@ -245,7 +245,7 @@ class NetworkSpeedTester {
             )
         }
 
-        delay(100)
+        delay(80)
 
         // 3. REAL UPLOAD THROUGHPUT MEASUREMENT
         val uploadDurationMs = if (batterySaver) 2400L else 3200L
@@ -256,6 +256,7 @@ class NetworkSpeedTester {
 
         val uploadWorker = launch(Dispatchers.IO) {
             val chunk = ByteArray(16384)
+            var errorCount = 0
             while (isUploadingActive.get() && isActive) {
                 try {
                     val requestBody = object : RequestBody() {
@@ -264,10 +265,9 @@ class NetworkSpeedTester {
                         override fun writeTo(sink: BufferedSink) {
                             while (isUploadingActive.get() && isActive && System.currentTimeMillis() - uploadStartTime < uploadDurationMs) {
                                 sink.write(chunk)
-                                sink.flush()
                                 totalUploadedBytes.addAndGet(chunk.size.toLong())
-                                Thread.sleep(2) // Throttle to prevent TCP buffer explosion
                             }
+                            sink.flush()
                         }
                     }
                     val request = Request.Builder()
@@ -280,11 +280,14 @@ class NetworkSpeedTester {
                     activeCalls.add(call)
                     try {
                         call.execute().close()
+                        errorCount = 0
                     } finally {
                         activeCalls.remove(call)
                     }
                 } catch (_: Exception) {
-                    delay(40)
+                    errorCount++
+                    val waitMs = if (errorCount > 2) 250L else 50L
+                    delay(waitMs)
                 }
             }
         }

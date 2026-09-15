@@ -26,6 +26,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,6 +37,8 @@ import com.example.model.NavTab
 import com.example.ui.ZipspeedViewModel
 import com.example.ui.components.BottomNavBar
 import com.example.ui.components.ServerSelectionModal
+import com.example.ui.components.SecurityShieldModal
+import com.example.ui.components.VipAdFreeModal
 import com.example.ui.components.TopHeader
 import com.example.ui.screens.HistoryScreen
 import com.example.ui.screens.HomeScreen
@@ -79,21 +83,23 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
     val videoTestState by viewModel.videoTestState.collectAsStateWithLifecycle()
     val webTestState by viewModel.webTestState.collectAsStateWithLifecycle()
 
+    val isProPlan by viewModel.isProPlan.collectAsStateWithLifecycle()
+    val isGpsModeEnabled by viewModel.isGpsModeEnabled.collectAsStateWithLifecycle()
+    val isSecurityShieldActive by viewModel.isSecurityShieldActive.collectAsStateWithLifecycle()
+    val securityReport by viewModel.securityReport.collectAsStateWithLifecycle()
+    val showSecurityModal by viewModel.showSecurityModal.collectAsStateWithLifecycle()
+    val showVipModal by viewModel.showVipModal.collectAsStateWithLifecycle()
     val showServerModal by viewModel.showServerModal.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     val locale = remember(language) { Locale(language.code) }
-    val configuration = remember(locale) {
+    val configuration = remember(locale, context) {
         android.content.res.Configuration(context.resources.configuration).apply {
             setLocale(locale)
         }
     }
-    val localizedContext = remember(configuration) {
-        context.createConfigurationContext(configuration)
-    }
 
     CompositionLocalProvider(
-        LocalContext provides localizedContext,
         LocalConfiguration provides configuration
     ) {
         Box(
@@ -148,7 +154,10 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
                                 BottomNavBar(
                                     activeTab = activeTab,
                                     language = language,
-                                    onTabSelected = { viewModel.selectTab(it) }
+                                    onTabSelected = { viewModel.selectTab(it) },
+                                    isSecurityShieldActive = isSecurityShieldActive,
+                                    onToggleSecurityShield = { viewModel.toggleSecurityShield(it) },
+                                    onSecurityClick = { viewModel.openSecurityModal() }
                                 )
                             }
                         ) { innerPadding ->
@@ -157,11 +166,17 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
                                     .fillMaxSize()
                                     .padding(innerPadding)
                             ) {
-                                // Header Bar
+                                // Header Bar with Dark/Light mode, VIP button, and GPS
                                 TopHeader(
                                     language = language,
                                     reducedMotion = reducedMotion,
-                                    onLanguageChange = { viewModel.setLanguage(it) }
+                                    isDarkTheme = currentTheme.isDark,
+                                    isVipAdFree = isProPlan,
+                                    isGpsActive = isGpsModeEnabled,
+                                    onLanguageChange = { viewModel.setLanguage(it) },
+                                    onToggleDarkLight = { viewModel.toggleDarkLightMode() },
+                                    onOpenVipModal = { viewModel.openVipModal() },
+                                    onToggleGps = { viewModel.toggleGpsMode() }
                                 )
 
                                 // Tab Content View
@@ -181,6 +196,8 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
                                                 language = language,
                                                 reducedMotion = reducedMotion || batterySaver,
                                                 isPrecisionMode = isPrecisionMode,
+                                                isVipAdFree = isProPlan,
+                                                isGpsActive = isGpsModeEnabled,
                                                 videoState = videoTestState,
                                                 webState = webTestState,
                                                 onStartTest = { viewModel.startSpeedTest() },
@@ -193,6 +210,8 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
                                                 onOpenServerModal = { viewModel.openServerModal() },
                                                 onRefreshIp = { viewModel.refreshIpInfo() },
                                                 onToggleSpeedUnit = { viewModel.toggleSpeedUnit() },
+                                                onToggleGpsMode = { viewModel.toggleGpsMode() },
+                                                onOpenVipModal = { viewModel.openVipModal() },
                                                 onNavigateToResults = { viewModel.selectTab(NavTab.HISTORY) },
                                                 onNavigateToSettings = { viewModel.selectTab(NavTab.SETTINGS) }
                                             )
@@ -239,6 +258,24 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
                     language = language,
                     onDismiss = { viewModel.closeServerModal() },
                     onSelectServer = { viewModel.setSelectedServer(it) }
+                )
+            }
+
+            if (showSecurityModal) {
+                SecurityShieldModal(
+                    securityReport = securityReport,
+                    isShieldEnabled = isSecurityShieldActive,
+                    onToggleShield = { viewModel.toggleSecurityShield(it) },
+                    onDismiss = { viewModel.closeSecurityModal() }
+                )
+            }
+
+            if (showVipModal) {
+                VipAdFreeModal(
+                    isVipAdFree = isProPlan,
+                    onDismiss = { viewModel.closeVipModal() },
+                    onPurchaseVip = { viewModel.purchaseVipAdFree(it) },
+                    onWatchAdForTempVip = { viewModel.watchAdForTempVip() }
                 )
             }
         }

@@ -8,6 +8,7 @@ data class ThemeDefinition(
     val nameTh: String,
     val nameEn: String,
     val isPremium: Boolean,
+    val isDark: Boolean,
     val colors: AppColors
 )
 
@@ -15,31 +16,59 @@ data class ThemeDefinition(
 data class AppColors(
     val background: Color,
     val surface: Color,
+    val cardBg: Color,
     val primary: Color,
     val accent: Color,
     val textMain: Color,
-    val textMuted: Color
+    val textMuted: Color,
+    val border: Color
 )
 
-// คลังธีม - ใช้ธีมละมุน สบายตา เป็นค่าหลัก
+// คลังธีม - รองรับทั้ง Dark Mode และ Light Mode อย่างสมมาตร
 object ThemeRegistry {
-    val softEyeComfort = ThemeDefinition(
-        id = "soft_eye_comfort",
-        nameTh = "ละมุน สบายตา (Eye-Care Soft)",
-        nameEn = "Soft & Eye-Care",
+    val cyberDark = ThemeDefinition(
+        id = "cyber_dark",
+        nameTh = "โหมดมืดล้ำยุค (Dark Mode)",
+        nameEn = "Cyber Dark",
         isPremium = false,
+        isDark = true,
         colors = AppColors(
-            background = CyberBg,
-            surface = CyberSurface,
-            primary = NeonBlue,
-            accent = NeonGreen,
-            textMain = CyberInk,
-            textMuted = CyberMuted
+            background = Color(0xFF0B0F19),
+            surface = Color(0xFF141A28),
+            cardBg = Color(0x1AFFFFFF),
+            primary = Color(0xFF00FFD1), // Cyan glow
+            accent = Color(0xFFE91E63),  // Magenta glow
+            textMain = Color(0xFFFFFFFF),
+            textMuted = Color(0xB3FFFFFF),
+            border = Color(0x2EFFFFFF)
         )
     )
 
-    val defaultSoftTheme = softEyeComfort
-    val futuristicBlue = softEyeComfort
-    val allThemes = listOf(softEyeComfort)
-    fun getThemeById(id: String) = softEyeComfort
+    val pureLight = ThemeDefinition(
+        id = "pure_light",
+        nameTh = "โหมดสว่างสดใส (Light Mode)",
+        nameEn = "Pure Light",
+        isPremium = false,
+        isDark = false,
+        colors = AppColors(
+            background = Color(0xFFF1F5F9),
+            surface = Color(0xFFFFFFFF),
+            cardBg = Color(0xFFFFFFFF),
+            primary = Color(0xFF0284C7), // Vibrant Blue
+            accent = Color(0xFFD946EF),  // Vibrant Magenta
+            textMain = Color(0xFF0F172A),
+            textMuted = Color(0xFF64748B),
+            border = Color(0xFFE2E8F0)
+        )
+    )
+
+    val defaultTheme = cyberDark
+    val softEyeComfort = cyberDark
+    val futuristicBlue = cyberDark
+    val allThemes = listOf(cyberDark, pureLight)
+
+    fun getThemeById(id: String): ThemeDefinition {
+        return allThemes.find { it.id == id } ?: defaultTheme
+    }
 }
+

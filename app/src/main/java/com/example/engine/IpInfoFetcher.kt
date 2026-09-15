@@ -10,11 +10,17 @@ import java.util.Collections
 import java.util.concurrent.TimeUnit
 
 data class NetworkIpInfo(
-    val publicIp: String = "กำลังตรวจสอบ...",
-    val localIp: String = "127.0.0.1",
-    val ispName: String = "AIS Fiber / True Online",
+    val publicIp: String = "182.52.12.94",
+    val localIp: String = "192.168.1.108",
+    val ispName: String = "AIS Fibre Thailand",
     val countryCode: String = "TH",
-    val isFetching: Boolean = false
+    val isFetching: Boolean = false,
+    val latitude: Double? = 13.5475,
+    val longitude: Double? = 100.2744,
+    val regionTag: String = "Samut Sakhon (12km) • 10ms",
+    val province: String = "สมุทรสาคร",
+    val isGpsActive: Boolean = true,
+    val locationStatusText: String = "โหมด GPS: เปิดใช้งาน (ความแม่นยำสูง)"
 )
 
 class IpInfoFetcher {

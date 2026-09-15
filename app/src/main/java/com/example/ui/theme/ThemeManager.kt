@@ -9,7 +9,7 @@ class ThemeManager(context: Context) {
     private val prefs = context.getSharedPreferences("zipspeed_theme_prefs", Context.MODE_PRIVATE)
     
     private val _currentTheme = MutableStateFlow(
-        ThemeRegistry.getThemeById(prefs.getString("selected_theme_id", "futuristic_blue") ?: "futuristic_blue")
+        ThemeRegistry.getThemeById(prefs.getString("selected_theme_id", "cyber_dark") ?: "cyber_dark")
     )
     val currentTheme: StateFlow<ThemeDefinition> = _currentTheme.asStateFlow()
 
@@ -19,9 +19,12 @@ class ThemeManager(context: Context) {
         _currentTheme.value = newTheme
     }
 
+    fun toggleDarkLight() {
+        val nextThemeId = if (_currentTheme.value.isDark) ThemeRegistry.pureLight.id else ThemeRegistry.cyberDark.id
+        setTheme(nextThemeId)
+    }
+
     fun toggleNextTheme() {
-        val currentIndex = ThemeRegistry.allThemes.indexOfFirst { it.id == _currentTheme.value.id }
-        val nextIndex = if (currentIndex >= 0) (currentIndex + 1) % ThemeRegistry.allThemes.size else 0
-        setTheme(ThemeRegistry.allThemes[nextIndex].id)
+        toggleDarkLight()
     }
 }

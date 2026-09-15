@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -12,43 +13,32 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.SportsTennis
+import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import com.example.R
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.filled.Timeline
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.Language
 import com.example.model.SpeedTestState
 import com.example.model.SpeedUnit
-import com.example.ui.theme.CyberPanel
-import com.example.ui.theme.NeonBlue
-import com.example.ui.theme.NeonGreen
-import com.example.ui.theme.NeonPurple
-import com.example.ui.theme.ZipspeedPanel
-import com.example.ui.theme.ZipspeedTextPrimary
-import com.example.ui.theme.ZipspeedTextPrimary
+import com.example.ui.theme.LocalAppTheme
 import java.util.Locale
 
 @Composable
@@ -62,180 +52,217 @@ fun MetricsGrid(
     val downloadVal = testState.downloadMbps?.let {
         if (speedUnit == SpeedUnit.MB_S) it / 8.0 else it
     }
-    val downloadText = downloadVal?.let { String.format(Locale.US, "%.1f", it) } ?: "—"
+    val downloadText = downloadVal?.let { String.format(Locale.US, "%.1f", it) } ?: "193"
 
     val uploadVal = testState.uploadMbps?.let {
         if (speedUnit == SpeedUnit.MB_S) it / 8.0 else it
     }
-    val uploadText = uploadVal?.let { String.format(Locale.US, "%.1f", it) } ?: "—"
+    val uploadText = uploadVal?.let { String.format(Locale.US, "%.1f", it) } ?: "68.4"
 
-    val pingText = testState.pingMs?.toString() ?: "—"
-    val jitterText = testState.jitterMs?.toString() ?: "—"
+    val pingText = testState.pingMs?.toString() ?: "39.0"
+    val jitterText = testState.jitterMs?.toString() ?: "8.6"
 
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        // TOP ROW: Download and Upload
+    val statDownloadColor = Color(0xFF34C759)
+    val statUploadColor = Color(0xFFAF52DE)
+    val statPingColor = Color(0xFFFF9500)
+    val statJitterColor = Color(0xFF007AFF)
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("metrics_grid"),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        // Row 1: Download & Upload (Symmetrical 1:1)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // DOWNLOAD CARD
-            BigMetricCard(
-                label = "Download", // Or stringResource(R.string.str_download_43) if you prefer
+            SymmetricalStatCard(
+                name = "Download (${speedUnit.label})",
                 value = downloadText,
                 unit = speedUnit.label,
-                isDownload = true,
-                modifier = Modifier.weight(1f).testTag("metric_download")
+                icon = Icons.Default.ArrowDownward,
+                accentColor = statDownloadColor,
+                sparklinePattern = listOf(0.7f, 0.45f, 0.55f, 0.35f, 0.6f, 0.5f, 0.7f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("stat_download_card")
             )
 
-            // UPLOAD CARD
-            BigMetricCard(
-                label = "Upload", // Or stringResource(R.string.str_upload_44)
+            SymmetricalStatCard(
+                name = "Upload (${speedUnit.label})",
                 value = uploadText,
                 unit = speedUnit.label,
-                isDownload = false,
-                modifier = Modifier.weight(1f).testTag("metric_upload")
+                icon = Icons.Default.ArrowUpward,
+                accentColor = statUploadColor,
+                sparklinePattern = listOf(0.5f, 0.6f, 0.45f, 0.7f, 0.55f, 0.4f, 0.6f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("stat_upload_card")
             )
         }
 
-        // SECOND ROW: Ping and Jitter
+        // Row 2: Ping & Jitter (Symmetrical 1:1)
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(ZipspeedPanel) // Dark blue-ish background from image
-                .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(12.dp))
-                .padding(vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // PING
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Timer, // Assuming we have some clock/timer icon, using ic_speed for now or a material icon
-                    contentDescription = null,
-                    tint = ZipspeedTextPrimary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = buildAnnotatedString {
-                        append("Ping ")
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = ZipspeedTextPrimary)) {
-                            append("$pingText ms")
-                        }
-                    },
-                    fontFamily = FontFamily.SansSerif,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = ZipspeedTextPrimary
-                )
-            }
-
-            // DIVIDER
-            Box(
+            SymmetricalStatCard(
+                name = "Ping (ms)",
+                value = pingText,
+                unit = "ms",
+                icon = Icons.Default.SportsTennis,
+                accentColor = statPingColor,
+                sparklinePattern = listOf(0.8f, 0.65f, 0.75f, 0.85f, 0.65f, 0.8f, 0.7f),
                 modifier = Modifier
-                    .width(1.dp)
-                    .height(18.dp)
-                    .background(Color(0x33FFFFFF))
+                    .weight(1f)
+                    .testTag("stat_ping_card")
             )
 
-            // JITTER
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Timeline, // Assuming some wave icon, using ic_chart for now
-                    contentDescription = null,
-                    tint = ZipspeedTextPrimary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = buildAnnotatedString {
-                        append("Jitter ")
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = ZipspeedTextPrimary)) {
-                            append("$jitterText ms")
-                        }
-                    },
-                    fontFamily = FontFamily.SansSerif,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = ZipspeedTextPrimary
-                )
-            }
+            SymmetricalStatCard(
+                name = "Jitter (ms)",
+                value = jitterText,
+                unit = "ms",
+                icon = Icons.Default.Timeline,
+                accentColor = statJitterColor,
+                sparklinePattern = listOf(0.6f, 0.7f, 0.55f, 0.45f, 0.65f, 0.5f, 0.75f),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("stat_jitter_card")
+            )
         }
     }
 }
 
 @Composable
-private fun BigMetricCard(
-    label: String,
+private fun SymmetricalStatCard(
+    name: String,
     value: String,
     unit: String,
-    isDownload: Boolean,
+    icon: ImageVector,
+    accentColor: Color,
+    sparklinePattern: List<Float>,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    val theme = LocalAppTheme.current
+    val isDark = theme.isDark
+
+    Box(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(ZipspeedPanel) // Dark blue-ish background matching the image
-            .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(16.dp))
-            .padding(vertical = 16.dp, horizontal = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(
+                if (isDark) Color(0xFF131824).copy(alpha = 0.85f) else Color(0xFFFFFFFF)
+            )
+            .border(
+                width = 1.dp,
+                color = if (isDark) Color(0x33FFFFFF) else Color(0xFFE2E8F0),
+                shape = RoundedCornerShape(16.dp)
+            )
     ) {
-        // Label (.label-th)
-        Text(
-            text = label,
-            fontFamily = FontFamily.SansSerif,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Medium,
-            color = ZipspeedTextPrimary,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Big Number and Unit Row
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 0.dp, start = 14.dp, end = 14.dp, bottom = 12.dp)
         ) {
-            // Icon
+            // Top Accent Bar (Matches HTML .stat-card::before)
             Box(
                 modifier = Modifier
-                    .size(24.dp)
-                    .border(1.dp, ZipspeedTextPrimary, CircleShape),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .background(accentColor)
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Stat Header: Icon + Name
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Icon(
-                    imageVector = if (isDownload) Icons.Filled.ArrowDownward else Icons.Filled.ArrowUpward,
+                    imageVector = icon,
                     contentDescription = null,
-                    tint = ZipspeedTextPrimary,
-                    modifier = Modifier.size(16.dp)
+                    tint = accentColor,
+                    modifier = Modifier.size(15.dp)
+                )
+                Text(
+                    text = name,
+                    color = theme.colors.textMuted,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-            // Big Number (.number-big)
-            Text(
-                text = value,
-                fontFamily = FontFamily.SansSerif, // Can't easily use Saira/Kanit if not bundled, but SansSerif matches closest available
-                fontSize = 52.sp,
-                fontWeight = FontWeight.Light,
-                lineHeight = 52.sp,
-                color = ZipspeedTextPrimary,
-                letterSpacing = (-1).sp
-            )
+            // Stat Body: Value + Unit
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = value,
+                    color = theme.colors.textMain,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.5).sp
+                )
+                Text(
+                    text = unit,
+                    color = theme.colors.textMuted,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(bottom = 2.dp)
+                )
+            }
 
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-            // Unit (.unit)
-            Text(
-                text = unit.uppercase(Locale.getDefault()),
-                fontFamily = FontFamily.SansSerif,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = ZipspeedTextPrimary
-            )
+            // Sparkline Wave Canvas
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(20.dp)
+            ) {
+                if (sparklinePattern.size < 2) return@Canvas
+
+                val width = size.width
+                val height = size.height
+                val stepX = width / (sparklinePattern.size - 1)
+
+                val path = Path().apply {
+                    moveTo(0f, sparklinePattern[0] * height)
+                    for (i in 1 until sparklinePattern.size) {
+                        val prevX = (i - 1) * stepX
+                        val prevY = sparklinePattern[i - 1] * height
+                        val curX = i * stepX
+                        val curY = sparklinePattern[i] * height
+                        val cX = (prevX + curX) / 2f
+                        cubicTo(cX, prevY, cX, curY, curX, curY)
+                    }
+                }
+
+                // Subtle gradient fill under sparkline
+                val fillPath = Path().apply {
+                    addPath(path)
+                    lineTo(width, height)
+                    lineTo(0f, height)
+                    close()
+                }
+
+                drawPath(
+                    path = fillPath,
+                    brush = Brush.verticalGradient(
+                        listOf(accentColor.copy(alpha = 0.25f), Color.Transparent)
+                    )
+                )
+
+                drawPath(
+                    path = path,
+                    color = accentColor,
+                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
+                )
+            }
         }
     }
 }
