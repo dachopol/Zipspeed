@@ -24,41 +24,41 @@ data class AppColors(
     val border: Color
 )
 
-// คลังธีม - รองรับทั้ง Dark Mode และ Light Mode อย่างสมมาตร
+// คลังธีม - ออกแบบตามทิศทางพรีเมียมหรูหรา (Dark Deep Navy #0B1120 & Light Ivory #F5F3EF)
 object ThemeRegistry {
     val cyberDark = ThemeDefinition(
         id = "cyber_dark",
-        nameTh = "โหมดมืดล้ำยุค (Dark Mode)",
-        nameEn = "Cyber Dark",
+        nameTh = "โหมดมืดพรีเมียม (Dark Mode)",
+        nameEn = "Deep Navy Dark",
         isPremium = false,
         isDark = true,
         colors = AppColors(
-            background = Color(0xFF0B0F19),
-            surface = Color(0xFF141A28),
-            cardBg = Color(0x1AFFFFFF),
-            primary = Color(0xFF00FFD1), // Cyan glow
-            accent = Color(0xFFE91E63),  // Magenta glow
-            textMain = Color(0xFFFFFFFF),
-            textMuted = Color(0xB3FFFFFF),
-            border = Color(0x2EFFFFFF)
+            background = DeepNavy,       // #0B1120
+            surface = DarkCard,          // #141E30
+            cardBg = DarkCard,           // #141E30
+            primary = ChampagneGold,     // #D6BC8A
+            accent = WinePink,           // #A83D65
+            textMain = TextWhite,        // #F2F4F8
+            textMuted = TextMuted,       // #A7B3C6
+            border = Color(0x1FFFFFFF)   // เส้นขอบบางละเอียด
         )
     )
 
     val pureLight = ThemeDefinition(
         id = "pure_light",
-        nameTh = "โหมดสว่างสดใส (Light Mode)",
-        nameEn = "Pure Light",
+        nameTh = "โหมดสว่างงาช้าง (Light Mode)",
+        nameEn = "Ivory Light",
         isPremium = false,
         isDark = false,
         colors = AppColors(
-            background = Color(0xFFF1F5F9),
-            surface = Color(0xFFFFFFFF),
-            cardBg = Color(0xFFFFFFFF),
-            primary = Color(0xFF0284C7), // Vibrant Blue
-            accent = Color(0xFFD946EF),  // Vibrant Magenta
-            textMain = Color(0xFF0F172A),
-            textMuted = Color(0xFF64748B),
-            border = Color(0xFFE2E8F0)
+            background = IvoryBg,         // #F5F3EF
+            surface = LightCard,          // #FFFFFF
+            cardBg = LightCard,           // #FFFFFF
+            primary = ChampagneBronze,    // #96783C
+            accent = WinePink,            // #A83D65
+            textMain = LightTextMain,     // #0B1120
+            textMuted = LightTextMuted,   // #64748B
+            border = Color(0xFFE2E8F0)    // เส้นขอบบางสว่าง
         )
     )
 
@@ -71,4 +71,3 @@ object ThemeRegistry {
         return allThemes.find { it.id == id } ?: defaultTheme
     }
 }
-

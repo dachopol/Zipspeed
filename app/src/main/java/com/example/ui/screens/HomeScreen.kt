@@ -3,6 +3,11 @@ package com.example.ui.screens
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,20 +17,37 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.GpsFixed
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -36,12 +58,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.SpeedTestRecord
 import com.example.engine.NetworkIpInfo
 import com.example.model.Language
 import com.example.model.ServerInfo
@@ -51,7 +75,6 @@ import com.example.model.TestPhase
 import com.example.model.VideoTestState
 import com.example.model.WebTestState
 import com.example.ui.components.AdMobBannerView
-import com.example.ui.components.ConnectionInfoCard
 import com.example.ui.components.ExperienceAssessmentView
 import com.example.ui.components.MetricsGrid
 import com.example.ui.components.ShareAdCountdownModal
@@ -59,7 +82,15 @@ import com.example.ui.components.ShareDetailModal
 import com.example.ui.components.ShareReportData
 import com.example.ui.components.SpeedGauge
 import com.example.ui.components.verticalScrollbar
+import com.example.ui.theme.ChampagneGold
 import com.example.ui.theme.LocalAppTheme
+import com.example.ui.theme.StatusGreen
+import com.example.ui.theme.TextMuted
+import com.example.ui.theme.TextWhite
+import com.example.ui.theme.WinePink
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun HomeScreen(
@@ -71,17 +102,20 @@ fun HomeScreen(
     reducedMotion: Boolean,
     isPrecisionMode: Boolean = false,
     isVipAdFree: Boolean = false,
-    isGpsActive: Boolean = true,
+    isGpsActive: Boolean = false,
+    previousResult: SpeedTestRecord? = null,
     videoState: VideoTestState = VideoTestState(),
     webState: WebTestState = WebTestState(),
     onStartTest: () -> Unit,
     onStartPrecisionTest: () -> Unit,
     onCancelTest: () -> Unit,
+    onTogglePrecisionMode: () -> Unit = {},
     onStartVideoTest: () -> Unit = {},
     onCancelVideoTest: () -> Unit = {},
     onStartWebTest: () -> Unit = {},
     onCancelWebTest: () -> Unit = {},
     onOpenServerModal: () -> Unit,
+    onSelectServer: (ServerInfo) -> Unit = {},
     onRefreshIp: () -> Unit,
     onToggleSpeedUnit: () -> Unit = {},
     onToggleGpsMode: () -> Unit = {},
@@ -91,18 +125,18 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
-    val isRunning = testState.phase != TestPhase.IDLE &&
-            testState.phase != TestPhase.COMPLETED &&
-            testState.phase != TestPhase.ERROR
+    val isRunning = testState.phase == TestPhase.TESTING_PING ||
+            testState.phase == TestPhase.TESTING_DOWNLOAD ||
+            testState.phase == TestPhase.TESTING_UPLOAD
 
-    // Sharing flow states: 5-second countdown ad for non-VIP, then detailed share sheet
     var showShareAdCountdownModal by remember { mutableStateOf(false) }
     var showShareDetailModal by remember { mutableStateOf(false) }
+    var isNetworkDetailsExpanded by remember { mutableStateOf(false) }
 
     val theme = LocalAppTheme.current
     val isDark = theme.isDark
+    val isTh = language == Language.TH
 
-    // Permission launcher for live GPS mode
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -115,10 +149,8 @@ fun HomeScreen(
 
     val handleInitiateShare = {
         if (isVipAdFree) {
-            // VIP users bypass the 5s ad immediately!
             showShareDetailModal = true
         } else {
-            // Free users must watch the 5-second countdown ad before skipping to share
             showShareAdCountdownModal = true
         }
     }
@@ -128,304 +160,472 @@ fun HomeScreen(
             .fillMaxSize()
             .verticalScroll(scrollState)
             .verticalScrollbar(scrollState)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // =========================================================================
-        // 1. Symmetrical Top Network & ISP Status Card
-        // =========================================================================
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(if (isDark) Color(0xFF131824).copy(alpha = 0.85f) else Color(0xFFFFFFFF))
-                .border(1.dp, if (isDark) Color(0x33FFFFFF) else Color(0xFFE2E8F0), RoundedCornerShape(16.dp))
-                .padding(14.dp)
-                .testTag("network_info_card")
+                .widthIn(max = 480.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // ISP Title & Brand Badge
+            // =========================================================================
+            // 1. Compact Network & Server Card (Decluttered & Integrated)
+            // =========================================================================
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(theme.colors.cardBg)
+                    .border(1.dp, theme.colors.border, RoundedCornerShape(20.dp))
+                    .padding(14.dp)
+                    .testTag("network_info_card")
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    // Top Row: ISP Name + Status Green Dot & Selected Server + Change Button
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(Color(0xFF34C759).copy(alpha = 0.20f))
-                                .border(1.dp, Color(0xFF34C759), RoundedCornerShape(6.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        // ISP and Connected status
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Text(
-                                text = "ISP",
-                                color = Color(0xFF34C759),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Black
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(StatusGreen)
                             )
-                        }
-                        Text(
-                            text = if (ipInfo.ispName.isNotBlank()) ipInfo.ispName else "AIS Fibre Thailand",
-                            color = theme.colors.textMain,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    // Auto Server Selector Pill
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(if (isDark) Color(0x18FFFFFF) else Color(0xFFF1F5F9))
-                            .border(1.dp, if (isDark) Color(0x22FFFFFF) else Color(0xFFCBD5E1), RoundedCornerShape(10.dp))
-                            .clickable { onOpenServerModal() }
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Sync,
-                            contentDescription = "Change Server",
-                            tint = Color(0xFF00FFD1),
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Text(
-                            text = "Auto (${selectedServer.name.substringBefore(" ")})",
-                            color = theme.colors.textMain,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Server Location, Ping & GPS Mode Button
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (ipInfo.regionTag.isNotBlank()) ipInfo.regionTag else "Samut Sakhon (12km) • 10ms",
-                        color = theme.colors.textMuted,
-                        fontSize = 11.sp
-                    )
-
-                    // GPS Toggle Button (Requests permission and fetches live coordinates)
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(
-                                if (isGpsActive) Color(0xFF00FFD1).copy(alpha = 0.15f) else Color(0x14FFFFFF)
-                            )
-                            .border(
-                                1.dp,
-                                if (isGpsActive) Color(0xFF00FFD1).copy(alpha = 0.40f) else Color(0x22FFFFFF),
-                                RoundedCornerShape(8.dp)
-                            )
-                            .clickable {
-                                locationPermissionLauncher.launch(
-                                    arrayOf(
-                                        Manifest.permission.ACCESS_FINE_LOCATION,
-                                        Manifest.permission.ACCESS_COARSE_LOCATION
-                                    )
+                            Column {
+                                Text(
+                                    text = if (!ipInfo.ispName.isNullOrBlank()) ipInfo.ispName!! else "Edge CDN Network",
+                                    color = theme.colors.textMain,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = if (isTh) "เชื่อมต่อแล้ว" else "Connected",
+                                    color = StatusGreen,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Normal
                                 )
                             }
-                            .padding(horizontal = 8.dp, vertical = 3.dp)
-                            .testTag("gps_toggle_btn"),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        }
+
+                        // Server Selector Button
+                        Box(
+                            modifier = Modifier
+                                .defaultMinSize(minHeight = 44.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isDark) Color(0x12FFFFFF) else Color(0xFFF1F5F9))
+                                .border(1.dp, theme.colors.border, RoundedCornerShape(12.dp))
+                                .clickable { onOpenServerModal() }
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                .testTag("change_server_btn"),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                Text(
+                                    text = selectedServer.name,
+                                    color = theme.colors.textMain,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = if (isTh) "เปลี่ยน" else "Change",
+                                    color = ChampagneGold,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Expandable Toggle for Network Details
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { isNetworkDetailsExpanded = !isNetworkDetailsExpanded }
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = if (isGpsActive) Icons.Default.GpsFixed else Icons.Default.MyLocation,
-                            contentDescription = "GPS Mode",
-                            tint = if (isGpsActive) Color(0xFF00FFD1) else theme.colors.textMuted,
-                            modifier = Modifier.size(12.dp)
-                        )
                         Text(
-                            text = if (isGpsActive) "GPS: ON" else "เปิดโหมด GPS",
-                            color = if (isGpsActive) Color(0xFF00FFD1) else theme.colors.textMuted,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold
+                            text = if (isTh) "รายละเอียดเครือข่าย" else "Network Details",
+                            color = theme.colors.textMuted,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Normal
                         )
+                        Icon(
+                            imageVector = if (isNetworkDetailsExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = if (isNetworkDetailsExpanded) "Collapse" else "Expand",
+                            tint = theme.colors.textMuted,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    // Collapsible Network Details Content
+                    AnimatedVisibility(
+                        visible = isNetworkDetailsExpanded,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            // Public IP & Local IP
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Public IP: ${ipInfo.publicIp ?: "--"}",
+                                    color = theme.colors.textMuted,
+                                    fontSize = 11.sp,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                                if (!ipInfo.localIp.isNullOrBlank()) {
+                                    Text(
+                                        text = "Local: ${ipInfo.localIp}",
+                                        color = theme.colors.textMuted,
+                                        fontSize = 11.sp,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                }
+                            }
+
+                            // Anycast PoP Node & Location
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Edge Node: ${ipInfo.colo ?: "Anycast"} • ${selectedServer.subLocation}",
+                                    color = theme.colors.textMuted,
+                                    fontSize = 11.sp
+                                )
+
+                                // GPS Toggle & IP Refresh
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(if (isGpsActive) StatusGreen.copy(alpha = 0.15f) else Color(0x10FFFFFF))
+                                            .clickable {
+                                                locationPermissionLauncher.launch(
+                                                    arrayOf(
+                                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                                        Manifest.permission.ACCESS_COARSE_LOCATION
+                                                    )
+                                                )
+                                            }
+                                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                                    ) {
+                                        Text(
+                                            text = if (isGpsActive) "GPS: ON" else "GPS",
+                                            color = if (isGpsActive) StatusGreen else theme.colors.textMuted,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Color(0x10FFFFFF))
+                                            .clickable { onRefreshIp() }
+                                            .padding(horizontal = 6.dp, vertical = 3.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Refresh,
+                                            contentDescription = "Refresh IP",
+                                            tint = theme.colors.textMuted,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // =========================================================================
-        // 2. Mathematically Symmetrical Speedometer Gauge with Post-Test AdMob Overlay
-        // =========================================================================
-        SpeedGauge(
-            speedValue = testState.liveSpeed,
-            progressFraction = testState.progressFraction,
-            speedUnit = speedUnit,
-            reducedMotion = reducedMotion,
-            isTesting = isRunning,
-            phase = testState.phase,
-            isVipAdFree = isVipAdFree,
-            onOpenVipModal = onOpenVipModal,
-            onToggleUnit = onToggleSpeedUnit,
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
+            // =========================================================================
+            // 2. 3D Speed Gauge Hero
+            // =========================================================================
+            SpeedGauge(
+                speedValue = testState.liveSpeed,
+                progressFraction = testState.progressFraction,
+                speedUnit = speedUnit,
+                reducedMotion = reducedMotion,
+                isTesting = isRunning,
+                phase = testState.phase,
+                isVipAdFree = isVipAdFree,
+                onOpenVipModal = onOpenVipModal,
+                onToggleUnit = onToggleSpeedUnit,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // =========================================================================
-        // 3. Symmetrical Dual Action Buttons
-        // =========================================================================
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            // Primary Test Button (Magenta Gradient)
-            val primaryButtonText = when {
-                isRunning -> if (language == Language.TH) "ยกเลิก" else "Cancel"
-                testState.phase == TestPhase.COMPLETED -> if (language == Language.TH) "ทดสอบอีกครั้ง" else "Test Again"
-                else -> if (language == Language.TH) "เริ่มทดสอบ" else "Start Test"
+            // Test Phase Status Banner
+            if (isRunning) {
+                Spacer(modifier = Modifier.height(6.dp))
+                val phaseMsg = when (testState.phase) {
+                    TestPhase.TESTING_PING -> if (isTh) "กำลังวัด Latency (HTTP RTT) ไปยังเซิร์ฟเวอร์..." else "Measuring HTTP Latency to Edge Node..."
+                    TestPhase.TESTING_DOWNLOAD -> if (isTh) "กำลังวัดความเร็วดาวน์โหลด (${testState.downloadSamples.size} ตัวอย่าง)..." else "Testing real download throughput..."
+                    TestPhase.TESTING_UPLOAD -> if (isTh) "กำลังวัดความเร็วอัปโหลด (${testState.uploadSamples.size} ตัวอย่าง)..." else "Testing real upload throughput..."
+                    else -> ""
+                }
+                Text(
+                    text = phaseMsg,
+                    color = ChampagneGold,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(vertical = 2.dp)
+                )
+            } else if (testState.phase == TestPhase.ERROR) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(vertical = 2.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ErrorOutline,
+                        contentDescription = null,
+                        tint = WinePink,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = testState.errorMessage ?: if (isTh) "ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่อีกครั้ง" else "Connection failed, please retry",
+                        color = WinePink,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
-            val primaryGradient = if (isRunning) {
-                Brush.horizontalGradient(listOf(Color(0xFFE53935), Color(0xFFD32F2F)))
-            } else {
-                Brush.horizontalGradient(listOf(Color(0xFFE91E63), Color(0xFFFF4081)))
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // =========================================================================
+            // 3. Full-Width Single Primary "Start Test" Button (Wine Pink #A83D65)
+            // =========================================================================
+            val primaryButtonText = when {
+                isRunning -> if (isTh) "ยกเลิกการทดสอบ" else "Cancel Test"
+                testState.phase == TestPhase.COMPLETED -> if (isTh) "เริ่มทดสอบอีกครั้ง" else "Test Again"
+                testState.phase == TestPhase.CANCELLED -> if (isTh) "เริ่มทดสอบใหม่" else "Start Test"
+                else -> if (isTh) "เริ่มทดสอบ" else "Start Test"
             }
 
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(primaryGradient)
+                    .fillMaxWidth()
+                    .height(54.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (isRunning) Color(0xFF8C2D4B) else WinePink)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = ripple(bounded = true, color = Color.White),
-                        onClick = { if (isRunning) onCancelTest() else onStartTest() }
+                        onClick = {
+                            if (isRunning) {
+                                onCancelTest()
+                            } else {
+                                if (isPrecisionMode) onStartPrecisionTest() else onStartTest()
+                            }
+                        }
                     )
                     .testTag("start_test_button"),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = primaryButtonText,
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 0.3.sp
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (isRunning) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            tint = TextWhite,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    } else if (testState.phase == TestPhase.COMPLETED) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = null,
+                            tint = TextWhite,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Speed,
+                            contentDescription = null,
+                            tint = TextWhite,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Text(
+                        text = primaryButtonText,
+                        color = TextWhite,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold, // 600
+                        letterSpacing = 0.2.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // =========================================================================
+            // 4. Precision Mode Small Switch with Explanation Directly Below Button
+            // =========================================================================
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                    Text(
+                        text = if (isTh) "โหมดความแม่นยำสูง (Precision Mode)" else "Precision Mode",
+                        color = theme.colors.textMain,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = if (isTh) {
+                            "เพิ่มขนาดข้อมูลและรอบทดสอบเพื่อวัด Throughput สูงสุด"
+                        } else {
+                            "Transfers larger payloads to verify peak capacity"
+                        },
+                        color = theme.colors.textMuted,
+                        fontSize = 11.sp,
+                        lineHeight = 15.sp
+                    )
+                }
+
+                Switch(
+                    checked = isPrecisionMode,
+                    onCheckedChange = { if (!isRunning) onTogglePrecisionMode() },
+                    enabled = !isRunning,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = ChampagneGold,
+                        uncheckedThumbColor = theme.colors.textMuted,
+                        uncheckedTrackColor = Color(0x1AFFFFFF)
+                    ),
+                    modifier = Modifier.testTag("precision_mode_switch")
                 )
             }
 
-            // Secondary Share / Precision Button (Cyan Accent)
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFF00FFD1).copy(alpha = 0.12f))
-                    .border(1.dp, Color(0xFF00FFD1).copy(alpha = 0.50f), RoundedCornerShape(14.dp))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(bounded = true, color = Color(0xFF00FFD1)),
-                        onClick = {
-                            if (testState.phase == TestPhase.COMPLETED) {
-                                handleInitiateShare()
-                            } else {
-                                onStartPrecisionTest()
-                            }
-                        }
-                    )
-                    .testTag("precision_or_share_button"),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // =========================================================================
+            // 5. Prominent Metrics Grid (Download & Upload prominent, Ping & Jitter next)
+            // =========================================================================
+            MetricsGrid(
+                testState = testState,
+                speedUnit = speedUnit,
+                language = language,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // =========================================================================
+            // 6. Share Result Action (If completed)
+            // =========================================================================
+            if (testState.phase == TestPhase.COMPLETED) {
+                Spacer(modifier = Modifier.height(14.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(ChampagneGold.copy(alpha = 0.12f))
+                        .border(1.dp, ChampagneGold.copy(alpha = 0.45f), RoundedCornerShape(14.dp))
+                        .clickable { handleInitiateShare() }
+                        .testTag("share_result_btn"),
+                    contentAlignment = Alignment.Center
                 ) {
-                    if (testState.phase == TestPhase.COMPLETED) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = "Share",
-                            tint = Color(0xFF00FFD1),
+                            tint = ChampagneGold,
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = if (language == Language.TH) "แชร์ข้อมูล" else "Share Report",
-                            color = Color(0xFF00FFD1),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.3.sp
-                        )
-                    } else {
-                        Text(
-                            text = if (language == Language.TH) "ดูผลละเอียด" else "Precision Mode",
-                            color = Color(0xFF00FFD1),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.3.sp
+                            text = if (isTh) "แชร์รายงานผลการทดสอบ" else "Share Speed Test Report",
+                            color = ChampagneGold,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
             }
+
+            // =========================================================================
+            // 7. Previous Result Card (Distinguished clearly when IDLE / CANCELLED)
+            // =========================================================================
+            if ((testState.phase == TestPhase.IDLE || testState.phase == TestPhase.CANCELLED) && previousResult != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                PreviousResultCard(
+                    record = previousResult,
+                    speedUnit = speedUnit,
+                    language = language,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // =========================================================================
+            // 8. Experience Assessment View
+            // =========================================================================
+            ExperienceAssessmentView(
+                testState = testState,
+                language = language,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // =========================================================================
+            // 9. AdMob Feed Banner View
+            // =========================================================================
+            AdMobBannerView(
+                isVipAdFree = isVipAdFree,
+                onRemoveAdsClick = onOpenVipModal,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Safe bottom margin for BottomNavBar
+            Spacer(modifier = Modifier.height(84.dp))
         }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // =========================================================================
-        // 4. Symmetrical 2x2 Connection Metrics Grid with Sparklines
-        // =========================================================================
-        MetricsGrid(
-            testState = testState,
-            speedUnit = speedUnit,
-            language = language,
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // =========================================================================
-        // 5. Symmetrical 2x2 Experience Assessment View (Browsing, Gaming, Video, Call)
-        // =========================================================================
-        ExperienceAssessmentView(
-            testState = testState,
-            language = language,
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // =========================================================================
-        // 6. AdMob Feed Banner View
-        // =========================================================================
-        AdMobBannerView(
-            isVipAdFree = isVipAdFree,
-            onRemoveAdsClick = onOpenVipModal,
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // =========================================================================
-        // 7. Clean Connection Info Card (Server, Ping, IP)
-        // =========================================================================
-        ConnectionInfoCard(
-            server = selectedServer,
-            ipInfo = ipInfo,
-            language = language,
-            onOpenServerModal = onOpenServerModal,
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
     }
 
-    // =========================================================================
-    // 8. 5-Second AdMob Interstitial Countdown Modal Before Sharing
-    // =========================================================================
+    // Modal Overlays
     if (showShareAdCountdownModal) {
         ShareAdCountdownModal(
             language = language,
@@ -441,25 +641,200 @@ fun HomeScreen(
         )
     }
 
-    // =========================================================================
-    // 9. Detailed Share Report Modal
-    // =========================================================================
     if (showShareDetailModal) {
         ShareDetailModal(
             reportData = ShareReportData(
-                downloadMbps = testState.downloadMbps ?: testState.liveSpeed.coerceAtLeast(10.0),
-                uploadMbps = testState.uploadMbps ?: (testState.liveSpeed * 0.4).coerceAtLeast(5.0),
+                downloadMbps = testState.downloadMbps ?: 0.0,
+                uploadMbps = testState.uploadMbps ?: 0.0,
                 pingMs = testState.pingMs ?: selectedServer.basePingMs,
                 jitterMs = testState.jitterMs ?: 2,
-                packetLossPercent = testState.packetLossPercent ?: 0.0,
+                packetLossPercent = 0.0,
                 serverName = selectedServer.name,
-                networkType = "WiFi 5GHz",
-                publicIp = ipInfo.publicIp,
-                ispName = ipInfo.ispName
+                networkType = if (isPrecisionMode) "Precision Anycast" else "Standard Anycast",
+                publicIp = ipInfo.publicIp ?: "--",
+                ispName = ipInfo.ispName ?: "--"
             ),
             speedUnit = speedUnit,
             language = language,
             onDismiss = { showShareDetailModal = false }
         )
+    }
+}
+
+/**
+ * Previous Test Result Card
+ */
+@Composable
+private fun PreviousResultCard(
+    record: SpeedTestRecord,
+    speedUnit: SpeedUnit,
+    language: Language,
+    modifier: Modifier = Modifier
+) {
+    val theme = LocalAppTheme.current
+    val isTh = language == Language.TH
+
+    val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
+    val formattedDate = remember(record.timestamp) { dateFormat.format(Date(record.timestamp)) }
+
+    val dlDisplay = if (speedUnit == SpeedUnit.MB_S) record.downloadMbps / 8.0 else record.downloadMbps
+    val ulDisplay = if (speedUnit == SpeedUnit.MB_S) record.uploadMbps / 8.0 else record.uploadMbps
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(theme.colors.cardBg)
+            .border(1.dp, theme.colors.border, RoundedCornerShape(20.dp))
+            .padding(14.dp)
+            .testTag("previous_result_card")
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = null,
+                        tint = ChampagneGold,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Text(
+                        text = if (isTh) "ผลการทดสอบล่าสุด (ครั้งก่อนหน้า)" else "Previous Test Result",
+                        color = theme.colors.textMain,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Text(
+                    text = formattedDate,
+                    color = theme.colors.textMuted,
+                    fontSize = 11.sp
+                )
+            }
+
+            Text(
+                text = if (isTh) {
+                    "บันทึกครั้งก่อน • เซิร์ฟเวอร์: ${record.serverName}"
+                } else {
+                    "Last run • Server: ${record.serverName}"
+                },
+                color = theme.colors.textMuted.copy(alpha = 0.75f),
+                fontSize = 10.5.sp,
+                modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
+            )
+
+            // 4 Metrics Mini Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowDownward,
+                            contentDescription = null,
+                            tint = ChampagneGold,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            text = if (isTh) "ดาวน์โหลด" else "Down",
+                            color = theme.colors.textMuted,
+                            fontSize = 10.sp
+                        )
+                    }
+                    Text(
+                        text = String.format(Locale.US, "%.1f %s", dlDisplay, speedUnit.label),
+                        color = theme.colors.textMain,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowUpward,
+                            contentDescription = null,
+                            tint = WinePink,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            text = if (isTh) "อัปโหลด" else "Up",
+                            color = theme.colors.textMuted,
+                            fontSize = 10.sp
+                        )
+                    }
+                    Text(
+                        text = String.format(Locale.US, "%.1f %s", ulDisplay, speedUnit.label),
+                        color = theme.colors.textMain,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Speed,
+                            contentDescription = null,
+                            tint = ChampagneGold,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            text = "Latency",
+                            color = theme.colors.textMuted,
+                            fontSize = 10.sp
+                        )
+                    }
+                    Text(
+                        text = "${record.pingMs} ms",
+                        color = theme.colors.textMain,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Timeline,
+                            contentDescription = null,
+                            tint = theme.colors.textMuted,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            text = "Jitter",
+                            color = theme.colors.textMuted,
+                            fontSize = 10.sp
+                        )
+                    }
+                    Text(
+                        text = "${record.jitterMs} ms",
+                        color = theme.colors.textMain,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
     }
 }

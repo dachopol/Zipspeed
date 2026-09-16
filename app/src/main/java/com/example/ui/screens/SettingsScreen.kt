@@ -20,11 +20,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.QuestionAnswer
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Icon
@@ -32,8 +35,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import com.example.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,20 +44,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.model.Language
 import com.example.model.ServerInfo
 import com.example.model.SpeedUnit
 import com.example.ui.components.verticalScrollbar
-import com.example.ui.theme.CyberInk
-import com.example.ui.theme.CyberMuted
-import com.example.ui.theme.CyberPanel
-import com.example.ui.theme.CyberSubtle
-import com.example.ui.theme.NeonBlue
-import com.example.ui.theme.NeonGreen
-import com.example.ui.theme.NeonPurple
+import com.example.ui.theme.ChampagneGold
+import com.example.ui.theme.LocalAppTheme
+import com.example.ui.theme.StatusGreen
+import com.example.ui.theme.WinePink
 
 @Composable
 fun SettingsScreen(
@@ -72,37 +72,46 @@ fun SettingsScreen(
     onToggleAutoSave: () -> Unit,
     onToggleReducedMotion: () -> Unit,
     onToggleBatterySaver: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isDarkTheme: Boolean = true,
+    isSecurityShieldActive: Boolean = true,
+    onToggleDarkLight: () -> Unit = {},
+    onToggleSecurityShield: (Boolean) -> Unit = {},
+    onOpenSecurityModal: () -> Unit = {}
 ) {
+    val theme = LocalAppTheme.current
     val scrollState = rememberScrollState()
     var expandedFaqIndex by remember { mutableStateOf<Int?>(null) }
     var showFeedbackNotice by remember { mutableStateOf(false) }
+    val isTh = language == Language.TH
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
             .verticalScrollbar(scrollState)
-            .padding(horizontal = 14.dp, vertical = 4.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .testTag("settings_screen")
     ) {
         Text(
-            text = stringResource(R.string.str_settings_support_95),
-            color = CyberInk,
+            text = if (isTh) "การตั้งค่าและความช่วยเหลือ" else "Settings & Support",
+            color = theme.colors.textMain,
             fontSize = 20.sp,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = FontWeight.SemiBold, // 600
             modifier = Modifier.testTag("settings_title")
         )
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Settings Section 1: General Preferences (การตั้งค่าทั่วไป)
+        // =========================================================================
+        // Section 1: Display & Preferences (ธีม, ภาษา, หน่วยความเร็ว)
+        // =========================================================================
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(18.dp))
-                .background(CyberPanel)
-                .border(1.dp, Color(0x17FFFFFF), RoundedCornerShape(18.dp))
+                .clip(RoundedCornerShape(20.dp))
+                .background(theme.colors.cardBg)
+                .border(1.dp, theme.colors.border, RoundedCornerShape(20.dp))
                 .padding(16.dp)
         ) {
             Row(
@@ -112,42 +121,79 @@ fun SettingsScreen(
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = null,
-                    tint = NeonBlue,
+                    tint = ChampagneGold,
                     modifier = Modifier.size(18.dp)
                 )
                 Text(
-                    text = stringResource(R.string.str_general_preferences_96),
-                    color = CyberMuted,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 0.8.sp
+                    text = if (isTh) "การแสดงผล & ภาษา" else "Display & Language",
+                    color = theme.colors.textMuted,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Language setting
+            // Dark / Light Theme Toggle (Moved from Top Header)
             SettingsRow(
-                title = stringResource(R.string.str_app_language_97),
-                subtitle = stringResource(R.string.str_english_thai_98),
+                title = if (isTh) "โหมดธีม" else "Theme Appearance",
+                subtitle = if (isDarkTheme) (if (isTh) "โหมดมืด (Navy Dark)" else "Deep Navy Dark") else (if (isTh) "โหมดสว่าง (Ivory Light)" else "Ivory Light"),
+                trailing = {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (theme.isDark) Color(0x1AFFFFFF) else Color(0xFFF1F5F9))
+                            .border(1.dp, theme.colors.border, RoundedCornerShape(10.dp))
+                            .clickable { onToggleDarkLight() }
+                            .padding(horizontal = 12.dp, vertical = 7.dp)
+                            .testTag("theme_toggle_btn")
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                contentDescription = null,
+                                tint = ChampagneGold,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = if (isDarkTheme) (if (isTh) "เปลี่ยนเป็นสว่าง" else "Light") else (if (isTh) "เปลี่ยนเป็นมืด" else "Dark"),
+                                color = theme.colors.textMain,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Language setting (Moved from Top Header)
+            SettingsRow(
+                title = if (isTh) "ภาษาของแอป" else "App Language",
+                subtitle = if (isTh) "ไทย / English" else "English / Thai",
                 trailing = {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Language.entries.forEach { lang ->
                             val active = lang == language
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(if (active) NeonBlue else Color(0x1AFFFFFF))
+                                    .background(if (active) ChampagneGold else Color(0x12FFFFFF))
                                     .clickable { onLanguageChange(lang) }
                                     .padding(horizontal = 10.dp, vertical = 6.dp)
                             ) {
                                 Text(
                                     text = lang.displayName,
-                                    color = if (active) Color.White else CyberMuted,
+                                    color = if (active) Color(0xFF0B1120) else theme.colors.textMuted,
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.SemiBold
                                 )
                             }
                         }
@@ -157,61 +203,132 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Unit setting
+            // Speed Unit setting
             SettingsRow(
-                title = stringResource(R.string.str_speed_unit_99),
-                subtitle = stringResource(R.string.str_mbps_or_mb_s_100),
+                title = if (isTh) "หน่วยความเร็ว" else "Speed Unit",
+                subtitle = if (isTh) "เมกะบิต/วินาที หรือ เมกะไบต์/วินาที" else "Mbps or MB/s",
                 trailing = {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         SpeedUnit.entries.forEach { unit ->
                             val active = unit == speedUnit
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(if (active) NeonGreen else Color(0x1AFFFFFF))
+                                    .background(if (active) ChampagneGold else Color(0x12FFFFFF))
                                     .clickable { onSpeedUnitChange(unit) }
                                     .padding(horizontal = 10.dp, vertical = 6.dp)
                             ) {
                                 Text(
                                     text = unit.label,
-                                    color = if (active) Color(0xFF071510) else CyberMuted,
+                                    color = if (active) Color(0xFF0B1120) else theme.colors.textMuted,
                                     fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.SemiBold
                                 )
                             }
                         }
                     }
                 }
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Server Selection row
-            SettingsRow(
-                title = stringResource(R.string.str_test_server_101),
-                subtitle = "${selectedServer.name} (${selectedServer.basePingMs}ms)",
-                onClick = onOpenServerModal,
-                trailing = {
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = "Select Server",
-                        tint = CyberMuted
-                    )
-                }
-            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Settings Section 2: Advanced Options & System (ตัวเลือกเพิ่มเติม)
+        // =========================================================================
+        // Section 2: Security & Privacy (ย้าย Security จากแถบล่างมาไว้ที่นี่)
+        // =========================================================================
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(18.dp))
-                .background(CyberPanel)
-                .border(1.dp, Color(0x17FFFFFF), RoundedCornerShape(18.dp))
+                .clip(RoundedCornerShape(20.dp))
+                .background(theme.colors.cardBg)
+                .border(1.dp, theme.colors.border, RoundedCornerShape(20.dp))
+                .padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Security,
+                    contentDescription = null,
+                    tint = if (isSecurityShieldActive) StatusGreen else theme.colors.textMuted,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = if (isTh) "ความปลอดภัย & ความเป็นส่วนตัว" else "Security & Privacy",
+                    color = theme.colors.textMuted,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Security Shield Switch
+            SettingsRow(
+                title = if (isTh) "ระบบตรวจสอบความปลอดภัย (Security Shield)" else "Security Shield Protection",
+                subtitle = if (isSecurityShieldActive) {
+                    if (isTh) "เปิดใช้งาน • ตรวจสอบ DNS Leak และเปิดพอร์ต" else "Active • DNS Leak & Port audit"
+                } else {
+                    if (isTh) "ปิดอยู่ • แตะเพื่อเปิดการตรวจสอบ" else "Inactive • Tap to enable"
+                },
+                trailing = {
+                    Switch(
+                        checked = isSecurityShieldActive,
+                        onCheckedChange = { onToggleSecurityShield(it) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = StatusGreen,
+                            uncheckedThumbColor = theme.colors.textMuted,
+                            uncheckedTrackColor = Color(0x1AFFFFFF)
+                        ),
+                        modifier = Modifier.testTag("security_shield_toggle")
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Security Audit Report Button
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0x0EFFFFFF))
+                    .clickable { onOpenSecurityModal() }
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = if (isTh) "ดูรายงานการประเมินความปลอดภัย" else "View Security Audit Report",
+                    color = ChampagneGold,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = ChampagneGold,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // =========================================================================
+        // Section 3: Performance & Network
+        // =========================================================================
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .background(theme.colors.cardBg)
+                .border(1.dp, theme.colors.border, RoundedCornerShape(20.dp))
                 .padding(16.dp)
         ) {
             Row(
@@ -221,32 +338,48 @@ fun SettingsScreen(
                 Icon(
                     imageVector = Icons.Default.Tune,
                     contentDescription = null,
-                    tint = NeonGreen,
+                    tint = ChampagneGold,
                     modifier = Modifier.size(18.dp)
                 )
                 Text(
-                    text = stringResource(R.string.str_performance_system_102),
-                    color = CyberMuted,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 0.8.sp
+                    text = if (isTh) "ประสิทธิภาพ & เซิร์ฟเวอร์" else "Performance & Server",
+                    color = theme.colors.textMuted,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Server Selection row
+            SettingsRow(
+                title = if (isTh) "เซิร์ฟเวอร์ทดสอบ" else "Test Server",
+                subtitle = "${selectedServer.name} (${selectedServer.basePingMs}ms)",
+                onClick = onOpenServerModal,
+                trailing = {
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = "Select Server",
+                        tint = theme.colors.textMuted
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Auto-Save Toggle
             SettingsRow(
-                title = stringResource(R.string.str_auto_save_history_103),
-                subtitle = stringResource(R.string.str_save_test_results_automaticall_104),
+                title = if (isTh) "บันทึกผลอัตโนมัติ" else "Auto-Save History",
+                subtitle = if (isTh) "บันทึกประวัติทุกครั้งที่ทดสอบเสร็จ" else "Save test results automatically",
                 trailing = {
                     Switch(
                         checked = autoSaveHistory,
                         onCheckedChange = { onToggleAutoSave() },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
-                            checkedTrackColor = NeonBlue,
-                            uncheckedThumbColor = CyberMuted,
+                            checkedTrackColor = ChampagneGold,
+                            uncheckedThumbColor = theme.colors.textMuted,
                             uncheckedTrackColor = Color(0x1AFFFFFF)
                         ),
                         modifier = Modifier.testTag("auto_save_toggle")
@@ -258,16 +391,16 @@ fun SettingsScreen(
 
             // Reduced Motion Toggle
             SettingsRow(
-                title = stringResource(R.string.str_reduced_motion_105),
-                subtitle = stringResource(R.string.str_disable_gauge_rotation_visual__106),
+                title = if (isTh) "ลดการเคลื่อนไหว (Reduced Motion)" else "Reduced Motion",
+                subtitle = if (isTh) "ลดอนิเมชันเพื่อประหยัดแบตเตอรี่และสายตา" else "Simplify animations",
                 trailing = {
                     Switch(
                         checked = reducedMotion,
                         onCheckedChange = { onToggleReducedMotion() },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
-                            checkedTrackColor = NeonPurple,
-                            uncheckedThumbColor = CyberMuted,
+                            checkedTrackColor = ChampagneGold,
+                            uncheckedThumbColor = theme.colors.textMuted,
                             uncheckedTrackColor = Color(0x1AFFFFFF)
                         ),
                         modifier = Modifier.testTag("reduced_motion_toggle")
@@ -279,16 +412,16 @@ fun SettingsScreen(
 
             // Battery Saver Mode Toggle
             SettingsRow(
-                title = stringResource(R.string.str_battery_saver_mode_107),
-                subtitle = stringResource(R.string.str_reduce_battery_drain_during_hi_108),
+                title = if (isTh) "โหมดประหยัดพลังงาน" else "Battery Saver Mode",
+                subtitle = if (isTh) "ลดความถี่การอัปเดตกราฟระหว่างทดสอบ" else "Lower visual refresh rate during test",
                 trailing = {
                     Switch(
                         checked = batterySaver,
                         onCheckedChange = { onToggleBatterySaver() },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
-                            checkedTrackColor = NeonGreen,
-                            uncheckedThumbColor = CyberMuted,
+                            checkedTrackColor = ChampagneGold,
+                            uncheckedThumbColor = theme.colors.textMuted,
                             uncheckedTrackColor = Color(0x1AFFFFFF)
                         ),
                         modifier = Modifier.testTag("battery_saver_toggle")
@@ -299,13 +432,15 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Settings Section 3: Support & FAQ (การสนับสนุน & ช่วยเหลือ)
+        // =========================================================================
+        // Section 4: Support & FAQ
+        // =========================================================================
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(18.dp))
-                .background(CyberPanel)
-                .border(1.dp, Color(0x17FFFFFF), RoundedCornerShape(18.dp))
+                .clip(RoundedCornerShape(20.dp))
+                .background(theme.colors.cardBg)
+                .border(1.dp, theme.colors.border, RoundedCornerShape(20.dp))
                 .padding(16.dp)
         ) {
             Row(
@@ -315,21 +450,21 @@ fun SettingsScreen(
                 Icon(
                     imageVector = Icons.Default.HelpOutline,
                     contentDescription = null,
-                    tint = NeonBlue,
+                    tint = ChampagneGold,
                     modifier = Modifier.size(18.dp)
                 )
                 Text(
-                    text = stringResource(R.string.str_frequently_asked_questions_109),
-                    color = CyberMuted,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 0.8.sp
+                    text = if (isTh) "คำถามที่พบบ่อย & ช่วยเหลือ" else "Frequently Asked Questions",
+                    color = theme.colors.textMuted,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp
                 )
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            val faqs = if (language == Language.TH) {
+            val faqs = if (isTh) {
                 listOf(
                     "การทดสอบวัดจากเซิร์ฟเวอร์จริงหรือไม่?" to
                             "ใช่แล้ว แอปพลิเคชันเชื่อมต่อไปยัง Cloudflare CDN Edge nodes จริง โดยวัดความเร็วการรับส่งข้อมูลผ่าน HTTP Streaming จริง 100%",
@@ -372,21 +507,21 @@ fun SettingsScreen(
                             Icon(
                                 imageVector = Icons.Default.QuestionAnswer,
                                 contentDescription = null,
-                                tint = NeonBlue,
+                                tint = ChampagneGold,
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
                                 text = q,
-                                color = CyberInk,
+                                color = theme.colors.textMain,
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Medium
                             )
                         }
                         Icon(
                             imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                             contentDescription = if (isExpanded) "Collapse" else "Expand",
-                            tint = CyberMuted,
-                            modifier = Modifier.size(20.dp)
+                            tint = theme.colors.textMuted,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
 
@@ -395,7 +530,7 @@ fun SettingsScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = a,
-                                color = CyberSubtle,
+                                color = theme.colors.textMuted,
                                 fontSize = 12.sp,
                                 lineHeight = 18.sp
                             )
@@ -415,7 +550,7 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0x10FFFFFF))
+                    .background(Color(0x0EFFFFFF))
                     .clickable { showFeedbackNotice = true }
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -428,61 +563,63 @@ fun SettingsScreen(
                     Icon(
                         imageVector = Icons.Default.Email,
                         contentDescription = null,
-                        tint = NeonBlue,
+                        tint = ChampagneGold,
                         modifier = Modifier.size(18.dp)
                     )
                     Column {
                         Text(
-                            text = stringResource(R.string.str_contact_support_feedback_110),
-                            color = NeonBlue,
+                            text = if (isTh) "ติดต่อผู้พัฒนา / แจ้งปัญหา" else "Contact Support / Feedback",
+                            color = ChampagneGold,
                             fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Medium
                         )
                         Text(
                             text = "support@zipspeed.app",
-                            color = CyberMuted,
+                            color = theme.colors.textMuted,
                             fontSize = 11.sp
                         )
                     }
                 }
                 Text(
-                    text = if (showFeedbackNotice) "ส่งแล้ว" else "ติดต่อ",
-                    color = NeonGreen,
+                    text = if (showFeedbackNotice) (if (isTh) "บันทึกแล้ว" else "Sent") else (if (isTh) "ติดต่อ" else "Contact"),
+                    color = StatusGreen,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // App Version Info Card
+        // =========================================================================
+        // Section 5: App Version & Attribution
+        // =========================================================================
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .background(CyberPanel)
-                .border(1.dp, Color(0x17FFFFFF), RoundedCornerShape(16.dp))
+                .background(theme.colors.cardBg)
+                .border(1.dp, theme.colors.border, RoundedCornerShape(16.dp))
                 .padding(vertical = 14.dp, horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Zipspeed Network Speedtest",
-                color = CyberInk,
+                text = "Zipspeed by AnakinYoo",
+                color = theme.colors.textMain,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(3.dp))
             Text(
-                text = stringResource(R.string.str_version_v_com_example_buildcon_111, com.example.BuildConfig.VERSION_NAME, com.example.BuildConfig.VERSION_CODE),
-                color = NeonGreen,
+                text = "Version ${com.example.BuildConfig.VERSION_NAME} (Build ${com.example.BuildConfig.VERSION_CODE})",
+                color = ChampagneGold,
                 fontSize = 12.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Normal,
                 modifier = Modifier.testTag("settings_version_info")
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
@@ -493,6 +630,8 @@ private fun SettingsRow(
     onClick: (() -> Unit)? = null,
     trailing: @Composable () -> Unit
 ) {
+    val theme = LocalAppTheme.current
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -500,18 +639,19 @@ private fun SettingsRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
             Text(
                 text = title,
-                color = CyberInk,
+                color = theme.colors.textMain,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = subtitle,
-                color = CyberMuted,
-                fontSize = 12.sp
+                color = theme.colors.textMuted,
+                fontSize = 12.sp,
+                lineHeight = 16.sp
             )
         }
         trailing()

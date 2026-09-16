@@ -6,6 +6,7 @@ enum class TestPhase {
     TESTING_DOWNLOAD,
     TESTING_UPLOAD,
     COMPLETED,
+    CANCELLED,
     ERROR
 }
 
@@ -36,5 +37,15 @@ data class SpeedTestState(
     val uploadLatencyMs: Int? = null,
     val downloadMbps: Double? = null,
     val uploadMbps: Double? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val downloadSamples: List<Double> = emptyList(),
+    val uploadSamples: List<Double> = emptyList(),
+    val detectedColo: String? = null,
+    val detectedClientIp: String? = null,
+    val detectedAsn: String? = null,
+    val warningMessage: String? = null,
+    val bytesDownloaded: Long = 0L,
+    val bytesUploaded: Long = 0L,
+    val testDurationMs: Long = 0L,
+    val isPrecisionMode: Boolean = false
 )

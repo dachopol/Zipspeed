@@ -32,8 +32,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import com.example.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,17 +41,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.model.DEFAULT_SERVERS
 import com.example.model.Language
 import com.example.model.ServerInfo
-import com.example.ui.theme.CyberInk
-import com.example.ui.theme.CyberMuted
-import com.example.ui.theme.CyberPanel
-import com.example.ui.theme.NeonBlue
-import com.example.ui.theme.NeonGreen
+import com.example.ui.theme.ChampagneGold
+import com.example.ui.theme.DarkCard
+import com.example.ui.theme.ElevatedSurface
+import com.example.ui.theme.StatusGreen
+import com.example.ui.theme.TextMuted
+import com.example.ui.theme.TextWhite
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,6 +66,7 @@ fun ServerSelectionModal(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var searchQuery by remember { mutableStateOf("") }
+    val isTh = language == Language.TH
 
     val filteredServers = remember(searchQuery) {
         if (searchQuery.isBlank()) {
@@ -81,13 +83,13 @@ fun ServerSelectionModal(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color(0xFF141320),
-        scrimColor = Color(0x99000000)
+        containerColor = DarkCard,
+        scrimColor = Color(0xB3000000)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 22.dp, vertical = 8.dp)
+                .padding(horizontal = 20.dp, vertical = 8.dp)
                 .testTag("server_selection_modal")
         ) {
             Row(
@@ -97,15 +99,16 @@ fun ServerSelectionModal(
             ) {
                 Column {
                     Text(
-                        text = stringResource(R.string.str_manual_server_selection_48),
-                        color = CyberInk,
+                        text = if (isTh) "เลือกเซิร์ฟเวอร์ทดสอบ" else "Select Test Server",
+                        color = TextWhite,
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.SemiBold // 600
                     )
                     Text(
-                        text = stringResource(R.string.str_choose_a_test_location_or_let__49),
-                        color = CyberMuted,
-                        fontSize = 12.sp
+                        text = if (isTh) "เลือกเซิร์ฟเวอร์ Edge ที่ใกล้คุณที่สุด" else "Choose an Edge server near your location",
+                        color = TextMuted,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Normal // 400
                     )
                 }
 
@@ -113,7 +116,7 @@ fun ServerSelectionModal(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close",
-                        tint = CyberMuted
+                        tint = TextMuted
                     )
                 }
             }
@@ -135,8 +138,8 @@ fun ServerSelectionModal(
                 onValueChange = { searchQuery = it },
                 placeholder = {
                     Text(
-                        text = stringResource(R.string.str_search_server_city_or_country_50),
-                        color = CyberMuted,
+                        text = if (isTh) "ค้นหาตามชื่อเมือง หรือประเทศ..." else "Search city or country...",
+                        color = TextMuted,
                         fontSize = 13.sp
                     )
                 },
@@ -144,7 +147,7 @@ fun ServerSelectionModal(
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
-                        tint = CyberMuted,
+                        tint = TextMuted,
                         modifier = Modifier.size(18.dp)
                     )
                 },
@@ -154,7 +157,7 @@ fun ServerSelectionModal(
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Clear Search",
-                                tint = CyberMuted,
+                                tint = TextMuted,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -162,12 +165,12 @@ fun ServerSelectionModal(
                 },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = CyberPanel,
-                    unfocusedContainerColor = CyberPanel,
-                    focusedBorderColor = NeonBlue,
+                    focusedContainerColor = ElevatedSurface,
+                    unfocusedContainerColor = ElevatedSurface,
+                    focusedBorderColor = ChampagneGold,
                     unfocusedBorderColor = Color(0x22FFFFFF),
-                    focusedTextColor = CyberInk,
-                    unfocusedTextColor = CyberInk
+                    focusedTextColor = TextWhite,
+                    unfocusedTextColor = TextWhite
                 ),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
@@ -186,8 +189,8 @@ fun ServerSelectionModal(
                 items(filteredServers, key = { it.id }) { server ->
                     val isSelected = server.id == selectedServer.id
                     val isAuto = server.id == "auto_best"
-                    val cardBg = if (isSelected) Color(0x242F7BFF) else CyberPanel
-                    val borderCol = if (isSelected) NeonBlue else Color(0x17FFFFFF)
+                    val cardBg = if (isSelected) ChampagneGold.copy(alpha = 0.14f) else ElevatedSurface
+                    val borderCol = if (isSelected) ChampagneGold else Color(0x18FFFFFF)
 
                     Row(
                         modifier = Modifier
@@ -212,8 +215,8 @@ fun ServerSelectionModal(
                                     .clip(CircleShape)
                                     .background(
                                         when {
-                                            isSelected -> NeonBlue
-                                            isAuto -> Color(0x228B7CFF)
+                                            isSelected -> ChampagneGold
+                                            isAuto -> ChampagneGold.copy(alpha = 0.20f)
                                             else -> Color(0x1AFFFFFF)
                                         }
                                     ),
@@ -222,7 +225,7 @@ fun ServerSelectionModal(
                                 Icon(
                                     imageVector = if (isAuto) Icons.Default.AutoAwesome else Icons.Default.Dns,
                                     contentDescription = null,
-                                    tint = if (isSelected) Color.White else if (isAuto) Color(0xFFB8A9FF) else CyberMuted,
+                                    tint = if (isSelected) Color(0xFF0B1120) else if (isAuto) ChampagneGold else TextMuted,
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
@@ -234,27 +237,28 @@ fun ServerSelectionModal(
                                 ) {
                                     Text(
                                         text = server.name,
-                                        color = CyberInk,
+                                        color = TextWhite,
                                         fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Medium
                                     )
                                     if (isAuto) {
                                         Text(
                                             text = "AUTO",
-                                            color = Color(0xFFB8A9FF),
+                                            color = ChampagneGold,
                                             fontSize = 9.sp,
-                                            fontWeight = FontWeight.ExtraBold,
+                                            fontWeight = FontWeight.SemiBold,
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(4.dp))
-                                                .background(Color(0x338B7CFF))
+                                                .background(ChampagneGold.copy(alpha = 0.22f))
                                                 .padding(horizontal = 5.dp, vertical = 2.dp)
                                         )
                                     }
                                 }
                                 Text(
                                     text = server.location,
-                                    color = CyberMuted,
-                                    fontSize = 12.sp
+                                    color = TextMuted,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Normal
                                 )
                             }
                         }
@@ -265,15 +269,15 @@ fun ServerSelectionModal(
                         ) {
                             Text(
                                 text = if (isAuto) "Best" else "${server.basePingMs}ms",
-                                color = NeonGreen,
+                                color = StatusGreen,
                                 fontSize = 13.sp,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.SemiBold
                             )
                             if (isSelected) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = "Selected",
-                                    tint = NeonGreen,
+                                    tint = StatusGreen,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }

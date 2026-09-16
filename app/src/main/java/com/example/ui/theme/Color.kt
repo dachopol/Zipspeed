@@ -2,39 +2,46 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// =========================================================================
+// Zipspeed by AnakinYoo - Refined Premium Palette
+// =========================================================================
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Dark Mode Palette
+val DeepNavy = Color(0xFF0B1120)        // Main Background #0B1120
+val DarkCard = Color(0xFF141E30)        // Card Background #141E30
+val ElevatedSurface = Color(0xFF1B2940) // Elevated Surface #1B2940
+val ChampagneGold = Color(0xFFD6BC8A)   // Champagne Accent #D6BC8A
+val ChampagneLight = Color(0xFFEAD9B8)  // Champagne Highlight
+val ChampagneDark = Color(0xFF8C7348)   // Champagne Shadow/Bronze
+val TextWhite = Color(0xFFF2F4F8)       // Primary Text #F2F4F8
+val TextMuted = Color(0xFFA7B3C6)       // Secondary Text #A7B3C6
+val WinePink = Color(0xFFA83D65)        // Primary Button #A83D65
+val StatusGreen = Color(0xFF2ECC71)     // Connected/Success Only #2ECC71
 
-// Zipspeed UI Palette (Refined)
-val CyberInk = Color(0xFFFFFFFF)      // Deep Background
-val CyberPanel = Color(0xFF1E293B)    // Slightly lighter panels
-val CyberMuted = Color(0xB3FFFFFF)    // Subtitle text
+// Light Mode Palette
+val IvoryBg = Color(0xFFF5F3EF)         // Ivory Light Background #F5F3EF
+val LightCard = Color(0xFFFFFFFF)       // White Card
+val LightElevated = Color(0xFFEDEAE3)   // Light Elevated Surface #EDEAE3
+val LightTextMain = Color(0xFF0B1120)   // Deep Navy Text in Light Mode
+val LightTextMuted = Color(0xFF64748B)  // Slate Muted Text
+val ChampagneBronze = Color(0xFF96783C) // High-contrast Champagne for Light Mode
 
-// Accents
-val NeonBlue = Color(0xFF3B82F6)      // Ping / Download Primary
-val NeonBlueLight = Color(0xFF93C5FD) // Gradient / Hover
-val NeonGreen = Color(0xFF10B981)     // Good connection / Download
-val NeonRose = Color(0xFFF43F5E)      // Error / Cancel
-val NeonPurple = Color(0xFF8B5CF6)    // Upload / Highlight
+// Legacy compatibility aliases to avoid breaking other files
+val CyberInk = TextWhite
+val CyberPanel = DarkCard
+val CyberMuted = TextMuted
+val CyberSubtle = Color(0xFF475569)
+val CyberLine = Color(0x1FFFFFFF)
+val CyberLineActive = ChampagneGold
+val CyberBg = DeepNavy
+val CyberSurface = DarkCard
+val CyberBgGradStart = DeepNavy
+val CyberBgGradEnd = Color(0xFF060B14)
 
-// Base Colors
-val ZipspeedDark = Color(0xFF0C101A)
-val ZipspeedPanel = Color(0xFF141629)
-val ZipspeedTextPrimary = Color(0xFFFFFFFF)
-val ZipspeedTextSecondary = Color(0xB3FFFFFF)
-
-// Colors restored for compatibility
-val GoldPro = Color(0xFFFFD700)
-val NeonAmber = Color(0xFFFF8F00)
-val CyberBg = Color(0xFF0C101A)
-val CyberSurface = Color(0xFF161B22)
-val CyberSubtle = Color(0xFF1E232F)
-val CyberLine = Color(0xFF2B303B)
-val CyberLineActive = Color(0xFF4A5568)
-val CyberBgGradStart = Color(0xFF10142A)
-val CyberBgGradEnd = Color(0xFF070912)
+val NeonBlue = ChampagneGold
+val NeonBlueLight = ChampagneLight
+val NeonGreen = StatusGreen
+val NeonRose = WinePink
+val NeonPurple = ChampagneGold
+val GoldPro = ChampagneGold
+val NeonAmber = Color(0xFFE5A93C)

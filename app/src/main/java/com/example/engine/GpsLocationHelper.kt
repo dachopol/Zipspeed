@@ -14,13 +14,12 @@ import java.util.Locale
 import kotlin.coroutines.resume
 
 data class GpsLocationData(
-    val latitude: Double = 13.5475,
-    val longitude: Double = 100.2744,
-    val accuracyMeters: Float = 8.5f,
-    val regionTag: String = "Samut Sakhon (12km) • 10ms",
-    val province: String = "สมุทรสาคร",
-    val isRealGps: Boolean = false,
-    val speedTag: String = "AIS Fibre Thailand • Node BKK-West"
+    val latitude: Double,
+    val longitude: Double,
+    val accuracyMeters: Float,
+    val regionTag: String,
+    val province: String,
+    val isRealGps: Boolean = true
 )
 
 class GpsLocationHelper(private val context: Context) {
@@ -40,30 +39,20 @@ class GpsLocationHelper(private val context: Context) {
         return fine || coarse
     }
 
-    private fun defaultFallbackLocation(): GpsLocationData = GpsLocationData(
-        latitude = 13.5475,
-        longitude = 100.2744,
-        accuracyMeters = 12.0f,
-        regionTag = "Samut Sakhon (12km) • 10ms",
-        province = "สมุทรสาคร",
-        isRealGps = true,
-        speedTag = "AIS Fibre Thailand • Samut Sakhon Hub"
-    )
-
     suspend fun getCurrentLocation(): GpsLocationData? {
         if (!hasLocationPermission()) return null
 
         return try {
-            kotlinx.coroutines.withTimeoutOrNull(2500L) {
+            kotlinx.coroutines.withTimeoutOrNull(3000L) {
                 val location = fetchFusedLocation()
                 if (location != null) {
                     mapLocationToRegion(location, isReal = true)
                 } else {
-                    defaultFallbackLocation()
+                    null
                 }
-            } ?: defaultFallbackLocation()
+            }
         } catch (_: Exception) {
-            defaultFallbackLocation()
+            null
         }
     }
 
@@ -71,13 +60,12 @@ class GpsLocationHelper(private val context: Context) {
     private suspend fun fetchFusedLocation(): Location? = suspendCancellableCoroutine { continuation ->
         try {
             val cts = CancellationTokenSource()
-            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.token)
+            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, cts.token)
                 .addOnSuccessListener { loc ->
                     if (continuation.isActive) {
                         if (loc != null) {
                             continuation.resume(loc)
                         } else {
-                            // Try last location if current timed out
                             fusedLocationClient.lastLocation.addOnSuccessListener { lastLoc ->
                                 if (continuation.isActive) continuation.resume(lastLoc)
                             }.addOnFailureListener {
@@ -103,58 +91,19 @@ class GpsLocationHelper(private val context: Context) {
         val lon = loc.longitude
         val acc = loc.accuracy
 
-        // Determine Thailand region / province by coordinate bounds
-        val (province, regionTag, speedTag) = when {
-            // Samut Sakhon / West vicinity
-            lat in 13.4..13.7 && lon in 100.1..100.4 -> Triple(
-                "สมุทรสาคร",
-                "Samut Sakhon (12km) • 10ms",
-                "AIS Fibre Thailand • Samut Sakhon Sub-station"
-            )
-            // Bangkok Central
-            lat in 13.6..13.9 && lon in 100.4..100.7 -> Triple(
-                "กรุงเทพมหานคร",
-                "Bangkok Metro (5km) • 7ms",
-                "AIS Fibre / True 5G • Bang Rak Exchange"
-            )
-            // Nonthaburi / Pathum Thani (North BKK)
-            lat in 13.8..14.1 && lon in 100.3..100.7 -> Triple(
-                "นนทบุรี / ปทุมธานี",
-                "Nonthaburi Gateway (8km) • 9ms",
-                "AIS Fibre • Chaengwattana Node"
-            )
-            // Samut Prakan / East BKK
-            lat in 13.4..13.7 && lon in 100.5..100.9 -> Triple(
-                "สมุทรปราการ",
-                "Samut Prakan (14km) • 11ms",
-                "True Online / AIS • Bangna Core"
-            )
-            // Chonburi / Pattaya
-            lat in 12.8..13.4 && lon in 100.8..101.2 -> Triple(
-                "ชลบุรี / พัทยา",
-                "Chonburi East Gate (22km) • 14ms",
-                "3BB / AIS Fibre • EEC Fiber Node"
-            )
-            // Chiang Mai / Northern
-            lat in 18.5..19.2 && lon in 98.8..99.3 -> Triple(
-                "เชียงใหม่",
-                "Chiang Mai Hub (18km) • 16ms",
-                "NT Broadband / AIS • North Ring"
-            )
-            // Khon Kaen / Isan
-            lat in 16.0..16.8 && lon in 102.5..103.2 -> Triple(
-                "ขอนแก่น",
-                "Khon Kaen Regional (20km) • 18ms",
-                "True / AIS • Isan Core"
-            )
+        val (province, regionTag) = when {
+            lat in 13.4..13.7 && lon in 100.1..100.4 -> Pair("สมุทรสาคร", "สมุทรสาคร (GPS จริง)")
+            lat in 13.6..13.9 && lon in 100.4..100.7 -> Pair("กรุงเทพมหานคร", "กรุงเทพฯ (GPS จริง)")
+            lat in 13.8..14.1 && lon in 100.3..100.7 -> Pair("นนทบุรี / ปทุมธานี", "นนทบุรี (GPS จริง)")
+            lat in 13.4..13.7 && lon in 100.5..100.9 -> Pair("สมุทรปราการ", "สมุทรปราการ (GPS จริง)")
+            lat in 12.8..13.4 && lon in 100.8..101.2 -> Pair("ชลบุรี", "ชลบุรี (GPS จริง)")
+            lat in 18.5..19.2 && lon in 98.8..99.3 -> Pair("เชียงใหม่", "เชียงใหม่ (GPS จริง)")
+            lat in 16.0..16.8 && lon in 102.5..103.2 -> Pair("ขอนแก่น", "ขอนแก่น (GPS จริง)")
+            lat in 7.0..7.4 && lon in 100.3..100.7 -> Pair("สงขลา / หาดใหญ่", "สงขลา (GPS จริง)")
             else -> {
-                val formattedLat = String.format(Locale.US, "%.2f", lat)
-                val formattedLon = String.format(Locale.US, "%.2f", lon)
-                Triple(
-                    "พิกัด GPS: $formattedLat, $formattedLon",
-                    "$formattedLat°N, $formattedLon°E (12km) • 10ms",
-                    "ISP: AIS Fibre Thailand • Local Node"
-                )
+                val formattedLat = String.format(Locale.US, "%.3f", lat)
+                val formattedLon = String.format(Locale.US, "%.3f", lon)
+                Pair("พิกัด GPS", "$formattedLat°N, $formattedLon°E")
             }
         }
 
@@ -164,8 +113,7 @@ class GpsLocationHelper(private val context: Context) {
             accuracyMeters = acc,
             regionTag = regionTag,
             province = province,
-            isRealGps = isReal,
-            speedTag = speedTag
+            isRealGps = isReal
         )
     }
 }

@@ -12,13 +12,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.SportsTennis
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,13 +33,18 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.Language
 import com.example.model.SpeedTestState
 import com.example.model.SpeedUnit
+import com.example.model.TestPhase
+import com.example.ui.theme.ChampagneGold
 import com.example.ui.theme.LocalAppTheme
+import com.example.ui.theme.StatusGreen
+import com.example.ui.theme.WinePink
 import java.util.Locale
 
 @Composable
@@ -49,132 +55,209 @@ fun MetricsGrid(
     isProPlan: Boolean = true,
     modifier: Modifier = Modifier
 ) {
+    val theme = LocalAppTheme.current
+    val isTh = language == Language.TH
+
     val downloadVal = testState.downloadMbps?.let {
         if (speedUnit == SpeedUnit.MB_S) it / 8.0 else it
     }
-    val downloadText = downloadVal?.let { String.format(Locale.US, "%.1f", it) } ?: "193"
+    val downloadText = downloadVal?.let { String.format(Locale.US, "%.1f", it) } ?: "--"
 
     val uploadVal = testState.uploadMbps?.let {
         if (speedUnit == SpeedUnit.MB_S) it / 8.0 else it
     }
-    val uploadText = uploadVal?.let { String.format(Locale.US, "%.1f", it) } ?: "68.4"
+    val uploadText = uploadVal?.let { String.format(Locale.US, "%.1f", it) } ?: "--"
 
-    val pingText = testState.pingMs?.toString() ?: "39.0"
-    val jitterText = testState.jitterMs?.toString() ?: "8.6"
+    val pingText = testState.pingMs?.toString() ?: "--"
+    val jitterText = testState.jitterMs?.toString() ?: "--"
 
-    val statDownloadColor = Color(0xFF34C759)
-    val statUploadColor = Color(0xFFAF52DE)
-    val statPingColor = Color(0xFFFF9500)
-    val statJitterColor = Color(0xFF007AFF)
+    // Refined Palette (Champagne, Wine, Green, Muted Slate)
+    val downloadAccent = ChampagneGold
+    val uploadAccent = WinePink
+    val pingAccent = ChampagneGold
+    val jitterAccent = theme.colors.textMuted
+
+    // Convert raw Mbps samples to normalized 0f..1f for canvas sparkline
+    fun normalizeSamples(samples: List<Double>): List<Float> {
+        if (samples.size < 2) return emptyList()
+        val min = samples.minOrNull() ?: 0.0
+        val max = samples.maxOrNull() ?: 1.0
+        val range = (max - min).coerceAtLeast(0.1)
+        return samples.map { ((it - min) / range).toFloat().coerceIn(0.05f, 0.95f) }
+    }
+
+    val dlSparkline = normalizeSamples(testState.downloadSamples)
+    val ulSparkline = normalizeSamples(testState.uploadSamples)
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .testTag("metrics_grid"),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Row 1: Download & Upload (Symmetrical 1:1)
+        // Optional Warning Banner if unstable
+        if (!testState.warningMessage.isNullOrBlank()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFFFFF3CD).copy(alpha = if (theme.isDark) 0.12f else 0.90f))
+                    .border(1.dp, Color(0xFFFFC107).copy(alpha = 0.4f), RoundedCornerShape(14.dp))
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.WarningAmber,
+                    contentDescription = null,
+                    tint = Color(0xFFFFB300),
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(
+                    text = testState.warningMessage,
+                    color = if (theme.isDark) Color(0xFFFFE082) else Color(0xFF856404),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
+                    lineHeight = 16.sp
+                )
+            }
+        }
+
+        // Row 1: Download & Upload (Most Prominent Metrics)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            SymmetricalStatCard(
-                name = "Download (${speedUnit.label})",
-                value = downloadText,
+            ProminentStatCard(
+                name = if (isTh) "ดาวน์โหลด" else "Download",
                 unit = speedUnit.label,
+                value = downloadText,
                 icon = Icons.Default.ArrowDownward,
-                accentColor = statDownloadColor,
-                sparklinePattern = listOf(0.7f, 0.45f, 0.55f, 0.35f, 0.6f, 0.5f, 0.7f),
+                accentColor = downloadAccent,
+                sparklinePattern = dlSparkline,
+                isLive = testState.phase == TestPhase.TESTING_DOWNLOAD,
+                isProminent = true,
                 modifier = Modifier
                     .weight(1f)
                     .testTag("stat_download_card")
             )
 
-            SymmetricalStatCard(
-                name = "Upload (${speedUnit.label})",
-                value = uploadText,
+            ProminentStatCard(
+                name = if (isTh) "อัปโหลด" else "Upload",
                 unit = speedUnit.label,
+                value = uploadText,
                 icon = Icons.Default.ArrowUpward,
-                accentColor = statUploadColor,
-                sparklinePattern = listOf(0.5f, 0.6f, 0.45f, 0.7f, 0.55f, 0.4f, 0.6f),
+                accentColor = uploadAccent,
+                sparklinePattern = ulSparkline,
+                isLive = testState.phase == TestPhase.TESTING_UPLOAD,
+                isProminent = true,
                 modifier = Modifier
                     .weight(1f)
                     .testTag("stat_upload_card")
             )
         }
 
-        // Row 2: Ping & Jitter (Symmetrical 1:1)
+        // Row 2: Ping & Jitter (Matching visual style in the next row)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            SymmetricalStatCard(
-                name = "Ping (ms)",
-                value = pingText,
+            ProminentStatCard(
+                name = if (isTh) "HTTP Latency" else "HTTP Latency",
+                subTitle = if (isTh) "RTT" else "RTT",
                 unit = "ms",
-                icon = Icons.Default.SportsTennis,
-                accentColor = statPingColor,
-                sparklinePattern = listOf(0.8f, 0.65f, 0.75f, 0.85f, 0.65f, 0.8f, 0.7f),
+                value = pingText,
+                icon = Icons.Default.Speed,
+                accentColor = pingAccent,
+                sparklinePattern = emptyList(),
+                isLive = testState.phase == TestPhase.TESTING_PING,
+                isProminent = false,
                 modifier = Modifier
                     .weight(1f)
                     .testTag("stat_ping_card")
             )
 
-            SymmetricalStatCard(
-                name = "Jitter (ms)",
-                value = jitterText,
+            ProminentStatCard(
+                name = if (isTh) "Jitter" else "Jitter",
+                subTitle = if (isTh) "ความนิ่ง" else "Variance",
                 unit = "ms",
+                value = jitterText,
                 icon = Icons.Default.Timeline,
-                accentColor = statJitterColor,
-                sparklinePattern = listOf(0.6f, 0.7f, 0.55f, 0.45f, 0.65f, 0.5f, 0.75f),
+                accentColor = jitterAccent,
+                sparklinePattern = emptyList(),
+                isLive = false,
+                isProminent = false,
                 modifier = Modifier
                     .weight(1f)
                     .testTag("stat_jitter_card")
+            )
+        }
+
+        // Real Measurement Formula & Explanation Note
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = null,
+                tint = theme.colors.textMuted.copy(alpha = 0.6f),
+                modifier = Modifier.size(13.dp)
+            )
+            Text(
+                text = if (isTh) {
+                    "วัดผลจริงผ่าน Edge Node • สูตร: Mbps = (จำนวนไบต์ที่รับส่งจริง × 8) ÷ (วินาที × 1,000,000)"
+                } else {
+                    "Measured via Edge Node • Formula: Mbps = (Real Bytes × 8) ÷ (Seconds × 1,000,000)"
+                },
+                color = theme.colors.textMuted.copy(alpha = 0.65f),
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Normal,
+                lineHeight = 15.sp
             )
         }
     }
 }
 
 @Composable
-private fun SymmetricalStatCard(
+private fun ProminentStatCard(
     name: String,
     value: String,
     unit: String,
     icon: ImageVector,
     accentColor: Color,
     sparklinePattern: List<Float>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    subTitle: String? = null,
+    isLive: Boolean = false,
+    isProminent: Boolean = false
 ) {
     val theme = LocalAppTheme.current
     val isDark = theme.isDark
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                if (isDark) Color(0xFF131824).copy(alpha = 0.85f) else Color(0xFFFFFFFF)
-            )
+            .clip(RoundedCornerShape(20.dp))
+            .background(theme.colors.cardBg)
             .border(
-                width = 1.dp,
-                color = if (isDark) Color(0x33FFFFFF) else Color(0xFFE2E8F0),
-                shape = RoundedCornerShape(16.dp)
+                width = if (isLive) 1.5.dp else 1.dp,
+                color = if (isLive) accentColor else theme.colors.border,
+                shape = RoundedCornerShape(20.dp)
             )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 0.dp, start = 14.dp, end = 14.dp, bottom = 12.dp)
+                .padding(
+                    top = if (isProminent) 14.dp else 12.dp,
+                    start = 14.dp,
+                    end = 14.dp,
+                    bottom = if (isProminent) 14.dp else 12.dp
+                )
         ) {
-            // Top Accent Bar (Matches HTML .stat-card::before)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3.dp)
-                    .background(accentColor)
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
             // Stat Header: Icon + Name
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -189,79 +272,88 @@ private fun SymmetricalStatCard(
                 Text(
                     text = name,
                     color = theme.colors.textMuted,
-                    fontSize = 11.sp,
+                    fontSize = if (isProminent) 12.sp else 11.sp,
                     fontWeight = FontWeight.Medium
                 )
+                if (subTitle != null) {
+                    Text(
+                        text = "• $subTitle",
+                        color = theme.colors.textMuted.copy(alpha = 0.6f),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Normal
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Stat Body: Value + Unit
+            // Stat Body: Value + Unit (Tabular figures)
             Row(
                 verticalAlignment = Alignment.Bottom,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
                     text = value,
-                    color = theme.colors.textMain,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
+                    color = if (isLive) accentColor else theme.colors.textMain,
+                    fontSize = if (isProminent) 26.sp else 20.sp,
+                    fontWeight = FontWeight.SemiBold, // 600
+                    fontFamily = FontFamily.Monospace, // Tabular numerals
                     letterSpacing = (-0.5).sp
                 )
-                Text(
-                    text = unit,
-                    color = theme.colors.textMuted,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(bottom = 2.dp)
-                )
+                if (value != "--") {
+                    Text(
+                        text = unit,
+                        color = theme.colors.textMuted,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            // Sparkline for prominent metrics (Download / Upload)
+            if (isProminent) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(18.dp)
+                ) {
+                    if (sparklinePattern.size >= 2) {
+                        Canvas(modifier = Modifier.fillMaxWidth().height(18.dp)) {
+                            val width = size.width
+                            val height = size.height
+                            val stepX = width / (sparklinePattern.size - 1)
 
-            // Sparkline Wave Canvas
-            Canvas(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(20.dp)
-            ) {
-                if (sparklinePattern.size < 2) return@Canvas
+                            val path = Path().apply {
+                                moveTo(0f, (1f - sparklinePattern[0]) * height)
+                                for (i in 1 until sparklinePattern.size) {
+                                    val prevX = (i - 1) * stepX
+                                    val prevY = (1f - sparklinePattern[i - 1]) * height
+                                    val curX = i * stepX
+                                    val curY = (1f - sparklinePattern[i]) * height
+                                    val cX = (prevX + curX) / 2f
+                                    cubicTo(cX, prevY, cX, curY, curX, curY)
+                                }
+                            }
 
-                val width = size.width
-                val height = size.height
-                val stepX = width / (sparklinePattern.size - 1)
-
-                val path = Path().apply {
-                    moveTo(0f, sparklinePattern[0] * height)
-                    for (i in 1 until sparklinePattern.size) {
-                        val prevX = (i - 1) * stepX
-                        val prevY = sparklinePattern[i - 1] * height
-                        val curX = i * stepX
-                        val curY = sparklinePattern[i] * height
-                        val cX = (prevX + curX) / 2f
-                        cubicTo(cX, prevY, cX, curY, curX, curY)
+                            drawPath(
+                                path = path,
+                                color = accentColor.copy(alpha = 0.85f),
+                                style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round)
+                            )
+                        }
+                    } else {
+                        // Subtle baseline
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .align(Alignment.Center)
+                                .background(if (isDark) Color(0x18FFFFFF) else Color(0x12000000))
+                        )
                     }
                 }
-
-                // Subtle gradient fill under sparkline
-                val fillPath = Path().apply {
-                    addPath(path)
-                    lineTo(width, height)
-                    lineTo(0f, height)
-                    close()
-                }
-
-                drawPath(
-                    path = fillPath,
-                    brush = Brush.verticalGradient(
-                        listOf(accentColor.copy(alpha = 0.25f), Color.Transparent)
-                    )
-                )
-
-                drawPath(
-                    path = path,
-                    color = accentColor,
-                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
-                )
             }
         }
     }

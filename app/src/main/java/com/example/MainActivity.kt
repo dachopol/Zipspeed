@@ -78,6 +78,7 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
     val isPrecisionMode by viewModel.isPrecisionMode.collectAsStateWithLifecycle()
     val testState by viewModel.testState.collectAsStateWithLifecycle()
     val historyRecords by viewModel.historyRecords.collectAsStateWithLifecycle()
+    val previousResult by viewModel.previousResult.collectAsStateWithLifecycle()
     val ipInfo by viewModel.ipInfo.collectAsStateWithLifecycle()
 
     val videoTestState by viewModel.videoTestState.collectAsStateWithLifecycle()
@@ -198,16 +199,19 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
                                                 isPrecisionMode = isPrecisionMode,
                                                 isVipAdFree = isProPlan,
                                                 isGpsActive = isGpsModeEnabled,
+                                                previousResult = previousResult,
                                                 videoState = videoTestState,
                                                 webState = webTestState,
                                                 onStartTest = { viewModel.startSpeedTest() },
                                                 onStartPrecisionTest = { viewModel.startPrecisionSpeedTest() },
                                                 onCancelTest = { viewModel.cancelSpeedTest() },
+                                                onTogglePrecisionMode = { viewModel.togglePrecisionMode() },
                                                 onStartVideoTest = { viewModel.startVideoTest() },
                                                 onCancelVideoTest = { viewModel.cancelVideoTest() },
                                                 onStartWebTest = { viewModel.startWebTest() },
                                                 onCancelWebTest = { viewModel.cancelWebTest() },
                                                 onOpenServerModal = { viewModel.openServerModal() },
+                                                onSelectServer = { viewModel.setSelectedServer(it) },
                                                 onRefreshIp = { viewModel.refreshIpInfo() },
                                                 onToggleSpeedUnit = { viewModel.toggleSpeedUnit() },
                                                 onToggleGpsMode = { viewModel.toggleGpsMode() },
@@ -240,7 +244,12 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
                                                 onOpenServerModal = { viewModel.openServerModal() },
                                                 onToggleAutoSave = { viewModel.toggleAutoSave() },
                                                 onToggleReducedMotion = { viewModel.toggleReducedMotion() },
-                                                onToggleBatterySaver = { viewModel.toggleBatterySaver() }
+                                                onToggleBatterySaver = { viewModel.toggleBatterySaver() },
+                                                isDarkTheme = currentTheme.isDark,
+                                                isSecurityShieldActive = isSecurityShieldActive,
+                                                onToggleDarkLight = { viewModel.toggleDarkLightMode() },
+                                                onToggleSecurityShield = { viewModel.toggleSecurityShield(it) },
+                                                onOpenSecurityModal = { viewModel.openSecurityModal() }
                                             )
                                         }
                                     }

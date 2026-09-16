@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Zipspeed</string>
     <string name="str_speed_1">วัดสปีด</string>
     <string name="str_history_2">ประวัติ</string>
     <string name="str_settings_3">ตั้งค่า</string>

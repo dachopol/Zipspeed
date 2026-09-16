@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import com.example.ui.components.verticalScrollbar
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -38,8 +37,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import com.example.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,20 +47,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.SpeedTestRecord
 import com.example.model.Language
 import com.example.model.SpeedUnit
 import com.example.ui.components.ShareDetailModal
 import com.example.ui.components.ShareReportData
-import com.example.ui.theme.CyberInk
-import com.example.ui.theme.CyberMuted
-import com.example.ui.theme.CyberPanel
-import com.example.ui.theme.NeonBlue
-import com.example.ui.theme.NeonGreen
-import com.example.ui.theme.NeonPurple
+import com.example.ui.components.verticalScrollbar
+import com.example.ui.theme.ChampagneGold
+import com.example.ui.theme.DarkCard
+import com.example.ui.theme.ElevatedSurface
+import com.example.ui.theme.LocalAppTheme
+import com.example.ui.theme.StatusGreen
+import com.example.ui.theme.TextMuted
+import com.example.ui.theme.TextWhite
+import com.example.ui.theme.WinePink
 import com.example.util.startActivitySafely
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -79,10 +81,12 @@ fun HistoryScreen(
     onClearAll: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val theme = LocalAppTheme.current
     val context = LocalContext.current
     val dateFormat = SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault())
     var showExportModal by remember { mutableStateOf(false) }
     var selectedRecordForShare by remember { mutableStateOf<SpeedTestRecord?>(null) }
+    val isTh = language == Language.TH
 
     fun shareExportData(content: String, mimeType: String) {
         val sendIntent = Intent().apply {
@@ -100,7 +104,7 @@ fun HistoryScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 14.dp, vertical = 4.dp)
+            .padding(horizontal = 16.dp, vertical = 4.dp)
             .testTag("history_screen")
     ) {
         // Top Header
@@ -110,10 +114,10 @@ fun HistoryScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = stringResource(R.string.str_test_history_85),
-                color = CyberInk,
+                text = if (isTh) "ประวัติการทดสอบ" else "Test History",
+                color = theme.colors.textMain,
                 fontSize = 20.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.SemiBold, // 600
                 modifier = Modifier.testTag("history_title")
             )
 
@@ -129,15 +133,15 @@ fun HistoryScreen(
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = "Export History",
-                            tint = NeonBlue,
+                            tint = ChampagneGold,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.size(4.dp))
                         Text(
-                            text = stringResource(R.string.str_export_86),
-                            color = NeonBlue,
+                            text = if (isTh) "ส่งออก" else "Export",
+                            color = ChampagneGold,
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
 
@@ -148,15 +152,15 @@ fun HistoryScreen(
                         Icon(
                             imageVector = Icons.Default.DeleteOutline,
                             contentDescription = "Clear All",
-                            tint = Color(0xFFFF5252),
+                            tint = WinePink,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.size(4.dp))
                         Text(
-                            text = stringResource(R.string.str_clear_87),
-                            color = Color(0xFFFF5252),
+                            text = if (isTh) "ล้างทั้งหมด" else "Clear All",
+                            color = WinePink,
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -181,13 +185,13 @@ fun HistoryScreen(
                         modifier = Modifier
                             .size(64.dp)
                             .clip(CircleShape)
-                            .background(Color(0x1A2F7BFF)),
+                            .background(ChampagneGold.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.History,
                             contentDescription = null,
-                            tint = NeonBlue,
+                            tint = ChampagneGold,
                             modifier = Modifier.size(32.dp)
                         )
                     }
@@ -195,17 +199,17 @@ fun HistoryScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = stringResource(R.string.str_no_test_history_yet_88),
-                        color = CyberInk,
+                        text = if (isTh) "ยังไม่มีประวัติการทดสอบ" else "No test history yet",
+                        color = theme.colors.textMain,
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold
                     )
 
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = stringResource(R.string.str_tap_start_speed_test_to_save_y_89),
-                        color = CyberMuted,
+                        text = if (isTh) "กดเริ่มการทดสอบความเร็วเพื่อบันทึกผล" else "Run a speed test to record results",
+                        color = theme.colors.textMuted,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Normal
                     )
@@ -279,12 +283,13 @@ private fun ExportOptionsModal(
     onExportJson: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val isTh = language == Language.TH
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color(0xFF141320),
-        scrimColor = Color(0x99000000)
+        containerColor = DarkCard,
+        scrimColor = Color(0xB3000000)
     ) {
         Column(
             modifier = Modifier
@@ -298,17 +303,17 @@ private fun ExportOptionsModal(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = stringResource(R.string.str_export_format_90),
-                    color = CyberInk,
+                    text = if (isTh) "รูปแบบการส่งออกประวัติ" else "Export Format",
+                    color = TextWhite,
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.SemiBold
                 )
 
                 IconButton(onClick = onDismiss) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close",
-                        tint = CyberMuted
+                        tint = TextMuted
                     )
                 }
             }
@@ -317,10 +322,10 @@ private fun ExportOptionsModal(
 
             // Option 1: Text Summary
             ExportOptionCard(
-                title = stringResource(R.string.str_text_summary_91),
-                description = stringResource(R.string.str_human_readable_summary_ideal_f_92),
+                title = if (isTh) "ข้อความสรุป (Text Summary)" else "Text Summary",
+                description = if (isTh) "สรุปอ่านง่าย เหมาะสำหรับการคัดลอกหรือส่งต่อ" else "Human-readable summary ideal for messaging",
                 icon = Icons.Default.Description,
-                iconColor = NeonBlue,
+                iconColor = ChampagneGold,
                 onClick = onExportText,
                 testTag = "export_option_text"
             )
@@ -329,10 +334,10 @@ private fun ExportOptionsModal(
 
             // Option 2: JSON File Data
             ExportOptionCard(
-                title = stringResource(R.string.str_json_data_format_93),
-                description = stringResource(R.string.str_full_raw_json_data_for_backup__94),
+                title = if (isTh) "ข้อมูลไฟล์ JSON" else "JSON Data",
+                description = if (isTh) "ข้อมูลดิบครบถ้วนสำหรับสำรองข้อมูลหรือนำไปประมวลผลต่อ" else "Raw JSON dataset for backup or analytics",
                 icon = Icons.Default.Code,
-                iconColor = NeonGreen,
+                iconColor = ChampagneGold,
                 onClick = onExportJson,
                 testTag = "export_option_json"
             )
@@ -355,8 +360,8 @@ private fun ExportOptionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(CyberPanel)
-            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
+            .background(ElevatedSurface)
+            .border(1.dp, Color(0x18FFFFFF), RoundedCornerShape(16.dp))
             .clickable { onClick() }
             .padding(14.dp)
             .testTag(testTag),
@@ -382,14 +387,14 @@ private fun ExportOptionCard(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                color = CyberInk,
+                color = TextWhite,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = description,
-                color = CyberMuted,
+                color = TextMuted,
                 fontSize = 12.sp,
                 lineHeight = 16.sp
             )
@@ -404,7 +409,7 @@ private fun buildTextSummary(
 ): String {
     val dateFormat = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
     val sb = StringBuilder()
-    sb.append("Zipspeed Test History Report\n")
+    sb.append("Zipspeed by AnakinYoo - Test History Report\n")
     sb.append("=========================================\n")
     sb.append("Exported: ${dateFormat.format(Date())}\n")
     sb.append("Total Records: ${records.size}\n\n")
@@ -452,6 +457,7 @@ private fun HistoryCardItem(
     onShare: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val theme = LocalAppTheme.current
     val dateStr = dateFormat.format(Date(record.timestamp))
 
     val dlVal = if (speedUnit == SpeedUnit.MB_S) record.downloadMbps / 8.0 else record.downloadMbps
@@ -463,9 +469,9 @@ private fun HistoryCardItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(CyberPanel)
-            .border(1.dp, Color(0x17FFFFFF), RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(20.dp))
+            .background(theme.colors.cardBg)
+            .border(1.dp, theme.colors.border, RoundedCornerShape(20.dp))
             .clickable { onShare() }
             .padding(14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -474,19 +480,20 @@ private fun HistoryCardItem(
         Column(modifier = Modifier.weight(1.2f)) {
             Text(
                 text = dateStr,
-                color = CyberInk,
+                color = theme.colors.textMain,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = "${record.serverName} • ${record.pingMs}ms",
-                color = CyberMuted,
-                fontSize = 12.sp
+                color = theme.colors.textMuted,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Normal
             )
             Text(
                 text = record.networkType,
-                color = Color(0xFFA9C6FF),
+                color = ChampagneGold,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -502,14 +509,14 @@ private fun HistoryCardItem(
                     Icon(
                         imageVector = Icons.Default.ArrowDownward,
                         contentDescription = "Download",
-                        tint = NeonGreen,
-                        modifier = Modifier.size(14.dp)
+                        tint = ChampagneGold,
+                        modifier = Modifier.size(13.dp)
                     )
                     Text(
                         text = "$dlStr ${speedUnit.label}",
-                        color = NeonGreen,
+                        color = ChampagneGold,
                         fontSize = 13.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
                 // Upload
@@ -517,14 +524,14 @@ private fun HistoryCardItem(
                     Icon(
                         imageVector = Icons.Default.ArrowUpward,
                         contentDescription = "Upload",
-                        tint = NeonPurple,
-                        modifier = Modifier.size(14.dp)
+                        tint = WinePink,
+                        modifier = Modifier.size(13.dp)
                     )
                     Text(
                         text = "$ulStr ${speedUnit.label}",
-                        color = NeonPurple,
+                        color = WinePink,
                         fontSize = 13.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -532,13 +539,13 @@ private fun HistoryCardItem(
             IconButton(
                 onClick = onShare,
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(36.dp)
                     .testTag("share_history_item")
             ) {
                 Icon(
                     imageVector = Icons.Default.Share,
                     contentDescription = "Share Record Details",
-                    tint = NeonBlue,
+                    tint = ChampagneGold,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -546,13 +553,13 @@ private fun HistoryCardItem(
             IconButton(
                 onClick = onDelete,
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(36.dp)
                     .testTag("delete_history_item")
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = "Delete",
-                    tint = CyberMuted.copy(alpha = 0.6f),
+                    tint = theme.colors.textMuted.copy(alpha = 0.6f),
                     modifier = Modifier.size(18.dp)
                 )
             }

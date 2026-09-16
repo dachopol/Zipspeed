@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -66,6 +67,7 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
 
     private val repository: SpeedTestRepository
     val historyRecords: StateFlow<List<SpeedTestRecord>>
+    val previousResult: StateFlow<SpeedTestRecord?>
 
     private val tester = NetworkSpeedTester()
     val testState: StateFlow<SpeedTestState> = tester.state
@@ -713,6 +715,11 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+        previousResult = repository.allRecords.map { it.firstOrNull() }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
         refreshIpInfo()
         refreshBatteryStatus()
     }
@@ -724,7 +731,7 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
             _ipInfo.value = info
 
             // Auto-detect country location from IP if user hasn't manually selected language
-            if (!userHasManuallySelectedLanguage && info.countryCode.isNotBlank()) {
+            if (!userHasManuallySelectedLanguage && !info.countryCode.isNullOrBlank()) {
                 val sysLang = java.util.Locale.getDefault().language.lowercase()
                 if (info.countryCode.equals("TH", ignoreCase = true) && sysLang.startsWith("th")) {
                     _language.value = Language.TH
@@ -749,6 +756,12 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
         _showServerModal.value = false
     }
 
+    fun selectServerAndRun(server: ServerInfo) {
+        _selectedServer.value = server
+        _showServerModal.value = false
+        startSpeedTest()
+    }
+
     fun toggleProPlan() {
         _isProPlan.update { !it }
     }
@@ -759,7 +772,7 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
 
     // GPS & ISP Region Tagging Integration
     private val gpsHelper = GpsLocationHelper(application.applicationContext)
-    private val _isGpsModeEnabled = MutableStateFlow(true)
+    private val _isGpsModeEnabled = MutableStateFlow(false)
     val isGpsModeEnabled: StateFlow<Boolean> = _isGpsModeEnabled.asStateFlow()
 
     fun toggleGpsMode() {
@@ -771,7 +784,7 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
             _ipInfo.update {
                 it.copy(
                     isGpsActive = false,
-                    locationStatusText = "โหมด GPS: ปิดใช้งาน (ใช้พิกัด ISP เริ่มต้น)"
+                    locationStatusText = "โหมด GPS: ปิดใช้งาน (ใช้ข้อมูล Anycast โหนด)"
                 )
             }
         }
@@ -789,22 +802,20 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
                         longitude = gpsData.longitude,
                         regionTag = gpsData.regionTag,
                         province = gpsData.province,
-                        ispName = gpsData.speedTag.substringBefore(" •"),
                         isGpsActive = true,
-                        locationStatusText = "โหมด GPS: เปิดใช้งาน (${gpsData.province} • พิกัดจริง)"
+                        locationStatusText = "GPS: เปิดใช้งาน (${gpsData.province} • พิกัดจริง)"
                     )
                 }
             } else {
                 _ipInfo.update {
                     it.copy(
                         isFetching = false,
-                        latitude = 13.5475,
-                        longitude = 100.2744,
-                        regionTag = "Samut Sakhon (12km) • 10ms",
-                        province = "สมุทรสาคร",
-                        ispName = "AIS Fibre Thailand",
-                        isGpsActive = true,
-                        locationStatusText = "โหมด GPS: พร้อมใช้งาน (Samut Sakhon Hub)"
+                        isGpsActive = false,
+                        locationStatusText = if (!gpsHelper.hasLocationPermission()) {
+                            "GPS: ยังไม่ได้รับสิทธิ์เข้าถึงพิกัด (แตะเพื่อขอสิทธิ์)"
+                        } else {
+                            "GPS: ไม่สามารถระบุพิกัดได้ (สัญญาณไม่พร้อม)"
+                        }
                     )
                 }
             }
@@ -908,17 +919,31 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
         _showServerModal.value = false
     }
 
+    fun togglePrecisionMode() {
+        _isPrecisionMode.update { !it }
+    }
+
+    fun setPrecisionMode(enabled: Boolean) {
+        _isPrecisionMode.value = enabled
+    }
+
     fun startPrecisionSpeedTest() {
-        if (testState.value.phase != TestPhase.IDLE && testState.value.phase != TestPhase.COMPLETED && testState.value.phase != TestPhase.ERROR) {
+        if (testState.value.phase == TestPhase.TESTING_PING ||
+            testState.value.phase == TestPhase.TESTING_DOWNLOAD ||
+            testState.value.phase == TestPhase.TESTING_UPLOAD
+        ) {
             return
         }
-        tester.reset()
         _isPrecisionMode.value = true
         startSpeedTest()
     }
 
     fun startSpeedTest() {
-        if (testState.value.phase != TestPhase.IDLE && testState.value.phase != TestPhase.COMPLETED && testState.value.phase != TestPhase.ERROR) {
+        val currentPhase = testState.value.phase
+        if (currentPhase == TestPhase.TESTING_PING ||
+            currentPhase == TestPhase.TESTING_DOWNLOAD ||
+            currentPhase == TestPhase.TESTING_UPLOAD
+        ) {
             return
         }
 
@@ -936,7 +961,26 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
             val server = _selectedServer.value
             val isPro = _isProPlan.value
             val isBatterySaver = _batterySaver.value
-            val result = tester.runSpeedTest(server, isPro, isBatterySaver)
+            val isPrecision = _isPrecisionMode.value
+
+            val result = tester.runSpeedTest(
+                server = server,
+                isPrecisionMode = isPrecision,
+                isPro = isPro,
+                batterySaver = isBatterySaver
+            )
+
+            // Dynamically sync detected Anycast edge details if available
+            if (result.detectedColo != null || result.detectedClientIp != null) {
+                _ipInfo.update { current ->
+                    current.copy(
+                        publicIp = result.detectedClientIp ?: current.publicIp,
+                        colo = result.detectedColo ?: current.colo,
+                        city = if (current.city.isNullOrBlank() && result.detectedColo != null) "Cloudflare ${result.detectedColo}" else current.city,
+                        ispName = if (result.detectedAsn != null) "AS${result.detectedAsn} Network" else current.ispName
+                    )
+                }
+            }
 
             if (result.phase == TestPhase.COMPLETED) {
                 // Increment test usage count
@@ -950,10 +994,10 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
                         uploadMbps = result.uploadMbps ?: 0.0,
                         pingMs = result.pingMs ?: 0,
                         jitterMs = result.jitterMs ?: 0,
-                        packetLossPercent = result.packetLossPercent ?: 0.0,
+                        packetLossPercent = 0.0,
                         serverName = server.name,
-                        serverLocation = server.location,
-                        networkType = if (isPro) "5G Ultra (Pro)" else "Wi-Fi 6"
+                        serverLocation = result.detectedColo?.let { "Cloudflare $it PoP" } ?: server.location,
+                        networkType = if (isPro) "5G Pro (Precision)" else "Wi-Fi / Cellular"
                     )
                     repository.insertRecord(record)
                 }
@@ -962,6 +1006,12 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun cancelSpeedTest() {
+        activeTestJob?.cancel()
+        activeTestJob = null
+        tester.cancelTest()
+    }
+
+    fun resetSpeedTest() {
         activeTestJob?.cancel()
         activeTestJob = null
         tester.reset()

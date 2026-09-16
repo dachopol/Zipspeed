@@ -5,24 +5,73 @@ data class ServerInfo(
     val name: String,
     val location: String,
     val countryCode: String,
-    val basePingMs: Int,
-    val distanceKm: Int = 12,
-    val subLocation: String = "Samut Sakhon",
+    val isAnycast: Boolean = true,
+    val subLocation: String = "Anycast Edge",
+    val hostUrl: String = "https://speed.cloudflare.com/__down?bytes=0",
+    val downloadUrl: String = "https://speed.cloudflare.com/__down",
+    val uploadUrl: String = "https://speed.cloudflare.com/__up",
+    val distanceKm: Int = 0,
+    val basePingMs: Int = 10,
     val latitude: Double = 13.7563,
-    val longitude: Double = 100.5018,
-    val hostUrl: String = "https://1.1.1.1"
+    val longitude: Double = 100.5018
 )
 
 val DEFAULT_SERVERS = listOf(
-    ServerInfo("auto_best", "Auto (Fastest Server)", "Bangkok, Thailand", "TH", 10, 12, "Samut Sakhon", 13.7563, 100.5018, "https://speed.cloudflare.com/__down?bytes=0"),
-    ServerInfo("th_bkk_1", "AIS Fiber Server", "Bangkok, Thailand", "TH", 11, 12, "Samut Sakhon", 13.7563, 100.5018, "https://speed.cloudflare.com/__down?bytes=0"),
-    ServerInfo("th_bkk_2", "True Online Speedtest", "Bangkok, Thailand", "TH", 14, 18, "Nonthaburi", 13.8591, 100.5217, "https://speed.cloudflare.com/__down?bytes=0"),
-    ServerInfo("sg_sin_1", "Cloudflare Edge SG", "Singapore", "SG", 24, 1420, "Jurong East", 1.3521, 103.8198, "https://speed.cloudflare.com/__down?bytes=0"),
-    ServerInfo("hk_hkg_1", "Equinix HK1 Center", "Hong Kong", "HK", 42, 2310, "Kwai Chung", 22.3193, 114.1694, "https://speed.cloudflare.com/__down?bytes=0"),
-    ServerInfo("jp_tyo_1", "NTT Communications", "Tokyo, Japan", "JP", 62, 4320, "Otemachi", 35.6762, 139.6503, "https://speed.cloudflare.com/__down?bytes=0"),
-    ServerInfo("au_syd_1", "AWS Oceania", "Sydney, Australia", "AU", 135, 7530, "Sydney CBD", -33.8688, 151.2093, "https://speed.cloudflare.com/__down?bytes=0"),
-    ServerInfo("de_fra_1", "AWS EU Central", "Frankfurt, Germany", "DE", 175, 8950, "Frankfurt am Main", 50.1109, 8.6821, "https://speed.cloudflare.com/__down?bytes=0"),
-    ServerInfo("uk_lon_1", "Linode London Edge", "London, United Kingdom", "UK", 182, 9540, "Docklands", 51.5074, -0.1278, "https://speed.cloudflare.com/__down?bytes=0"),
-    ServerInfo("us_lax_1", "Fastly West Coast", "Los Angeles, USA", "US", 188, 13200, "Los Angeles", 34.0522, -118.2437, "https://speed.cloudflare.com/__down?bytes=0"),
-    ServerInfo("us_nyc_1", "DigitalOcean NY3", "New York, USA", "US", 210, 13900, "New York City", 40.7128, -74.0060, "https://speed.cloudflare.com/__down?bytes=0")
+    ServerInfo(
+        id = "cf_auto",
+        name = "Cloudflare Anycast (เร็วที่สุด / Auto PoP)",
+        location = "ค้นหาโหนดใกล้ที่สุดอัตโนมัติ",
+        countryCode = "GLOBAL",
+        isAnycast = true,
+        subLocation = "Anycast Routing (Auto PoP)"
+    ),
+    ServerInfo(
+        id = "cf_asia_bkk",
+        name = "Cloudflare Edge (South East Asia / BKK PoP)",
+        location = "Southeast Asia Edge Node",
+        countryCode = "TH",
+        isAnycast = true,
+        subLocation = "Bangkok Metro Transit"
+    ),
+    ServerInfo(
+        id = "cf_asia_sin",
+        name = "Cloudflare Edge (Singapore PoP)",
+        location = "Singapore Regional Hub",
+        countryCode = "SG",
+        isAnycast = true,
+        subLocation = "Singapore Equinix Node"
+    ),
+    ServerInfo(
+        id = "cf_east_asia_hkg",
+        name = "Cloudflare Edge (East Asia / HKG PoP)",
+        location = "East Asia Gateway",
+        countryCode = "HK",
+        isAnycast = true,
+        subLocation = "Hong Kong Core"
+    ),
+    ServerInfo(
+        id = "cf_east_asia_nrt",
+        name = "Cloudflare Edge (Japan / NRT PoP)",
+        location = "Tokyo Transit Exchange",
+        countryCode = "JP",
+        isAnycast = true,
+        subLocation = "Tokyo Otemachi Hub"
+    ),
+    ServerInfo(
+        id = "cf_us_west",
+        name = "Cloudflare Edge (US West Coast)",
+        location = "North America West",
+        countryCode = "US",
+        isAnycast = true,
+        subLocation = "San Jose / Los Angeles"
+    ),
+    ServerInfo(
+        id = "cf_eu_central",
+        name = "Cloudflare Edge (Europe Central)",
+        location = "Europe Hub (DE/UK)",
+        countryCode = "DE",
+        isAnycast = true,
+        subLocation = "Frankfurt / London PoP"
+    )
 )
+

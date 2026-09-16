@@ -153,7 +153,7 @@ fun IpAddressCard(
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = ipInfo.publicIp,
+                    text = ipInfo.publicIp ?: "--",
                     color = CyberInk,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.ExtraBold,
@@ -224,7 +224,7 @@ fun IpAddressCard(
             }
 
             Text(
-                text = ipInfo.ispName,
+                text = ipInfo.ispName ?: "Unknown Network",
                 color = NeonGreen,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold

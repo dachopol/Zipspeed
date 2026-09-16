@@ -4,15 +4,14 @@ import com.example.model.ServerInfo
 import com.example.model.SpeedTestState
 import com.example.model.TestPhase
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.Call
@@ -21,6 +20,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okio.BufferedSink
+import java.io.IOException
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -28,23 +28,23 @@ import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
-import kotlin.random.Random
 
 class NetworkSpeedTester {
 
     private val client = OkHttpClient.Builder()
-        .connectTimeout(1500, TimeUnit.MILLISECONDS)
-        .readTimeout(2000, TimeUnit.MILLISECONDS)
-        .writeTimeout(2000, TimeUnit.MILLISECONDS)
-        .callTimeout(3000, TimeUnit.MILLISECONDS)
+        .connectTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(8, TimeUnit.SECONDS)
+        .writeTimeout(8, TimeUnit.SECONDS)
         .build()
 
     private val _state = MutableStateFlow(SpeedTestState())
     val state: StateFlow<SpeedTestState> = _state.asStateFlow()
 
     private val activeCalls = CopyOnWriteArrayList<Call>()
+    private val isCancelled = AtomicBoolean(false)
 
     private fun cancelAllActiveCalls() {
+        isCancelled.set(true)
         for (call in activeCalls) {
             try {
                 call.cancel()
@@ -55,30 +55,49 @@ class NetworkSpeedTester {
 
     suspend fun runSpeedTest(
         server: ServerInfo,
-        isPro: Boolean,
+        isPrecisionMode: Boolean = false,
+        isPro: Boolean = false,
         batterySaver: Boolean = false
-    ): SpeedTestState = kotlinx.coroutines.supervisorScope {
+    ): SpeedTestState = supervisorScope {
+        isCancelled.set(false)
         cancelAllActiveCalls()
-        _state.value = SpeedTestState(phase = TestPhase.TESTING_PING, liveSpeed = 0.0)
 
-        val pollDelayMs = if (batterySaver) 70L else 40L
-        val pingDelayMs = if (batterySaver) 80L else 40L
+        _state.value = SpeedTestState(
+            phase = TestPhase.TESTING_PING,
+            liveSpeed = 0.0,
+            progressFraction = 0.05f,
+            isPrecisionMode = isPrecisionMode
+        )
 
-        // 1. PING & JITTER PHASE
+        val pollDelayMs = if (batterySaver) 75L else 45L
+        val testStartTime = System.currentTimeMillis()
+
+        // =========================================================================
+        // PHASE 1: HTTP LATENCY & JITTER MEASUREMENT (Real HTTP Round-Trip Time)
+        // =========================================================================
+        val pingCount = if (isPrecisionMode) 8 else 4
         val pingResults = mutableListOf<Long>()
-        val pingUrl = if (server.hostUrl.startsWith("http")) server.hostUrl else "https://${server.hostUrl}"
+        var detectedColo: String? = null
+        var detectedIp: String? = null
+        var detectedAsn: String? = null
 
-        for (i in 1..3) {
-            if (!isActive || _state.value.phase == TestPhase.IDLE) break
-            val startTime = System.currentTimeMillis()
-            var measuredPing: Long = -1L
+        val pingUrl = if (server.hostUrl.isNotBlank()) server.hostUrl else "https://speed.cloudflare.com/__down?bytes=0"
 
-            withTimeoutOrNull(450L) {
+        for (i in 1..pingCount) {
+            if (isCancelled.get() || !isActive) {
+                _state.update { it.copy(phase = TestPhase.CANCELLED, liveSpeed = 0.0) }
+                return@supervisorScope _state.value
+            }
+
+            val requestStart = System.currentTimeMillis()
+            var pingDuration: Long? = null
+
+            withTimeoutOrNull(3500L) {
                 try {
                     val request = Request.Builder()
                         .url(pingUrl)
-                        .header("User-Agent", "Zipspeed/35.0")
-                        .head()
+                        .header("User-Agent", "Zipspeed/1.0")
+                        .header("Cache-Control", "no-cache")
                         .build()
 
                     val call = client.newCall(request)
@@ -86,70 +105,90 @@ class NetworkSpeedTester {
 
                     try {
                         withContext(Dispatchers.IO) {
-                            call.execute().use {
-                                measuredPing = System.currentTimeMillis() - startTime
+                            call.execute().use { response ->
+                                pingDuration = System.currentTimeMillis() - requestStart
+                                if (detectedColo == null) {
+                                    detectedColo = response.header("cf-meta-colo") ?: response.header("colo")
+                                    detectedIp = response.header("cf-meta-ip")
+                                    detectedAsn = response.header("asn") ?: response.header("cf-meta-asn")
+                                }
                             }
                         }
                     } finally {
                         activeCalls.remove(call)
                     }
-                } catch (_: Exception) {
-                    measuredPing = -1L
+                } catch (_: IOException) {
+                    pingDuration = null
                 }
             }
 
-            // Fallback to fast realistic latency if sandbox blocks direct HTTP
-            if (measuredPing <= 0L) {
-                measuredPing = (server.basePingMs + Random.nextLong(-2, 5)).coerceAtLeast(8L)
+            if (pingDuration != null && pingDuration!! > 0) {
+                pingResults.add(pingDuration!!)
+                _state.update {
+                    it.copy(
+                        pingMs = pingDuration!!.toInt(),
+                        progressFraction = 0.05f + (i.toFloat() / pingCount * 0.12f),
+                        detectedColo = detectedColo,
+                        detectedClientIp = detectedIp,
+                        detectedAsn = detectedAsn
+                    )
+                }
             }
 
-            pingResults.add(measuredPing)
-            _state.update {
-                it.copy(
-                    pingMs = measuredPing.toInt(),
-                    progressFraction = 0.06f + (i * 0.04f)
-                )
-            }
-            delay(pingDelayMs)
+            delay(if (batterySaver) 80L else 40L)
         }
 
-        val sorted = pingResults.sorted()
-        val finalPing = sorted[sorted.size / 2].toInt().coerceAtLeast(8)
+        if (pingResults.isEmpty()) {
+            _state.update {
+                it.copy(
+                    phase = TestPhase.ERROR,
+                    errorMessage = "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ทดสอบได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต (Connection timed out or unreachable)",
+                    liveSpeed = 0.0
+                )
+            }
+            return@supervisorScope _state.value
+        }
+
+        val sortedPings = pingResults.sorted()
+        val finalPing = (sortedPings.sum() / sortedPings.size).toInt()
         val jitter = if (pingResults.size > 1) {
             var sumDiff = 0.0
-            for (i in 1 until pingResults.size) {
-                sumDiff += abs(pingResults[i] - pingResults[i - 1])
+            for (idx in 1 until pingResults.size) {
+                sumDiff += abs(pingResults[idx] - pingResults[idx - 1])
             }
-            (sumDiff / (pingResults.size - 1)).roundToInt().coerceAtLeast(1)
-        } else 2
+            (sumDiff / (pingResults.size - 1)).roundToInt()
+        } else 0
 
         _state.update {
             it.copy(
                 pingMs = finalPing,
-                jitterMs = max(1, jitter),
-                packetLossPercent = 0.0,
-                phase = TestPhase.TESTING_DOWNLOAD
+                jitterMs = jitter,
+                phase = TestPhase.TESTING_DOWNLOAD,
+                progressFraction = 0.18f
             )
         }
 
         delay(60)
 
-        // 2. REAL DOWNLOAD MEASUREMENT
-        val downloadDurationMs = if (batterySaver) 2600L else 3600L
-        val downloadUrl = "https://speed.cloudflare.com/__down?bytes=15000000"
+        // =========================================================================
+        // PHASE 2: REAL DOWNLOAD MEASUREMENT (Stream bytes from Cloudflare Edge)
+        // Formula: Mbps = (DownloadedBytes * 8) / (ElapsedSeconds * 1,000,000)
+        // =========================================================================
+        val downloadDurationMs = if (isPrecisionMode) 7000L else if (batterySaver) 3200L else 4500L
+        val bytesPerChunk = if (isPrecisionMode) 35000000L else 20000000L
+        val downloadUrl = "${server.downloadUrl}?bytes=$bytesPerChunk"
         val totalDownloadedBytes = AtomicLong(0L)
         val isDownloadingActive = AtomicBoolean(true)
-        val numThreads = if (isPro) 3 else 2
+        val numDownloadThreads = if (isPro) 3 else 2
 
-        val downloadWorkers = (1..numThreads).map {
+        val downloadWorkers = (1..numDownloadThreads).map {
             launch(Dispatchers.IO) {
-                val buffer = ByteArray(16384)
-                var errorCount = 0
-                while (isDownloadingActive.get() && isActive) {
+                val buffer = ByteArray(32768)
+                while (isDownloadingActive.get() && !isCancelled.get() && isActive) {
                     try {
                         val request = Request.Builder()
                             .url(downloadUrl)
-                            .header("User-Agent", "Zipspeed/35.0")
+                            .header("User-Agent", "Zipspeed/1.0")
                             .header("Cache-Control", "no-cache")
                             .build()
 
@@ -157,12 +196,13 @@ class NetworkSpeedTester {
                         activeCalls.add(call)
                         try {
                             call.execute().use { response ->
-                                errorCount = 0
                                 val stream = response.body?.byteStream()
                                 if (stream != null) {
-                                    var bytesRead = 0
-                                    while (isDownloadingActive.get() && isActive && stream.read(buffer).also { bytesRead = it } != -1) {
-                                        totalDownloadedBytes.addAndGet(bytesRead.toLong())
+                                    var readBytes = 0
+                                    while (isDownloadingActive.get() && !isCancelled.get() && isActive &&
+                                        stream.read(buffer).also { readBytes = it } != -1
+                                    ) {
+                                        totalDownloadedBytes.addAndGet(readBytes.toLong())
                                     }
                                 }
                             }
@@ -170,109 +210,123 @@ class NetworkSpeedTester {
                             activeCalls.remove(call)
                         }
                     } catch (_: Exception) {
-                        errorCount++
-                        val waitMs = if (errorCount > 2) 250L else 50L
-                        delay(waitMs)
+                        delay(60L)
                     }
                 }
             }
         }
 
-        val downloadStartTime = System.currentTimeMillis()
-        var lastBytes = 0L
-        var lastTime = downloadStartTime
-        val recordedSpeedSamples = mutableListOf<Double>()
-        var smoothedSpeed = 0.0
-        val targetSimDownload = if (isPro) Random.nextDouble(380.0, 520.0) else Random.nextDouble(180.0, 290.0)
+        val dlStartTime = System.currentTimeMillis()
+        var lastDlBytes = 0L
+        var lastDlTime = dlStartTime
+        val recordedDlSamples = mutableListOf<Double>()
+        var smoothedDlSpeed = 0.0
 
-        while (isActive && System.currentTimeMillis() - downloadStartTime < downloadDurationMs) {
+        while (isActive && !isCancelled.get() && (System.currentTimeMillis() - dlStartTime) < downloadDurationMs) {
             delay(pollDelayMs)
             val now = System.currentTimeMillis()
             val currentBytes = totalDownloadedBytes.get()
-            val timeDiffSec = (now - lastTime) / 1000.0
-            val elapsedTotalSec = (now - downloadStartTime) / 1000.0
+            val deltaBytes = currentBytes - lastDlBytes
+            val timeDiffSec = (now - lastDlTime) / 1000.0
+            val totalElapsedSec = (now - dlStartTime) / 1000.0
 
             if (timeDiffSec >= 0.04) {
-                val deltaBytes = currentBytes - lastBytes
-                var instantMbps = if (deltaBytes > 0) (deltaBytes * 8.0) / (timeDiffSec * 1_000_000.0) else 0.0
+                val instantMbps = if (deltaBytes > 0 && timeDiffSec > 0) {
+                    (deltaBytes * 8.0) / (timeDiffSec * 1_000_000.0)
+                } else 0.0
 
-                // If sandbox environment network is blocked, provide smooth realistic curve
-                if (currentBytes <= 0L) {
-                    val curveFactor = (elapsedTotalSec / (downloadDurationMs / 1000.0)).coerceIn(0.0, 1.0)
-                    instantMbps = targetSimDownload * (0.35 + 0.65 * curveFactor) + Random.nextDouble(-8.0, 8.0)
+                if (instantMbps > 0.0) {
+                    smoothedDlSpeed = if (smoothedDlSpeed == 0.0) instantMbps else (0.45 * instantMbps + 0.55 * smoothedDlSpeed)
+                    if (totalElapsedSec > 0.3) {
+                        recordedDlSamples.add(smoothedDlSpeed)
+                    }
                 }
 
-                val validInstantMbps = max(1.0, instantMbps)
-                smoothedSpeed = if (smoothedSpeed == 0.0) validInstantMbps else (0.55 * validInstantMbps + 0.45 * smoothedSpeed)
-
-                if (elapsedTotalSec > 0.4) {
-                    recordedSpeedSamples.add(smoothedSpeed)
-                }
-
-                val progress = (elapsedTotalSec / (downloadDurationMs / 1000.0)).toFloat().coerceIn(0f, 1f)
+                val progress = (totalElapsedSec / (downloadDurationMs / 1000.0)).toFloat().coerceIn(0f, 1f)
                 _state.update {
                     it.copy(
-                        liveSpeed = smoothedSpeed,
-                        progressFraction = 0.18f + (progress * 0.38f)
+                        liveSpeed = smoothedDlSpeed,
+                        progressFraction = 0.18f + (progress * 0.38f),
+                        downloadSamples = recordedDlSamples.takeLast(30)
                     )
                 }
-                lastBytes = currentBytes
-                lastTime = now
+                lastDlBytes = currentBytes
+                lastDlTime = now
             }
         }
 
         isDownloadingActive.set(false)
-        cancelAllActiveCalls()
         downloadWorkers.forEach { it.cancel() }
+        cancelAllActiveCalls()
+        isCancelled.set(false)
 
-        val finalDownload = if (recordedSpeedSamples.size >= 4) {
-            val sortedSamples = recordedSpeedSamples.sorted()
-            val p80Index = (sortedSamples.size * 0.80).toInt().coerceIn(0, sortedSamples.size - 1)
-            sortedSamples[p80Index]
-        } else {
-            targetSimDownload
+        val dlElapsedSec = (System.currentTimeMillis() - dlStartTime) / 1000.0
+        val finalDlBytes = totalDownloadedBytes.get()
+
+        if (finalDlBytes == 0L || dlElapsedSec <= 0) {
+            _state.update {
+                it.copy(
+                    phase = TestPhase.ERROR,
+                    errorMessage = "การทดสอบดาวน์โหลดล้มเหลว ไม่สามารถรับข้อมูลจากเซิร์ฟเวอร์ได้ (Download failed: No bytes received)",
+                    liveSpeed = 0.0
+                )
+            }
+            return@supervisorScope _state.value
         }
 
-        val finalDownloadLatency = (finalPing + (jitter * 1.8).toInt()).coerceAtLeast(finalPing)
-        val finalUploadLatency = (finalPing + (jitter * 1.3).toInt()).coerceAtLeast(finalPing)
+        // Real Download Calculation: (TotalBytes * 8) / (ElapsedSeconds * 1,000,000)
+        // Or 80th percentile of recorded samples during stable streaming
+        val finalDownloadMbps = if (recordedDlSamples.isNotEmpty()) {
+            val sorted = recordedDlSamples.sorted()
+            val idx = (sorted.size * 0.75).toInt().coerceIn(0, sorted.size - 1)
+            sorted[idx]
+        } else {
+            (finalDlBytes * 8.0) / (dlElapsedSec * 1_000_000.0)
+        }
 
         _state.update {
             it.copy(
-                downloadMbps = finalDownload,
-                downloadLatencyMs = finalDownloadLatency,
+                downloadMbps = finalDownloadMbps,
+                bytesDownloaded = finalDlBytes,
                 phase = TestPhase.TESTING_UPLOAD,
+                progressFraction = 0.58f,
                 liveSpeed = 0.0
             )
         }
 
         delay(80)
 
-        // 3. REAL UPLOAD THROUGHPUT MEASUREMENT
-        val uploadDurationMs = if (batterySaver) 2400L else 3200L
-        val uploadUrl = "https://speed.cloudflare.com/__up"
+        // =========================================================================
+        // PHASE 3: REAL UPLOAD MEASUREMENT (POST real bytes to Cloudflare Edge)
+        // Formula: Mbps = (UploadedBytes * 8) / (ElapsedSeconds * 1,000,000)
+        // =========================================================================
+        val uploadDurationMs = if (isPrecisionMode) 6000L else if (batterySaver) 2800L else 3800L
+        val uploadUrl = server.uploadUrl
         val totalUploadedBytes = AtomicLong(0L)
         val isUploadingActive = AtomicBoolean(true)
-        val uploadStartTime = System.currentTimeMillis()
+        val ulStartTime = System.currentTimeMillis()
 
         val uploadWorker = launch(Dispatchers.IO) {
-            val chunk = ByteArray(16384)
-            var errorCount = 0
-            while (isUploadingActive.get() && isActive) {
+            val uploadChunk = ByteArray(32768) { (it % 127).toByte() }
+            while (isUploadingActive.get() && !isCancelled.get() && isActive) {
                 try {
                     val requestBody = object : RequestBody() {
                         override fun contentType() = "application/octet-stream".toMediaTypeOrNull()
                         override fun contentLength() = -1L
                         override fun writeTo(sink: BufferedSink) {
-                            while (isUploadingActive.get() && isActive && System.currentTimeMillis() - uploadStartTime < uploadDurationMs) {
-                                sink.write(chunk)
-                                totalUploadedBytes.addAndGet(chunk.size.toLong())
+                            while (isUploadingActive.get() && !isCancelled.get() && isActive &&
+                                (System.currentTimeMillis() - ulStartTime) < uploadDurationMs
+                            ) {
+                                sink.write(uploadChunk)
+                                totalUploadedBytes.addAndGet(uploadChunk.size.toLong())
                             }
                             sink.flush()
                         }
                     }
+
                     val request = Request.Builder()
                         .url(uploadUrl)
-                        .header("User-Agent", "Zipspeed/35.0")
+                        .header("User-Agent", "Zipspeed/1.0")
                         .post(requestBody)
                         .build()
 
@@ -280,78 +334,86 @@ class NetworkSpeedTester {
                     activeCalls.add(call)
                     try {
                         call.execute().close()
-                        errorCount = 0
                     } finally {
                         activeCalls.remove(call)
                     }
                 } catch (_: Exception) {
-                    errorCount++
-                    val waitMs = if (errorCount > 2) 250L else 50L
-                    delay(waitMs)
+                    delay(50L)
                 }
             }
         }
 
-        var lastUploadBytes = 0L
-        var lastUploadTime = uploadStartTime
-        val recordedUploadSamples = mutableListOf<Double>()
-        var smoothedUploadSpeed = 0.0
-        val targetSimUpload = if (isPro) Random.nextDouble(120.0, 195.0) else Random.nextDouble(65.0, 115.0)
+        var lastUlBytes = 0L
+        var lastUlTime = ulStartTime
+        val recordedUlSamples = mutableListOf<Double>()
+        var smoothedUlSpeed = 0.0
 
-        while (isActive && System.currentTimeMillis() - uploadStartTime < uploadDurationMs) {
+        while (isActive && !isCancelled.get() && (System.currentTimeMillis() - ulStartTime) < uploadDurationMs) {
             delay(pollDelayMs)
             val now = System.currentTimeMillis()
             val currentBytes = totalUploadedBytes.get()
-            val timeDiffSec = (now - lastUploadTime) / 1000.0
-            val elapsedTotalSec = (now - uploadStartTime) / 1000.0
+            val deltaBytes = currentBytes - lastUlBytes
+            val timeDiffSec = (now - lastUlTime) / 1000.0
+            val totalElapsedSec = (now - ulStartTime) / 1000.0
 
             if (timeDiffSec >= 0.04) {
-                val deltaBytes = currentBytes - lastUploadBytes
-                var instantMbps = if (deltaBytes > 0) (deltaBytes * 8.0) / (timeDiffSec * 1_000_000.0) else 0.0
+                val instantMbps = if (deltaBytes > 0 && timeDiffSec > 0) {
+                    (deltaBytes * 8.0) / (timeDiffSec * 1_000_000.0)
+                } else 0.0
 
-                if (currentBytes <= 0L) {
-                    val curveFactor = (elapsedTotalSec / (uploadDurationMs / 1000.0)).coerceIn(0.0, 1.0)
-                    instantMbps = targetSimUpload * (0.40 + 0.60 * curveFactor) + Random.nextDouble(-4.0, 4.0)
+                if (instantMbps > 0.0) {
+                    smoothedUlSpeed = if (smoothedUlSpeed == 0.0) instantMbps else (0.45 * instantMbps + 0.55 * smoothedUlSpeed)
+                    if (totalElapsedSec > 0.3) {
+                        recordedUlSamples.add(smoothedUlSpeed)
+                    }
                 }
 
-                val validInstantMbps = max(1.0, instantMbps)
-                smoothedUploadSpeed = if (smoothedUploadSpeed == 0.0) validInstantMbps else (0.55 * validInstantMbps + 0.45 * smoothedUploadSpeed)
-
-                if (elapsedTotalSec > 0.4) {
-                    recordedUploadSamples.add(smoothedUploadSpeed)
-                }
-
-                val progress = (elapsedTotalSec / (uploadDurationMs / 1000.0)).toFloat().coerceIn(0f, 1f)
+                val progress = (totalElapsedSec / (uploadDurationMs / 1000.0)).toFloat().coerceIn(0f, 1f)
                 _state.update {
                     it.copy(
-                        liveSpeed = smoothedUploadSpeed,
-                        progressFraction = 0.58f + (progress * 0.40f)
+                        liveSpeed = smoothedUlSpeed,
+                        progressFraction = 0.58f + (progress * 0.40f),
+                        uploadSamples = recordedUlSamples.takeLast(30)
                     )
                 }
-                lastUploadBytes = currentBytes
-                lastUploadTime = now
+                lastUlBytes = currentBytes
+                lastUlTime = now
             }
         }
 
         isUploadingActive.set(false)
-        cancelAllActiveCalls()
         uploadWorker.cancel()
+        cancelAllActiveCalls()
 
-        val finalUpload = if (recordedUploadSamples.size >= 4) {
-            val sortedSamples = recordedUploadSamples.sorted()
-            val p80Index = (sortedSamples.size * 0.80).toInt().coerceIn(0, sortedSamples.size - 1)
-            sortedSamples[p80Index]
+        val ulElapsedSec = (System.currentTimeMillis() - ulStartTime) / 1000.0
+        val finalUlBytes = totalUploadedBytes.get()
+
+        val finalUploadMbps = if (recordedUlSamples.isNotEmpty()) {
+            val sorted = recordedUlSamples.sorted()
+            val idx = (sorted.size * 0.75).toInt().coerceIn(0, sorted.size - 1)
+            sorted[idx]
+        } else if (finalUlBytes > 0 && ulElapsedSec > 0) {
+            (finalUlBytes * 8.0) / (ulElapsedSec * 1_000_000.0)
         } else {
-            targetSimUpload
+            0.0
+        }
+
+        // Warnings Check (Latency > 150ms or Jitter > 30ms)
+        val warning = when {
+            finalPing > 150 -> "ค่า HTTP Latency สูงผิดปกติ (${finalPing}ms) อาจส่งผลต่อการเล่นเกมหรือการสนทนาเสียง"
+            jitter > 35 -> "พบความผันผวนของสัญญาณ (Jitter ${jitter}ms) แนะนำให้อยู่ใกล้เราเตอร์หรือจุดปล่อยสัญญาณ"
+            else -> null
         }
 
         _state.update {
             it.copy(
-                uploadMbps = finalUpload,
-                uploadLatencyMs = finalUploadLatency,
-                liveSpeed = finalDownload,
+                uploadMbps = finalUploadMbps,
+                bytesUploaded = finalUlBytes,
+                liveSpeed = finalDownloadMbps,
                 progressFraction = 1.0f,
-                phase = TestPhase.COMPLETED
+                phase = TestPhase.COMPLETED,
+                warningMessage = warning,
+                testDurationMs = System.currentTimeMillis() - testStartTime
             )
         }
 
@@ -362,7 +424,7 @@ class NetworkSpeedTester {
         cancelAllActiveCalls()
         _state.update {
             it.copy(
-                phase = TestPhase.IDLE,
+                phase = TestPhase.CANCELLED,
                 liveSpeed = 0.0,
                 progressFraction = 0.0f
             )
@@ -370,7 +432,7 @@ class NetworkSpeedTester {
     }
 
     fun reset() {
-        cancelTest()
-        _state.value = SpeedTestState()
+        cancelAllActiveCalls()
+        _state.value = SpeedTestState(phase = TestPhase.IDLE, liveSpeed = 0.0)
     }
 }
