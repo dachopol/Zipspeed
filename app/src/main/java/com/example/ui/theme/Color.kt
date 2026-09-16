@@ -7,14 +7,14 @@ import androidx.compose.ui.graphics.Color
 // =========================================================================
 
 // Dark Mode Palette
-val DeepNavy = Color(0xFF0B1120)        // Main Background #0B1120
-val DarkCard = Color(0xFF141E30)        // Card Background #141E30
-val ElevatedSurface = Color(0xFF1B2940) // Elevated Surface #1B2940
-val ChampagneGold = Color(0xFFD6BC8A)   // Champagne Accent #D6BC8A
-val ChampagneLight = Color(0xFFEAD9B8)  // Champagne Highlight
-val ChampagneDark = Color(0xFF8C7348)   // Champagne Shadow/Bronze
-val TextWhite = Color(0xFFF2F4F8)       // Primary Text #F2F4F8
-val TextMuted = Color(0xFFA7B3C6)       // Secondary Text #A7B3C6
+val DeepNavy = Color(0xFF080F1F)        // Main Background #080F1F
+val DarkCard = Color(0xFF111C30)        // Card Background #111C30
+val ElevatedSurface = Color(0xFF17243C) // Elevated Surface
+val ChampagneGold = Color(0xFFD8B56A)   // Champagne Accent #D8B56A
+val ChampagneLight = Color(0xFFF5E3AD)  // Highlight #F5E3AD
+val ChampagneDark = Color(0xFF9A7B38)   // Bronze Shadow
+val TextWhite = Color(0xFFF5F2E9)       // Primary Text Main #F5F2E9
+val TextMuted = Color(0xFFAAB3C2)       // Secondary Text Muted #AAB3C2
 val WinePink = Color(0xFFA83D65)        // Primary Button #A83D65
 val StatusGreen = Color(0xFF2ECC71)     // Connected/Success Only #2ECC71
 
