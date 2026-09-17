@@ -383,6 +383,9 @@ fun HomeScreen(
                 isVipAdFree = isVipAdFree,
                 onOpenVipModal = onOpenVipModal,
                 onToggleUnit = onToggleSpeedUnit,
+                onStartTest = {
+                    if (isPrecisionMode) onStartPrecisionTest() else onStartTest()
+                },
                 modifier = Modifier.padding(vertical = 4.dp)
             )
 
