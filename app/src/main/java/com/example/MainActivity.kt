@@ -40,11 +40,15 @@ import com.example.ui.components.ServerSelectionModal
 import com.example.ui.components.SecurityShieldModal
 import com.example.ui.components.VipAdFreeModal
 import com.example.ui.components.TopHeader
+import com.example.ui.screens.AdFreeScreen
 import com.example.ui.screens.HistoryScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.LoginScreen
+import com.example.ui.screens.MapScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.SplashScreen
+import com.example.ui.screens.StatusScreen
+import com.example.ui.screens.VideoScreen
 import com.example.ui.theme.ZipspeedTheme
 
 class MainActivity : ComponentActivity() {
@@ -231,10 +235,38 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
                                             )
                                         }
 
-                                        NavTab.VIDEO -> { /* TODO: Implement */ }
-                                        NavTab.STATUS -> { /* TODO: Implement */ }
-                                        NavTab.MAP -> { /* TODO: Implement */ }
-                                        NavTab.AD_FREE -> { /* TODO: Implement */ }
+                                        NavTab.VIDEO -> {
+                                            VideoScreen(
+                                                videoState = videoTestState,
+                                                language = language,
+                                                onStartTest = { viewModel.startVideoTest() },
+                                                onCancelTest = { viewModel.cancelVideoTest() }
+                                            )
+                                        }
+
+                                        NavTab.STATUS -> {
+                                            StatusScreen(
+                                                ipInfo = ipInfo,
+                                                language = language,
+                                                onRefreshIp = { viewModel.refreshIpInfo() }
+                                            )
+                                        }
+
+                                        NavTab.MAP -> {
+                                            MapScreen(
+                                                selectedServer = selectedServer,
+                                                language = language,
+                                                onSelectServer = { viewModel.setSelectedServer(it) }
+                                            )
+                                        }
+
+                                        NavTab.AD_FREE -> {
+                                            AdFreeScreen(
+                                                isVipAdFree = isProPlan,
+                                                language = language,
+                                                onActivateVip = { viewModel.activateVipAdFree() }
+                                            )
+                                        }
 
                                         NavTab.SETTINGS -> {
                                             SettingsScreen(

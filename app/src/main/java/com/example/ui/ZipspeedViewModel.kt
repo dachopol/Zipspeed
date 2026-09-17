@@ -874,6 +874,15 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
         _rewardAdsEnabled.value = false
     }
 
+    fun activateVipAdFree() {
+        if (_isProPlan.value) {
+            _isProPlan.value = false
+            prefs.edit().putBoolean("is_vip_ad_free", false).apply()
+        } else {
+            purchaseVipAdFree("LIFETIME")
+        }
+    }
+
     fun watchAdForTempVip() {
         // Unlock 1 hour VIP temporary pass
         _isProPlan.value = true

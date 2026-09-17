@@ -20,9 +20,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Tv
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -73,21 +79,47 @@ fun BottomNavBar(
                 shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
             )
             .navigationBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 4.dp, vertical = 6.dp)
             .testTag("bottom_nav_bar")
     ) {
+        val navScrollState = rememberScrollState()
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(navScrollState),
+            horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
             NavItem(
-                label = if (language == Language.TH) "ทดสอบ" else "Test",
+                label = if (language == Language.TH) "ทดสอบ" else "Speed",
                 icon = Icons.Default.Speed,
                 isSelected = activeTab == NavTab.SPEED,
                 testTag = "nav_speed",
-                onClick = { onTabSelected(NavTab.SPEED) },
-                modifier = Modifier.weight(1f)
+                onClick = { onTabSelected(NavTab.SPEED) }
+            )
+
+            NavItem(
+                label = if (language == Language.TH) "วิดีโอ" else "Video",
+                icon = Icons.Default.Tv,
+                isSelected = activeTab == NavTab.VIDEO,
+                testTag = "nav_video",
+                onClick = { onTabSelected(NavTab.VIDEO) }
+            )
+
+            NavItem(
+                label = if (language == Language.TH) "สถานะ" else "Status",
+                icon = Icons.Default.SignalCellularAlt,
+                isSelected = activeTab == NavTab.STATUS,
+                testTag = "nav_status",
+                onClick = { onTabSelected(NavTab.STATUS) }
+            )
+
+            NavItem(
+                label = if (language == Language.TH) "แผนที่" else "Map",
+                icon = Icons.Default.Public,
+                isSelected = activeTab == NavTab.MAP,
+                testTag = "nav_map",
+                onClick = { onTabSelected(NavTab.MAP) }
             )
 
             NavItem(
@@ -95,8 +127,7 @@ fun BottomNavBar(
                 icon = Icons.Default.History,
                 isSelected = activeTab == NavTab.HISTORY,
                 testTag = "nav_history",
-                onClick = { onTabSelected(NavTab.HISTORY) },
-                modifier = Modifier.weight(1f)
+                onClick = { onTabSelected(NavTab.HISTORY) }
             )
 
             NavItem(
@@ -104,8 +135,15 @@ fun BottomNavBar(
                 icon = Icons.Default.Settings,
                 isSelected = activeTab == NavTab.SETTINGS,
                 testTag = "nav_settings",
-                onClick = { onTabSelected(NavTab.SETTINGS) },
-                modifier = Modifier.weight(1f)
+                onClick = { onTabSelected(NavTab.SETTINGS) }
+            )
+
+            NavItem(
+                label = if (language == Language.TH) "VIP" else "Ad-Free",
+                icon = Icons.Default.WorkspacePremium,
+                isSelected = activeTab == NavTab.AD_FREE,
+                testTag = "nav_ad_free",
+                onClick = { onTabSelected(NavTab.AD_FREE) }
             )
         }
     }
@@ -137,7 +175,7 @@ private fun NavItem(
 
     Box(
         modifier = modifier
-            .defaultMinSize(minHeight = 48.dp)
+            .defaultMinSize(minHeight = 48.dp, minWidth = 48.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(animatedBgColor)
             .clickable(
@@ -145,7 +183,7 @@ private fun NavItem(
                 indication = ripple(bounded = true, color = activeColor),
                 onClick = onClick
             )
-            .padding(vertical = 8.dp),
+            .padding(horizontal = 8.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
