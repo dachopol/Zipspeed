@@ -14,7 +14,7 @@ android {
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
-    applicationId = "com.aistudio.zipspeed.zskt"
+    applicationId = "com.aistudio.zipspeed.anakinyoo"
     minSdk = 24
     targetSdk = 36
     versionCode = 37

@@ -654,7 +654,7 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
     val showAdModal: StateFlow<Boolean> = _showAdModal.asStateFlow()
 
     // UI Preferences
-    private val _activeTab = MutableStateFlow(NavTab.HOME)
+    private val _activeTab = MutableStateFlow(NavTab.SPEED)
     val activeTab: StateFlow<NavTab> = _activeTab.asStateFlow()
 
     private var userHasManuallySelectedLanguage = false

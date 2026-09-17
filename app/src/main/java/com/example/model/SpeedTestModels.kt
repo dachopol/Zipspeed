@@ -21,9 +21,13 @@ enum class Language(val code: String, val displayName: String) {
 }
 
 enum class NavTab {
-    HOME,
+    SPEED,
+    VIDEO,
+    STATUS,
+    MAP,
     HISTORY,
-    SETTINGS
+    SETTINGS,
+    AD_FREE
 }
 
 data class SpeedTestState(

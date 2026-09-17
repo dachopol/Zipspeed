@@ -84,9 +84,9 @@ fun BottomNavBar(
             NavItem(
                 label = if (language == Language.TH) "ทดสอบ" else "Test",
                 icon = Icons.Default.Speed,
-                isSelected = activeTab == NavTab.HOME,
-                testTag = "nav_home",
-                onClick = { onTabSelected(NavTab.HOME) },
+                isSelected = activeTab == NavTab.SPEED,
+                testTag = "nav_speed",
+                onClick = { onTabSelected(NavTab.SPEED) },
                 modifier = Modifier.weight(1f)
             )
 

@@ -188,7 +188,7 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
                                     modifier = Modifier.weight(1f)
                                 ) { targetTab ->
                                     when (targetTab) {
-                                        NavTab.HOME -> {
+                                        NavTab.SPEED -> {
                                             HomeScreen(
                                                 testState = testState,
                                                 selectedServer = selectedServer,
@@ -230,6 +230,11 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
                                                 onClearAll = { viewModel.clearAllHistory() }
                                             )
                                         }
+
+                                        NavTab.VIDEO -> { /* TODO: Implement */ }
+                                        NavTab.STATUS -> { /* TODO: Implement */ }
+                                        NavTab.MAP -> { /* TODO: Implement */ }
+                                        NavTab.AD_FREE -> { /* TODO: Implement */ }
 
                                         NavTab.SETTINGS -> {
                                             SettingsScreen(
