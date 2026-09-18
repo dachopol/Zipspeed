@@ -10,7 +10,12 @@ import androidx.compose.ui.graphics.Color
 val DeepNavy = Color(0xFF080F1F)        // Main Background #080F1F
 val DarkCard = Color(0xFF111C30)        // Card Background #111C30
 val ElevatedSurface = Color(0xFF17243C) // Elevated Surface
-val ChampagneGold = Color(0xFFD8B56A)   // Champagne Accent #D8B56A
+val ZipMint = Color(0xFF35E8C8)        // Zipspeed primary action / download
+val ZipMintSoft = Color(0xFF8FF5E2)    // Soft highlight
+val ZipViolet = Color(0xFF8B7BFF)      // Secondary / upload
+val DangerRose = Color(0xFFFF5C72)     // Error / destructive only
+
+val ChampagneGold = Color(0xFFD8B56A)   // VIP / premium accent only
 val ChampagneLight = Color(0xFFF5E3AD)  // Highlight #F5E3AD
 val ChampagneDark = Color(0xFF9A7B38)   // Bronze Shadow
 val TextWhite = Color(0xFFF5F2E9)       // Primary Text Main #F5F2E9
