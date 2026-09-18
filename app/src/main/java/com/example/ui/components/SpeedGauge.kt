@@ -87,6 +87,9 @@ import com.example.ui.theme.DeepNavy
 import com.example.ui.theme.LocalAppTheme
 import com.example.ui.theme.StatusGreen
 import com.example.ui.theme.WinePink
+import com.example.ui.theme.ZipMint
+import com.example.ui.theme.ZipMintSoft
+import com.example.ui.theme.ZipViolet
 import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.sin
@@ -349,10 +352,10 @@ fun SpeedGauge(
             val activeSweep = (animatedNeedleFraction * sweepAngle).coerceAtLeast(0.5f)
             val progressBrush = Brush.sweepGradient(
                 colors = listOf(
-                    ChampagneGold.copy(alpha = 0.6f),
-                    ChampagneLight,
-                    ChampagneGold,
-                    ChampagneLight
+                    ZipMint.copy(alpha = 0.55f),
+                    ZipMintSoft,
+                    ZipMint,
+                    ZipViolet
                 ),
                 center = centerOffset
             )
@@ -416,11 +419,11 @@ fun SpeedGauge(
 
             val needleBrush = Brush.linearGradient(
                 colors = listOf(
-                    Color(0xFF8C1D40), // Darker counterweight
-                    WinePink,          // Crimson body
-                    Color(0xFFFF5277), // Vivid sport red
-                    ChampagneGold,     // Luminous transition
-                    ChampagneLight     // Brilliant needle point
+                    Color(0xFF352B76), // Violet counterweight
+                    ZipViolet,         // Zipspeed violet body
+                    ZipMint,           // Brand transition
+                    ZipMintSoft,       // Luminous transition
+                    Color.White        // Crisp needle point
                 ),
                 start = tailTip,
                 end = tipPoint
@@ -470,7 +473,7 @@ fun SpeedGauge(
                 center = centerOffset
             )
             drawCircle(
-                color = WinePink,
+                color = ZipMint,
                 radius = 4.dp.toPx(),
                 center = centerOffset
             )
@@ -489,13 +492,13 @@ fun SpeedGauge(
                     .background(
                         Brush.radialGradient(
                             colors = listOf(
-                                WinePink,
-                                Color(0xFF9E2A52),
-                                Color(0xFF6B122E)
+                                ZipMintSoft,
+                                ZipMint,
+                                Color(0xFF0D9F87)
                             )
                         )
                     )
-                    .border(2.5.dp, ChampagneGold.copy(alpha = 0.85f), CircleShape)
+                    .border(2.dp, Color.White.copy(alpha = 0.28f), CircleShape)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = ripple(bounded = true, color = Color.White),
@@ -514,7 +517,7 @@ fun SpeedGauge(
                     )
                     Text(
                         text = "แตะเพื่อเริ่ม",
-                        color = ChampagneLight,
+                        color = Color(0xE6003029),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -533,7 +536,7 @@ fun SpeedGauge(
                     TestPhase.IDLE -> Triple("READY", theme.colors.border, theme.colors.textMuted)
                     TestPhase.TESTING_PING -> Triple("LATENCY", ChampagneGold, ChampagneGold)
                     TestPhase.TESTING_DOWNLOAD -> Triple("DOWNLOAD", ChampagneGold, ChampagneGold)
-                    TestPhase.TESTING_UPLOAD -> Triple("UPLOAD", WinePink, WinePink)
+                    TestPhase.TESTING_UPLOAD -> Triple("UPLOAD", ZipViolet, ZipViolet)
                     TestPhase.COMPLETED -> Triple("COMPLETED", StatusGreen, StatusGreen)
                     TestPhase.CANCELLED -> Triple("CANCELLED", theme.colors.border, theme.colors.textMuted)
                     TestPhase.ERROR -> Triple("ERROR", WinePink, WinePink)
@@ -577,8 +580,8 @@ fun SpeedGauge(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
-                            .background(WinePink.copy(alpha = 0.15f))
-                            .border(1.dp, WinePink.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                            .background(ZipMint.copy(alpha = 0.13f))
+                            .border(1.dp, ZipMint.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
                             .clickable { onStartTest?.invoke() }
                             .padding(horizontal = 8.dp, vertical = 3.dp)
                             .testTag("gauge_restart_button")
@@ -590,12 +593,12 @@ fun SpeedGauge(
                             Icon(
                                 imageVector = Icons.Default.Refresh,
                                 contentDescription = null,
-                                tint = WinePink,
+                                tint = ZipMint,
                                 modifier = Modifier.size(13.dp)
                             )
                             Text(
                                 text = "ทดสอบอีกครั้ง",
-                                color = WinePink,
+                                color = ZipMint,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
