@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.WorkspacePremium
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -61,6 +62,7 @@ fun TopHeader(
     onLanguageChange: (Language) -> Unit = {},
     onToggleDarkLight: () -> Unit = {},
     onOpenVipModal: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
     onToggleGps: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -120,46 +122,73 @@ fun TopHeader(
             }
         }
 
-        // Minimalist Ad-Free VIP Action (Touch target >= 44x44dp)
-        Box(
-            modifier = Modifier
-                .defaultMinSize(minWidth = 44.dp, minHeight = 44.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(
-                    if (isVipAdFree) ChampagneGold.copy(alpha = 0.12f)
-                    else currentTheme.colors.surface.copy(alpha = 0.8f)
-                )
-                .border(
-                    width = 1.dp,
-                    color = if (isVipAdFree) ChampagneGold.copy(alpha = 0.45f)
-                    else currentTheme.colors.border,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple(bounded = true, color = ChampagneGold),
-                    onClick = onOpenVipModal
-                )
-                .padding(horizontal = 10.dp, vertical = 6.dp)
-                .testTag("vip_header_btn"),
-            contentAlignment = Alignment.Center
+        // Header actions: Settings + VIP. These replace secondary bottom-nav destinations.
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(5.dp)
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(currentTheme.colors.surface.copy(alpha = 0.78f))
+                    .border(1.dp, currentTheme.colors.border, RoundedCornerShape(12.dp))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(bounded = true, color = currentTheme.colors.primary),
+                        onClick = onOpenSettings
+                    )
+                    .testTag("settings_header_btn"),
+                contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.WorkspacePremium,
-                    contentDescription = "VIP Ad-Free",
-                    tint = if (isVipAdFree) StatusGreen else ChampagneGold,
-                    modifier = Modifier.size(15.dp)
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = if (language == Language.TH) "การตั้งค่า" else "Settings",
+                    tint = currentTheme.colors.textMuted,
+                    modifier = Modifier.size(19.dp)
                 )
-                Text(
-                    text = if (isVipAdFree) "VIP" else "Ad-Free",
-                    color = if (isVipAdFree) StatusGreen else ChampagneGold,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium
-                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .defaultMinSize(minWidth = 44.dp, minHeight = 44.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        if (isVipAdFree) ChampagneGold.copy(alpha = 0.12f)
+                        else currentTheme.colors.surface.copy(alpha = 0.78f)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = if (isVipAdFree) ChampagneGold.copy(alpha = 0.45f)
+                        else currentTheme.colors.border,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(bounded = true, color = ChampagneGold),
+                        onClick = onOpenVipModal
+                    )
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                    .testTag("vip_header_btn"),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.WorkspacePremium,
+                        contentDescription = "VIP Ad-Free",
+                        tint = if (isVipAdFree) StatusGreen else ChampagneGold,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Text(
+                        text = if (isVipAdFree) "VIP" else "Ad-Free",
+                        color = if (isVipAdFree) StatusGreen else ChampagneGold,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }
