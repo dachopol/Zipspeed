@@ -45,6 +45,8 @@ import com.example.ui.theme.ChampagneGold
 import com.example.ui.theme.LocalAppTheme
 import com.example.ui.theme.StatusGreen
 import com.example.ui.theme.WinePink
+import com.example.ui.theme.ZipMint
+import com.example.ui.theme.ZipViolet
 import java.util.Locale
 
 @Composable
@@ -72,8 +74,8 @@ fun MetricsGrid(
     val jitterText = testState.jitterMs?.toString() ?: "--"
 
     // Refined Palette (Champagne, Wine, Green, Muted Slate)
-    val downloadAccent = ChampagneGold
-    val uploadAccent = WinePink
+    val downloadAccent = ZipMint
+    val uploadAccent = ZipViolet
     val pingAccent = ChampagneGold
     val jitterAccent = theme.colors.textMuted
 
