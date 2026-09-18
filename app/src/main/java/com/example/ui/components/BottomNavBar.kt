@@ -20,15 +20,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Tv
-import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -46,15 +42,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.Language
 import com.example.model.NavTab
-import com.example.ui.theme.ChampagneGold
 import com.example.ui.theme.LocalAppTheme
+import com.example.ui.theme.ZipMint
 
 /**
- * Premium 3-Tab Bottom Navigation Bar:
- * - Test (ทดสอบ)
- * - History (ประวัติ)
- * - Settings (การตั้งค่า)
- * Note: Security Shield has been integrated cleanly into the Settings screen as requested.
+ * Five primary destinations stay visible without horizontal scrolling.
+ * Settings is available in the top header and Ad-Free/VIP is available there too.
  */
 @Composable
 fun BottomNavBar(
@@ -67,7 +60,6 @@ fun BottomNavBar(
     modifier: Modifier = Modifier
 ) {
     val currentTheme = LocalAppTheme.current
-    val isDark = currentTheme.isDark
 
     Box(
         modifier = modifier
@@ -76,18 +68,15 @@ fun BottomNavBar(
             .border(
                 width = 1.dp,
                 color = currentTheme.colors.border,
-                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             )
             .navigationBarsPadding()
-            .padding(horizontal = 4.dp, vertical = 6.dp)
+            .padding(horizontal = 8.dp, vertical = 7.dp)
             .testTag("bottom_nav_bar")
     ) {
-        val navScrollState = rememberScrollState()
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(navScrollState),
-            horizontalArrangement = Arrangement.SpaceAround,
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             NavItem(
@@ -95,55 +84,40 @@ fun BottomNavBar(
                 icon = Icons.Default.Speed,
                 isSelected = activeTab == NavTab.SPEED,
                 testTag = "nav_speed",
-                onClick = { onTabSelected(NavTab.SPEED) }
+                onClick = { onTabSelected(NavTab.SPEED) },
+                modifier = Modifier.weight(1f)
             )
-
             NavItem(
                 label = if (language == Language.TH) "วิดีโอ" else "Video",
                 icon = Icons.Default.Tv,
                 isSelected = activeTab == NavTab.VIDEO,
                 testTag = "nav_video",
-                onClick = { onTabSelected(NavTab.VIDEO) }
+                onClick = { onTabSelected(NavTab.VIDEO) },
+                modifier = Modifier.weight(1f)
             )
-
             NavItem(
                 label = if (language == Language.TH) "สถานะ" else "Status",
                 icon = Icons.Default.SignalCellularAlt,
                 isSelected = activeTab == NavTab.STATUS,
                 testTag = "nav_status",
-                onClick = { onTabSelected(NavTab.STATUS) }
+                onClick = { onTabSelected(NavTab.STATUS) },
+                modifier = Modifier.weight(1f)
             )
-
             NavItem(
                 label = if (language == Language.TH) "แผนที่" else "Map",
                 icon = Icons.Default.Public,
                 isSelected = activeTab == NavTab.MAP,
                 testTag = "nav_map",
-                onClick = { onTabSelected(NavTab.MAP) }
+                onClick = { onTabSelected(NavTab.MAP) },
+                modifier = Modifier.weight(1f)
             )
-
             NavItem(
                 label = if (language == Language.TH) "ประวัติ" else "History",
                 icon = Icons.Default.History,
                 isSelected = activeTab == NavTab.HISTORY,
                 testTag = "nav_history",
-                onClick = { onTabSelected(NavTab.HISTORY) }
-            )
-
-            NavItem(
-                label = if (language == Language.TH) "การตั้งค่า" else "Settings",
-                icon = Icons.Default.Settings,
-                isSelected = activeTab == NavTab.SETTINGS,
-                testTag = "nav_settings",
-                onClick = { onTabSelected(NavTab.SETTINGS) }
-            )
-
-            NavItem(
-                label = if (language == Language.TH) "VIP" else "Ad-Free",
-                icon = Icons.Default.WorkspacePremium,
-                isSelected = activeTab == NavTab.AD_FREE,
-                testTag = "nav_ad_free",
-                onClick = { onTabSelected(NavTab.AD_FREE) }
+                onClick = { onTabSelected(NavTab.HISTORY) },
+                modifier = Modifier.weight(1f)
             )
         }
     }
@@ -159,31 +133,29 @@ private fun NavItem(
     modifier: Modifier = Modifier
 ) {
     val currentTheme = LocalAppTheme.current
-    val activeColor = ChampagneGold
-
+    val activeColor = ZipMint
     val animatedBgColor by animateColorAsState(
-        targetValue = if (isSelected) activeColor.copy(alpha = 0.14f) else Color.Transparent,
-        animationSpec = tween(200, easing = FastOutSlowInEasing),
+        targetValue = if (isSelected) activeColor.copy(alpha = 0.13f) else Color.Transparent,
+        animationSpec = tween(180, easing = FastOutSlowInEasing),
         label = "navBg"
     )
-
     val animatedContentColor by animateColorAsState(
         targetValue = if (isSelected) activeColor else currentTheme.colors.textMuted,
-        animationSpec = tween(200, easing = FastOutSlowInEasing),
+        animationSpec = tween(180, easing = FastOutSlowInEasing),
         label = "navContent"
     )
 
     Box(
         modifier = modifier
-            .defaultMinSize(minHeight = 48.dp, minWidth = 48.dp)
+            .defaultMinSize(minHeight = 52.dp)
+            .padding(horizontal = 2.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(animatedBgColor)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(bounded = true, color = activeColor),
                 onClick = onClick
-            )
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            ),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -195,14 +167,15 @@ private fun NavItem(
                 imageVector = icon,
                 contentDescription = label,
                 tint = animatedContentColor,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(21.dp)
             )
             Spacer(modifier = Modifier.height(3.dp))
             Text(
                 text = label,
                 color = animatedContentColor,
-                fontSize = 11.sp,
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                fontSize = 10.sp,
+                maxLines = 1,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium
             )
         }
     }
