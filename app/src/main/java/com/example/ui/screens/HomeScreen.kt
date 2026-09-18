@@ -244,7 +244,7 @@ fun HomeScreen(
                                 )
                                 Text(
                                     text = if (isTh) "เปลี่ยน" else "Change",
-                                    color = ChampagneGold,
+                                    color = ZipMint,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -400,7 +400,7 @@ fun HomeScreen(
                 }
                 Text(
                     text = phaseMsg,
-                    color = ChampagneGold,
+                    color = ZipMint,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(vertical = 2.dp)
@@ -430,75 +430,48 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // =========================================================================
-            // 3. Full-Width Single Primary "Start Test" Button (Wine Pink #A83D65)
+            // 3. Running-state control only. Idle/restart actions live on the gauge to avoid duplicates.
             // =========================================================================
-            val primaryButtonText = when {
-                isRunning -> if (isTh) "ยกเลิกการทดสอบ" else "Cancel Test"
-                testState.phase == TestPhase.COMPLETED -> if (isTh) "เริ่มทดสอบอีกครั้ง" else "Test Again"
-                testState.phase == TestPhase.CANCELLED -> if (isTh) "เริ่มทดสอบใหม่" else "Start Test"
-                else -> if (isTh) "เริ่มทดสอบ" else "Start Test"
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(if (isRunning) Color(0xFF8C2D4B) else WinePink)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(bounded = true, color = Color.White),
-                        onClick = {
-                            if (isRunning) {
-                                onCancelTest()
-                            } else {
-                                if (isPrecisionMode) onStartPrecisionTest() else onStartTest()
-                            }
-                        }
-                    )
-                    .testTag("start_test_button"),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            if (isRunning) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(WinePink.copy(alpha = 0.14f))
+                        .border(1.dp, WinePink.copy(alpha = 0.45f), RoundedCornerShape(14.dp))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = ripple(bounded = true, color = WinePink),
+                            onClick = onCancelTest
+                        )
+                        .testTag("cancel_test_button"),
+                    contentAlignment = Alignment.Center
                 ) {
-                    if (isRunning) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = null,
-                            tint = TextWhite,
+                            tint = WinePink,
                             modifier = Modifier.size(18.dp)
                         )
-                    } else if (testState.phase == TestPhase.COMPLETED) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = null,
-                            tint = TextWhite,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Speed,
-                            contentDescription = null,
-                            tint = TextWhite,
-                            modifier = Modifier.size(18.dp)
+                        Text(
+                            text = if (isTh) "หยุดการทดสอบ" else "Stop Test",
+                            color = WinePink,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
-                    Text(
-                        text = primaryButtonText,
-                        color = TextWhite,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold, // 600
-                        letterSpacing = 0.2.sp
-                    )
                 }
+                Spacer(modifier = Modifier.height(12.dp))
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
 
             // =========================================================================
             // 4. Precision Mode Small Switch with Explanation Directly Below Button
+            // =========================================================================
             // =========================================================================
             Row(
                 modifier = Modifier
@@ -532,7 +505,7 @@ fun HomeScreen(
                     enabled = !isRunning,
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
-                        checkedTrackColor = ChampagneGold,
+                        checkedTrackColor = ZipMint,
                         uncheckedThumbColor = theme.colors.textMuted,
                         uncheckedTrackColor = Color(0x1AFFFFFF)
                     ),
@@ -562,8 +535,8 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .height(48.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(ChampagneGold.copy(alpha = 0.12f))
-                        .border(1.dp, ChampagneGold.copy(alpha = 0.45f), RoundedCornerShape(14.dp))
+                        .background(ZipMint.copy(alpha = 0.12f))
+                        .border(1.dp, ZipMint.copy(alpha = 0.45f), RoundedCornerShape(14.dp))
                         .clickable { handleInitiateShare() }
                         .testTag("share_result_btn"),
                     contentAlignment = Alignment.Center
@@ -575,12 +548,12 @@ fun HomeScreen(
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = "Share",
-                            tint = ChampagneGold,
+                            tint = ZipMint,
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
                             text = if (isTh) "แชร์รายงานผลการทดสอบ" else "Share Speed Test Report",
-                            color = ChampagneGold,
+                            color = ZipMint,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold
                         )
