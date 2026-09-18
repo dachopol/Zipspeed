@@ -36,8 +36,8 @@ object ThemeRegistry {
             background = DeepNavy,       // #0B1120
             surface = DarkCard,          // #141E30
             cardBg = DarkCard,           // #141E30
-            primary = ChampagneGold,     // #D6BC8A
-            accent = WinePink,           // #A83D65
+            primary = ZipMint,          // Zipspeed mint
+            accent = ZipViolet,          // Zipspeed violet
             textMain = TextWhite,        // #F2F4F8
             textMuted = TextMuted,       // #A7B3C6
             border = Color(0x1FFFFFFF)   // เส้นขอบบางละเอียด
@@ -54,8 +54,8 @@ object ThemeRegistry {
             background = IvoryBg,         // #F5F3EF
             surface = LightCard,          // #FFFFFF
             cardBg = LightCard,           // #FFFFFF
-            primary = ChampagneBronze,    // #96783C
-            accent = WinePink,            // #A83D65
+            primary = Color(0xFF087E6A), // Accessible mint for light surfaces
+            accent = ZipViolet,          // Zipspeed violet
             textMain = LightTextMain,     // #0B1120
             textMuted = LightTextMuted,   // #64748B
             border = Color(0xFFE2E8F0)    // เส้นขอบบางสว่าง
