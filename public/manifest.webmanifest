@@ -1,0 +1,16 @@
+{
+  "name": "Zipspeed by AnakinYoo",
+  "short_name": "Zipspeed",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#050811",
+  "theme_color": "#050811",
+  "icons": [
+    {
+      "src": "assets/zipspeed-icon.png",
+      "sizes": "1536x1536",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

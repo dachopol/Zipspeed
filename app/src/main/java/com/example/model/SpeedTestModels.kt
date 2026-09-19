@@ -51,5 +51,6 @@ data class SpeedTestState(
     val bytesDownloaded: Long = 0L,
     val bytesUploaded: Long = 0L,
     val testDurationMs: Long = 0L,
-    val isPrecisionMode: Boolean = false
+    val isPrecisionMode: Boolean = false,
+    val currentStepText: String? = null
 )

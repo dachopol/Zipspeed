@@ -965,6 +965,10 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
         cancelVideoTest()
         cancelWebTest()
 
+        // เวลาวัดค่าเปิดโหมด GPS อัตโนมัติและดึงพิกัดจริง
+        _isGpsModeEnabled.value = true
+        fetchGpsCoordinates()
+
         activeTestJob?.cancel()
         activeTestJob = viewModelScope.launch {
             val server = _selectedServer.value

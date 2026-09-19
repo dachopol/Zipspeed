@@ -1,8 +1,11 @@
 package com.example.ui.screens
 
 import android.Manifest
+import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -137,6 +140,7 @@ fun HomeScreen(
     val theme = LocalAppTheme.current
     val isDark = theme.isDark
     val isTh = language == Language.TH
+    val context = LocalContext.current
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -144,8 +148,34 @@ fun HomeScreen(
         val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
                 permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (granted) {
+            if (!isGpsActive) {
+                onToggleGpsMode()
+            }
+        }
+    }
+
+    val triggerStartTestWithGps = {
+        val hasFine = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasFine && !hasCoarse) {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        } else if (!isGpsActive) {
             onToggleGpsMode()
         }
+
+        if (isPrecisionMode) onStartPrecisionTest() else onStartTest()
     }
 
     val handleInitiateShare = {
@@ -384,16 +414,14 @@ fun HomeScreen(
                 isVipAdFree = isVipAdFree,
                 onOpenVipModal = onOpenVipModal,
                 onToggleUnit = onToggleSpeedUnit,
-                onStartTest = {
-                    if (isPrecisionMode) onStartPrecisionTest() else onStartTest()
-                },
+                onStartTest = triggerStartTestWithGps,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
 
             // Test Phase Status Banner
             if (isRunning) {
                 Spacer(modifier = Modifier.height(6.dp))
-                val phaseMsg = when (testState.phase) {
+                val phaseMsg = testState.currentStepText ?: when (testState.phase) {
                     TestPhase.TESTING_PING -> if (isTh) "กำลังวัด Latency (HTTP RTT) ไปยังเซิร์ฟเวอร์..." else "Measuring HTTP Latency to Edge Node..."
                     TestPhase.TESTING_DOWNLOAD -> if (isTh) "กำลังวัดความเร็วดาวน์โหลด (${testState.downloadSamples.size} ตัวอย่าง)..." else "Testing real download throughput..."
                     TestPhase.TESTING_UPLOAD -> if (isTh) "กำลังวัดความเร็วอัปโหลด (${testState.uploadSamples.size} ตัวอย่าง)..." else "Testing real upload throughput..."
