@@ -181,6 +181,7 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
                                     onLanguageChange = { viewModel.setLanguage(it) },
                                     onToggleDarkLight = { viewModel.toggleDarkLightMode() },
                                     onOpenVipModal = { viewModel.openVipModal() },
+                                    onOpenSettings = { viewModel.selectTab(NavTab.SETTINGS) },
                                     onToggleGps = { viewModel.toggleGpsMode() }
                                 )
 

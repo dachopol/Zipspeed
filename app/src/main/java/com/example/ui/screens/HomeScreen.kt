@@ -88,6 +88,7 @@ import com.example.ui.theme.StatusGreen
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextWhite
 import com.example.ui.theme.WinePink
+import com.example.ui.theme.ZipMint
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -430,44 +431,75 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // =========================================================================
-            // 3. Running-state control only. Idle/restart actions live on the gauge to avoid duplicates.
+            // 3. Primary Start / Stop / Retest Button
             // =========================================================================
-            if (isRunning) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(WinePink.copy(alpha = 0.14f))
-                        .border(1.dp, WinePink.copy(alpha = 0.45f), RoundedCornerShape(14.dp))
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = ripple(bounded = true, color = WinePink),
-                            onClick = onCancelTest
-                        )
-                        .testTag("cancel_test_button"),
-                    contentAlignment = Alignment.Center
+            val primaryButtonText = when {
+                isRunning -> if (isTh) "ยกเลิกการทดสอบ" else "Cancel Test"
+                testState.phase == TestPhase.COMPLETED -> if (isTh) "เริ่มทดสอบอีกครั้ง" else "Test Again"
+                testState.phase == TestPhase.CANCELLED -> if (isTh) "เริ่มทดสอบใหม่" else "Start Test"
+                else -> if (isTh) "เริ่มทดสอบ" else "Start Test"
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        if (isRunning) Color(0xFF8C2D4B)
+                        else ZipMint
+                    )
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(bounded = true, color = Color.White),
+                        onClick = {
+                            if (isRunning) {
+                                onCancelTest()
+                            } else {
+                                if (isPrecisionMode) onStartPrecisionTest() else onStartTest()
+                            }
+                        }
+                    )
+                    .testTag("start_test_button"),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
+                    if (isRunning) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = null,
-                            tint = WinePink,
+                            tint = Color.White,
                             modifier = Modifier.size(18.dp)
                         )
-                        Text(
-                            text = if (isTh) "หยุดการทดสอบ" else "Stop Test",
-                            color = WinePink,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold
+                    } else if (testState.phase == TestPhase.COMPLETED) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = null,
+                            tint = Color(0xFF04241D),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Speed,
+                            contentDescription = null,
+                            tint = Color(0xFF04241D),
+                            modifier = Modifier.size(18.dp)
                         )
                     }
+                    Text(
+                        text = primaryButtonText,
+                        color = if (isRunning) Color.White else Color(0xFF04241D),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.2.sp
+                    )
                 }
-                Spacer(modifier = Modifier.height(12.dp))
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             // =========================================================================
             // 4. Precision Mode Small Switch with Explanation Directly Below Button
