@@ -129,7 +129,6 @@ fun SpeedGauge(
     val theme = LocalAppTheme.current
     val isDark = theme.isDark
 
-    // State for AdMob overlay covering gauge on completion
     var isGaugeAdDismissed by remember(phase) { mutableStateOf(false) }
     val showGaugeAd = phase == TestPhase.COMPLETED && !isVipAdFree && !isGaugeAdDismissed
 
@@ -153,11 +152,9 @@ fun SpeedGauge(
         }
     }
 
-    // Convert display speed if unit is MB/s
     val displayedSpeed = if (speedUnit == SpeedUnit.MB_S) speedValue / 8.0 else speedValue
     val rawTargetFraction = calculateSpeedFraction(speedValue)
 
-    // Smooth animation with reduced-motion support
     val animationSpec: AnimationSpec<Float> = if (reducedMotion) {
         tween(durationMillis = 0)
     } else {
@@ -170,14 +167,12 @@ fun SpeedGauge(
         label = "needleMotion"
     )
 
-    // Milestone haptic trigger
     LaunchedEffect((animatedNeedleFraction * 5).toInt()) {
         if (isTesting && !reducedMotion) {
             triggerHaptic(1)
         }
     }
 
-    // Gentle pulse animation for the center GO button when idle
     val infiniteTransition = rememberInfiniteTransition(label = "goPulse")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 1.0f,
@@ -189,7 +184,6 @@ fun SpeedGauge(
         label = "pulseScale"
     )
 
-    // Gauge Tick Text Paint
     val tickTextPaint = remember(isDark) {
         Paint().apply {
             color = if (isDark) android.graphics.Color.parseColor("#A7B3C6") else android.graphics.Color.parseColor("#64748B")
@@ -219,7 +213,6 @@ fun SpeedGauge(
     ) {
         val gaugeSize = maxWidth
 
-        // 3D Canvas
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
@@ -230,13 +223,12 @@ fun SpeedGauge(
             val bezelWidth = 7.dp.toPx()
             val strokeWidth = 9.dp.toPx()
 
-            // 1. Outer 3D Matte Champagne Bezel with Top Highlight and Bottom Shadow
             val bezelBrush = Brush.verticalGradient(
                 colors = listOf(
-                    ChampagneLight, // Top Specular Highlight
-                    ChampagneGold,  // Midtone Matte Gold
-                    ChampagneDark,  // Lower Bronze
-                    Color(0xFF4A3B22) // Bottom Shadow
+                    ChampagneLight,
+                    ChampagneGold,
+                    ChampagneDark,
+                    Color(0xFF4A3B22)
                 ),
                 startY = 0f,
                 endY = size.height
@@ -248,14 +240,12 @@ fun SpeedGauge(
                 style = Stroke(width = bezelWidth)
             )
 
-            // Inner Bevel Shadow Ring (Deep tactile sunken rim)
             drawCircle(
                 color = if (isDark) Color(0x66000000) else Color(0x22000000),
                 radius = radius - bezelWidth - 1.dp.toPx(),
                 style = Stroke(width = 2.dp.toPx())
             )
 
-            // 2. Deep Navy Concave Dial Face (Subtle Radial Depth)
             val dialFaceBrush = Brush.radialGradient(
                 colors = if (isDark) {
                     listOf(Color(0xFF131F33), DeepNavy)
@@ -271,12 +261,10 @@ fun SpeedGauge(
                 radius = radius - bezelWidth - 2.dp.toPx()
             )
 
-            // 3. Arc Configuration (270° Sweep: from 135° to 405° with 90° bottom gap)
             val startAngle = 135f
             val sweepAngle = 270f
             val arcRadius = radius - bezelWidth - strokeWidth - 12.dp.toPx()
 
-            // Background Arc Track (Muted Track)
             drawArc(
                 color = if (isDark) Color(0x18FFFFFF) else Color(0x18000000),
                 startAngle = startAngle,
@@ -285,7 +273,6 @@ fun SpeedGauge(
                 style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
             )
 
-            // 4. Essential Tick Marks & Milestone Numerals (0, 50, 100, 200, 500, 1000)
             val milestoneTicks = listOf(
                 0.00f to "0",
                 0.20f to "50",
@@ -298,7 +285,6 @@ fun SpeedGauge(
             val effectiveNeedleFraction = animatedNeedleFraction.coerceIn(0f, 1f)
             val currentNeedleAngle = startAngle + (effectiveNeedleFraction * sweepAngle)
 
-            // Draw Minor and Major Ticks
             val totalMinorTicks = 25
             for (i in 0..totalMinorTicks) {
                 val frac = i.toFloat() / totalMinorTicks
@@ -319,7 +305,6 @@ fun SpeedGauge(
                 )
             }
 
-            // Draw Essential Milestones
             milestoneTicks.forEach { (frac, label) ->
                 val angle = startAngle + (frac * sweepAngle)
                 val rad = Math.toRadians(angle.toDouble())
@@ -330,7 +315,6 @@ fun SpeedGauge(
                 val innerR = outerR - 7.dp.toPx()
                 val isReached = angle <= currentNeedleAngle + 1f
 
-                // Major tick line
                 drawLine(
                     color = if (isReached) ChampagneGold else if (isDark) Color(0x44FFFFFF) else Color(0x38000000),
                     start = Offset(centerOffset.x + innerR * cosT, centerOffset.y + innerR * sinT),
@@ -339,7 +323,6 @@ fun SpeedGauge(
                     cap = StrokeCap.Round
                 )
 
-                // Label
                 val textR = innerR - 10.dp.toPx()
                 val textX = centerOffset.x + textR * cosT
                 val textY = centerOffset.y + textR * sinT + (tickTextPaint.textSize / 3f)
@@ -348,7 +331,6 @@ fun SpeedGauge(
                 }
             }
 
-            // 5. Active Progress Arc (Matte Champagne Metallic Sweep)
             val activeSweep = (animatedNeedleFraction * sweepAngle).coerceAtLeast(0.5f)
             val progressBrush = Brush.sweepGradient(
                 colors = listOf(
@@ -368,9 +350,6 @@ fun SpeedGauge(
                 style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
             )
 
-            // =====================================================================
-            // 6. Authentic 3D Speedometer Needle (เข็มเรือนไมล์ของแท้ ชัดเจน พรีเมียม)
-            // =====================================================================
             val needleRad = Math.toRadians(currentNeedleAngle.toDouble())
             val cosN = cos(needleRad).toFloat()
             val sinN = sin(needleRad).toFloat()
@@ -382,7 +361,6 @@ fun SpeedGauge(
             val needleTailLength = 16.dp.toPx()
             val needleTailWidth = 2.8.dp.toPx()
 
-            // Key Coordinates for the Needle
             val tipPoint = Offset(centerOffset.x + needleTipRadius * cosN, centerOffset.y + needleTipRadius * sinN)
             val baseRight = Offset(centerOffset.x - needleBaseWidth * perpCos, centerOffset.y - needleBaseWidth * perpSin)
             val baseLeft = Offset(centerOffset.x + needleBaseWidth * perpCos, centerOffset.y + needleBaseWidth * perpSin)
@@ -390,7 +368,6 @@ fun SpeedGauge(
             val tailRight = Offset(tailTip.x - needleTailWidth * perpCos, tailTip.y - needleTailWidth * perpSin)
             val tailLeft = Offset(tailTip.x + needleTailWidth * perpCos, tailTip.y + needleTailWidth * perpSin)
 
-            // A. Drop Shadow beneath the needle for tactile physical depth
             val shadowOffset = Offset(3.dp.toPx(), 4.dp.toPx())
             val shadowPath = Path().apply {
                 moveTo(tipPoint.x + shadowOffset.x, tipPoint.y + shadowOffset.y)
@@ -401,12 +378,8 @@ fun SpeedGauge(
                 lineTo(baseLeft.x + shadowOffset.x, baseLeft.y + shadowOffset.y)
                 close()
             }
-            drawPath(
-                path = shadowPath,
-                color = Color(0x50000000)
-            )
+            drawPath(path = shadowPath, color = Color(0x50000000))
 
-            // B. Main Needle Blade with Sports/Aviation Instrument Gradient
             val needlePath = Path().apply {
                 moveTo(tipPoint.x, tipPoint.y)
                 lineTo(baseRight.x, baseRight.y)
@@ -419,18 +392,17 @@ fun SpeedGauge(
 
             val needleBrush = Brush.linearGradient(
                 colors = listOf(
-                    Color(0xFF352B76), // Violet counterweight
-                    ZipViolet,         // Zipspeed violet body
-                    ZipMint,           // Brand transition
-                    ZipMintSoft,       // Luminous transition
-                    Color.White        // Crisp needle point
+                    Color(0xFF352B76),
+                    ZipViolet,
+                    ZipMint,
+                    ZipMintSoft,
+                    Color.White
                 ),
                 start = tailTip,
                 end = tipPoint
             )
             drawPath(path = needlePath, brush = needleBrush)
 
-            // C. Highlight Spine down the center of the needle
             drawLine(
                 color = Color(0xDDFFFFFF),
                 start = Offset(centerOffset.x + 10.dp.toPx() * cosN, centerOffset.y + 10.dp.toPx() * sinN),
@@ -439,7 +411,6 @@ fun SpeedGauge(
                 cap = StrokeCap.Round
             )
 
-            // D. Needle Tip Glow & Jewel Marker (Sweep indicator on outer track)
             drawCircle(
                 color = ChampagneGold.copy(alpha = 0.45f),
                 radius = 7.dp.toPx(),
@@ -451,7 +422,6 @@ fun SpeedGauge(
                 center = tipPoint
             )
 
-            // E. Metallic Center Hub / Cap
             val capBrush = Brush.radialGradient(
                 colors = listOf(
                     ChampagneLight,
@@ -479,11 +449,7 @@ fun SpeedGauge(
             )
         }
 
-        // =========================================================================
-        // Center Digital Display & GO Action Button
-        // =========================================================================
         if (phase == TestPhase.IDLE || phase == TestPhase.CANCELLED) {
-            // High-Affordance Pulsing Center "GO" Button (Tap to Start)
             Box(
                 modifier = Modifier
                     .size(104.dp)
@@ -531,7 +497,6 @@ fun SpeedGauge(
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
             ) {
-                // Status Pill at Top of Stack
                 val (statusText, statusBorderColor, statusTextColor) = when (phase) {
                     TestPhase.IDLE -> Triple("READY", theme.colors.border, theme.colors.textMuted)
                     TestPhase.TESTING_PING -> Triple("LATENCY", ChampagneGold, ChampagneGold)
@@ -554,28 +519,26 @@ fun SpeedGauge(
                         text = statusText,
                         color = statusTextColor,
                         fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold, // 600
+                        fontWeight = FontWeight.SemiBold,
                         letterSpacing = 0.6.sp
                     )
                 }
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // Massive Speed Number in Center (Tabular Figures to prevent jitter)
                 val speedDisplay = String.format(Locale.US, "%.1f", displayedSpeed)
 
                 Text(
                     text = speedDisplay,
                     color = theme.colors.textMain,
                     fontSize = 46.sp,
-                    fontWeight = FontWeight.SemiBold, // 600
-                    fontFamily = FontFamily.Monospace, // Tabular numerals
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = FontFamily.Monospace,
                     letterSpacing = (-1.0).sp,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.testTag("gauge_speed_text")
                 )
 
-                // Speed Unit Clickable Pill Directly Below or Restart Button
                 if (phase == TestPhase.COMPLETED) {
                     Box(
                         modifier = Modifier
@@ -616,7 +579,7 @@ fun SpeedGauge(
                             text = speedUnit.label,
                             color = ChampagneGold,
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium, // 500
+                            fontWeight = FontWeight.Medium,
                             letterSpacing = 0.4.sp,
                             modifier = Modifier.testTag("gauge_unit_text")
                         )
@@ -625,9 +588,6 @@ fun SpeedGauge(
             }
         }
 
-        // =========================================================================
-        // AdMob Completion Overlay
-        // =========================================================================
         AnimatedVisibility(
             visible = showGaugeAd,
             enter = fadeIn() + scaleIn(initialScale = 0.92f),
@@ -648,28 +608,6 @@ fun SpeedGauge(
                     verticalArrangement = Arrangement.Center,
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.TopEnd
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clip(CircleShape)
-                                .background(theme.colors.surface)
-                                .clickable { isGaugeAdDismissed = true },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Close Ad",
-                                tint = theme.colors.textMuted,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-
                     Icon(
                         imageVector = Icons.Default.WorkspacePremium,
                         contentDescription = null,
@@ -692,7 +630,7 @@ fun SpeedGauge(
                         fontSize = 11.sp
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Box(
                         modifier = Modifier
@@ -700,18 +638,29 @@ fun SpeedGauge(
                             .background(ChampagneGold.copy(alpha = 0.15f))
                             .border(1.dp, ChampagneGold.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
                             .clickable { onOpenVipModal?.invoke() }
-                            .padding(horizontal = 10.dp, vertical = 5.dp)
+                            .padding(horizontal = 12.dp, vertical = 7.dp)
+                            .testTag("vip_upgrade_single_button")
                     ) {
-                        Text(
-                            text = "Upgrade Ad-Free",
-                            color = ChampagneGold,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.WorkspacePremium,
+                                contentDescription = null,
+                                tint = ChampagneGold,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = "Upgrade Ad-Free",
+                                color = ChampagneGold,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
-
