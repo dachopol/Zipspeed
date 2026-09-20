@@ -129,9 +129,6 @@ fun SpeedGauge(
     val theme = LocalAppTheme.current
     val isDark = theme.isDark
 
-    var isGaugeAdDismissed by remember(phase) { mutableStateOf(false) }
-    val showGaugeAd = phase == TestPhase.COMPLETED && !isVipAdFree && !isGaugeAdDismissed
-
     val vibrator = remember(context) {
         runCatching {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -588,79 +585,5 @@ fun SpeedGauge(
             }
         }
 
-        AnimatedVisibility(
-            visible = showGaugeAd,
-            enter = fadeIn() + scaleIn(initialScale = 0.92f),
-            exit = fadeOut() + scaleOut(targetScale = 0.92f)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-                    .clip(CircleShape)
-                    .background(if (isDark) DeepNavy.copy(alpha = 0.96f) else Color.White.copy(alpha = 0.96f))
-                    .border(1.dp, ChampagneGold.copy(alpha = 0.4f), CircleShape)
-                    .clickable(enabled = false) {},
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.WorkspacePremium,
-                        contentDescription = null,
-                        tint = ChampagneGold,
-                        modifier = Modifier.size(24.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "Zipspeed Sponsor",
-                        color = theme.colors.textMain,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    Text(
-                        text = "High Performance Network",
-                        color = theme.colors.textMuted,
-                        fontSize = 11.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(ChampagneGold.copy(alpha = 0.15f))
-                            .border(1.dp, ChampagneGold.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
-                            .clickable { onOpenVipModal?.invoke() }
-                            .padding(horizontal = 12.dp, vertical = 7.dp)
-                            .testTag("vip_upgrade_single_button")
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.WorkspacePremium,
-                                contentDescription = null,
-                                tint = ChampagneGold,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Text(
-                                text = "Upgrade Ad-Free",
-                                color = ChampagneGold,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-                }
-            }
-        }
     }
 }
