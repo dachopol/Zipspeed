@@ -146,8 +146,12 @@ class WebPerformanceTester {
             delay(60L)
         }
 
-        val avgLatency = if (successCount > 0) totalLatency / successCount else 45
-        val baseScore = (100 - (avgLatency * 0.18).toInt()).coerceIn(65, 99)
+        val avgLatency = if (successCount > 0) totalLatency / successCount else 0
+        val baseScore = if (successCount > 0) {
+            (100 - (avgLatency * 0.18).toInt()).coerceIn(0, 99)
+        } else {
+            0
+        }
 
         val finalState = _state.value.copy(
             isTesting = false,
