@@ -1,102 +1,97 @@
-# ข้อมูลฟีเจอร์และข้อความสำหรับโปรโมทใน Google Play Store
-**ชื่อแอป:** Zipspeed Network Speedtest & Diagnostics  
-**หมวดหมู่:** Tools (เครื่องมือ) / Productivity  
+# Zipspeed — Google Play listing draft based on current code
 
----
+**App name:** Zipspeed  
+**Credit:** by AnakinYoo  
+**Category direction:** Tools
 
-## 1. ข้อมูลสำหรับลงข้อมูลหน้าร้านค้า (Google Play Store Listing)
+> This document describes only features currently supported by the Android project. Do not add claims that are not backed by the release build.
 
-### 📌 คำอธิบายสั้น (Short Description - ไม่เกิน 80 ตัวอักษร)
-> วัดความเร็วเน็ตแม่นยำ เช็กจุดอับสัญญาณ แผนที่ Wi-Fi Heatmap และสถานะเน็ตล่มทั่วไทย
+## Short description
 
----
+ทดสอบ Download/Upload, HTTP Latency/Jitter, IP และบันทึกผลเครือข่าย
 
-### 📌 คำอธิบายเต็ม (Full Description)
+## Full description draft
 
-**Zipspeed** คือแอปพลิเคชันทดสอบความเร็วอินเทอร์เน็ตและวิเคราะห์ประสิทธิภาพเครือข่ายระดับมืออาชีพ ออกแบบมาเพื่อผู้ใช้งานทั้งเน็ตบ้าน Wi-Fi, 5G, 4G ครอบคลุมตั้งแต่การวัดสปีดความเร็วสูง ระบบฟิสิกส์เกจวัดความเร็วที่ลื่นไหล ตรวจสอบคุณภาพการสตรีมวิดีโอ 4K ไปจนถึงการสแกนสร้างแผนที่ความครอบคลุมสัญญาณ (Wi-Fi Heatmap) ภายในอาคาร พร้อมระบบแจ้งเตือนจุดอับสัญญาณอัตโนมัติ
+**Zipspeed by AnakinYoo** เป็นเครื่องมือทดสอบและตรวจสอบเครือข่ายสำหรับ Android ที่เน้นแสดงค่าที่วัดได้จริง หาก endpoint หรือเครือข่ายไม่ตอบ แอปจะแสดงสถานะผิดพลาดหรือไม่มีข้อมูลแทนการสร้างค่าจำลอง
 
----
+ฟังก์ชันหลักประกอบด้วยการวัด Download และ Upload ผ่าน HTTP, วัด HTTP latency และ jitter, แสดง Public/Local IP เมื่อดึงข้อมูลได้, ทดสอบความเหมาะสมสำหรับการสตรีมจาก throughput ที่วัดได้, ตรวจเวลาเปิดเว็บไซต์/endpoint, เก็บประวัติผลในเครื่อง และแชร์หรือส่งออกประวัติเป็น CSV/JSON
 
-## 2. รวมฟีเจอร์เด่นทั้งหมดของ Zipspeed (Key Features)
+แอปรองรับภาษาไทยและอังกฤษ, Dark/Light mode, Reduced Motion และหน้าจอหลายขนาด การใช้ GPS เป็นตัวเลือกและไม่จำเป็นต่อการเริ่มทดสอบความเร็ว
 
-### ⚡ 1. เครื่องมือวัดความเร็วเน็ตอัจฉริยะ (Advanced Speedtest Engine)
-* **วัดครบทุกมิติ**: วัดความเร็วดาวน์โหลด (Download), อัปโหลด (Upload), ปิง (Ping), ค่าความหน่วงแกว่ง (Jitter) และอัตราข้อมูลสูญหาย (Packet Loss)
-* **เข็มวัดสปีดระบบฟิสิกส์สปริง (Spring-based Needle Physics)**: เข็มไมล์ตอบสนองแบบไดนามิก ลื่นไหลเป็นธรรมชาติ พร้อมการสั่นตามคลื่นสัญญาณจริง (Haptic Feedback)
-* **โหมดทดสอบความแม่นยำสูง (Precision Mode)**: บันทึกข้อมูลและประมวลผล Multi-thread ขั้นสูงเพื่อการวัดสปีดระดับกิกะบิต (Gigabit)
-* **หน่วยความเร็วหลากหลาย**: สลับดูหน่วยได้ทั้ง **Mbps** (Megabits per second) และ **MB/s** (Megabytes per second)
-* **เซิร์ฟเวอร์ทั่วโลก**: รองรับการเลือกเซิร์ฟเวอร์ทั้งในประเทศ (AIS, True, NT) และศูนย์ข้อมูลต่างประเทศ (Singapore, Tokyo, Hong Kong, London, US)
-* **ตรวจสอบ IP และ ISP**: แสดงหมายเลข Public IP, Local IP, ชื่อผู้ให้บริการอินเทอร์เน็ต (ISP) และประเทศในทันที
+## Features verified in the current project
 
----
+### Speed test
+- Download throughput from transferred HTTP payload bytes.
+- Upload throughput from transferred HTTP payload bytes.
+- HTTP latency and jitter.
+- Live gauge/needle and GO/cancel/retry flow.
+- Mbps / MB/s display units.
+- Cloudflare Anycast endpoint. Actual PoP/location is displayed only when verifiable metadata is returned.
 
-### 🎬 2. ทดสอบความสามารถการสตรีมวิดีโอ (Video Streaming Test)
-* **จำลองการเล่นวิดีโอจริง**: ทดสอบตั้งแต่ความละเอียด SD 480p, HD 720p, Full HD 1080p, 2K QHD 1440p ไปจนถึง **4K UHD**
-* **วัดเวลาบัฟเฟอร์ (Buffer Time) & เวลาโหลด (Load Time)**: รู้ล่วงหน้าว่าเน็ตของคุณดูวิดีโอระดับไหนได้โดยไม่สะดุด
-* **สรุปบิตเรตที่เหมาะสม**: วิเคราะห์และแนะนำความละเอียดวิดีโอสูงสุดที่โครงข่ายรองรับ
+### Network information
+- Public IP when available.
+- Local IPv4 when available.
+- ISP/ASN metadata only when returned by the endpoint.
+- Optional GPS mode; speed testing itself does not require location permission.
 
----
+### Video suitability
+- Measures HTTP payload throughput across resolution thresholds from 480p through 4K.
+- The result is a network-throughput suitability estimate, not actual video playback or a licensed streaming benchmark.
 
-### 🌐 3. ทดสอบการท่องเว็บและ CDN ระดับโลก (Web Performance & Browsing Test)
-* **วิเคราะห์ DNS & Handshake**: ทดสอบระยะเวลาเชื่อมต่อ DNS Resolution, TLS Handshake และ TTFB (Time to First Byte)
-* **ทดสอบกับ CDN ชั้นนำของโลก**: ทดสอบความเร็วกับ Cloudflare, Google, AWS CloudFront และ Akamai เพื่อการประเมินการเปิดเว็บไซต์ที่สมจริง
+### Website checks
+- HTTP checks against configured public endpoints.
+- Displays measured response timing and HTTP result status.
+- Does not claim separate DNS-resolution or TLS-handshake timing unless those measurements are implemented in the release.
 
----
+### Status links
+- Opens external outage/status websites for supported services.
+- Zipspeed does not invent live outage counts or operational/outage labels.
 
-### 📱 4. ตรวจสุขภาพอุปกรณ์และสัญญาณมือถือ (Device & Cellular Health)
-* **ตรวจสอบความแรงสัญญาณจริง**: แสดงหน่วยเป็น dBm และ ASU แบบเรียลไทม์
-* **วัด Bufferbloat**: ตรวจสอบว่าสัญญาณเกิดอาการคอขวดเมื่อมีการใช้งานเครือข่ายหนักหรือไม่
-* **ตรวจวัดอุณหภูมิเครื่อง**: ตรวจดูความร้อนของโมเด็มและอุปกรณ์ขณะส่งข้อมูลด้วยความเร็วสูง
+### History and sharing
+- Completed measured results can be stored locally using Room.
+- Individual results can be shared.
+- History can be exported as CSV/JSON.
+- Unknown metrics remain unknown instead of being replaced with fabricated zero/default values.
 
----
+### UI
+- Thai / English.
+- Dark / Light.
+- Reduced Motion / Battery Saver controls.
+- Phone bottom navigation and side navigation on wider screens.
 
-### 📶 5. แผนที่สัญญาณ Wi-Fi แบบ D3 Heatmap & เตือนจุดอับสัญญาณ (Wi-Fi Coverage Heatmap)
-* **สแกนและวาดแผนที่เดินสแกน (Walk & Map Simulation)**: จำลองการเดินรอบห้องและสร้างแผนผังความแรงสัญญาณแบบอินเทอร์แอคทีฟ
-* **เทคโนโลยี D3.js v7 Heatmap**: แสดงเฉดสี Turbo, Viridis และ Eye-Care Soft เพื่อหาจุดรับสัญญาณดีที่สุดและจุดอับสัญญาณ (Deadzone) ภายในบ้านหรือสำนักงาน
-* **ระบบแจ้งเตือนจุดอับสัญญาณอัตโนมัติ (Signal Alert Notifications)**: แจ้งเตือนทันทีเมื่อระดับสัญญาณ Wi-Fi หรือ Cellular ลดลงต่ำกว่าค่าที่กำหนด (เช่น ต่ำกว่า -80 dBm)
-* **ระบบตั้งเวลาสแกนพื้นหลังแบบประหยัดแบตเตอรี่ (Smart Schedule & Battery Guard)**: สแกนเฉพาะช่วงเวลาที่ต้องการ หรือสแกนเฉพาะเมื่อแบตเตอรี่เกินเกณฑ์ที่กำหนด
+## Features not ready to advertise yet
 
----
+Do **not** claim these as production features until the code and account configuration exist and pass testing:
 
-### ⚠️ 6. ตรวจสอบสถานะเน็ตล่มทั่วไทย (Downdetector Outages)
-* **ตรวจสอบเน็ตล่มแบบเรียลไทม์**: ติดตามสถานะโครงข่าย AIS, True, 3BB, NT และบริการโซเชียลมีเดียยอดนิยม (LINE, Facebook, YouTube, Netflix)
-* **แผนภูมิรายงานปัญหา 24 ชั่วโมง**: แสดงประวัติและระดับความรุนแรงของปัญหา (ปกติ / เริ่มมีรายงาน / ระบบล่ม)
-* **กดรายงานปัญหาได้ทันที (Report Outage)**: ผู้ใช้สามารถกดแจ้งสถานะปัญหาเน็ตในพื้นที่ตนเองเพื่อแบ่งปันข้อมูล
+- ICMP packet-loss measurement.
+- Manual city-specific worldwide speed-test servers.
+- Live outage report counts.
+- Regional ISP rankings/benchmarks.
+- Indoor Wi-Fi position/heatmap derived from real coordinates.
+- Real AdMob impressions/interstitial/rewarded ads.
+- Paid Ad-Free entitlement through Google Play Billing.
+- Play Integrity verification.
+- Guaranteed equivalence to Ookla, Cloudflare Speed Test or any third-party benchmark.
 
----
+## Privacy/Data Safety implementation notes
 
-### 📊 7. เปรียบเทียบประสิทธิภาพค่ายเน็ตตามภูมิภาค (Regional ISP Benchmark)
-* **เทียบสปีดตามภาค**: เปรียบเทียบค่าเฉลี่ยความเร็วและคะแนนความเสถียรระหว่างค่ายเน็ตในภาคกลาง, เหนือ, อีสาน, ใต้, ตะวันออก และตะวันตก
-* **ดูคะแนนความน่าเชื่อถือ**: ช่วยให้ตัดสินใจเลือกแพ็กเกจเน็ตบ้านและซิมมือถือได้อย่างคุ้มค่า
+- Speed/video tests contact configured Cloudflare HTTP endpoints.
+- Public-IP fallback may contact api.ipify.org.
+- External outage links open third-party websites.
+- GPS is optional and requested only when the user selects GPS mode.
+- Test history is stored locally in the app database.
+- Privacy Policy and Play Console Data Safety answers must be checked again whenever ads, analytics, billing, crash reporting or other SDKs are enabled.
 
----
+## Screenshot copy based on implemented features
 
-### 📜 8. ประวัติการทดสอบและส่งออกข้อมูล (History & Export)
-* **เก็บบันทึกประวัติในตัวเครื่อง**: บันทึกสถิติความเร็ว วันที่ เวลา เซิร์ฟเวอร์ และพารามิเตอร์แบบออฟไลน์ด้วย Room Database
-* **ส่งออกรายงานเป็น CSV และ JSON**: ดาวน์โหลดหรือแชร์ประวัติการทดสอบไปใช้งานต่อบน Spreadsheet หรือวิเคราะห์ข้อมูลได้ง่ายดาย
-* **การ์ดสรุปผลภาพกราฟิกสำหรับแชร์ (Share Card)**: สร้างการ์ดผลการทดสอบดีไซน์ล้ำสมัย แชร์ลง Social Media หรือส่งให้ทีมช่าง ISP ได้ทันที
+| Screen | Headline | Supporting text |
+|---|---|---|
+| 1 | วัด Download / Upload แบบเรียลไทม์ | เข็มและตัวเลขขยับตามค่าที่วัดได้ |
+| 2 | ดู HTTP Latency และ Jitter | ถ้าวัดไม่ได้ แอปจะแจ้งข้อผิดพลาด |
+| 3 | เช็ก IP และเส้นทาง Anycast | แสดง PoP เฉพาะเมื่อมีข้อมูลที่ตรวจสอบได้ |
+| 4 | ทดสอบความเหมาะสมสำหรับวิดีโอ | ประเมินจาก throughput ที่วัดได้จริง |
+| 5 | เก็บและแชร์ประวัติผล | ส่งออก CSV/JSON จากผลที่วัดสำเร็จ |
 
----
+## ASO terms that match the current build
 
-### 🎨 9. ดีไซน์และประสบการณ์ใช้งาน (UI/UX & Accessibility)
-* **สไตล์ Cyberpunk Modern Dark & Eye-care Theme**: ถนอมสายตา สีสันสวยสะดุดตา สอดคล้องกับมาตรฐาน Material Design 3
-* **สกอร์บาร์ด้านขวา (Right-Side Vertical Scrollbar)**: เลื่อนดูข้อมูลยาวได้อย่างคล่องตัว ชัดเจนและตอบสนองเร็ว
-* **รองรับ 2 ภาษา**: สลับเปลี่ยนภาษาได้ทันที ทั้ง **ภาษาไทย** และ **English**
-* **โหมดประหยัดพลังงาน & ลดการเคลื่อนไหว (Reduced Motion / Battery Saver)**: เหมาะสำหรับเครื่องที่ต้องการประหยัดพลังงานเป็นพิเศษ
-
----
-
-## 3. จุดขายและสโลแกนสำหรับทำภาพโฆษณา (Play Store Screenshots & Banner Copies)
-
-| หมายเลขภาพ | หัวข้อจุดขาย (Headline) | ข้อความขยายความ (Sub-headline) |
-| :--- | :--- | :--- |
-| **ภาพที่ 1** | **วัดสปีดเน็ตเร็ว แรง แม่นยำ** | เกจวัดความเร็วระบบฟิสิกส์สปริง ตอบสนองเรียลไทม์ |
-| **ภาพที่ 2** | **สร้างแผนที่ Wi-Fi Heatmap** | สแกนหาจุดอับสัญญาณในบ้านและอาคารด้วย D3 Canvas |
-| **ภาพที่ 3** | **เช็กเน็ตสตรีม 4K ลื่นไหม?** | ทดสอบความละเอียดวิดีโอก่อนดูหนัง ไม่สะดุด |
-| **ภาพที่ 4** | **เช็กสถานะเน็ตล่มทั่วไทย** | รายงานปัญหาค่ายเน็ตและแอปดังแบบเรียลไทม์ 24 ชม. |
-| **ภาพที่ 5** | **เทียบค่ายเน็ตตามภูมิภาค** | รู้ชัดค่ายไหนแรง เสถียรที่สุดในพื้นที่ของคุณ |
-| **ภาพที่ 6** | **บันทึก & ส่งออกประวัติผลทดสอบ** | รองรับ CSV, JSON และการ์ดแชร์กราฟิกสวยงาม |
-
----
-
-## 4. คำค้นหาสำหรับการค้นหาในสโตร์ (ASO Keywords & Tags)
-`วัดความเร็วเน็ต`, `ทดสอบความเร็ว`, `สปีดเทส`, `Speedtest`, `Wi-Fi Heatmap`, `วัดสัญญาณ Wi-Fi`, `เช็กเน็ตล่ม`, `เน็ต 5G`, `ทดสอบเน็ตบ้าน`, `Ping Test`, `Packet Loss`, `Jitter`, `Internet Speed Test`, `Bandwidth Test`, `Network Diagnostics`, `Downdetector Thailand`
+`internet speed test`, `network test`, `download speed`, `upload speed`, `latency`, `jitter`, `IP address`, `network diagnostics`, `วัดความเร็วเน็ต`, `ทดสอบอินเทอร์เน็ต`, `เช็ก IP`
