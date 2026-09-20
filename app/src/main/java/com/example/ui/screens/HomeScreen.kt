@@ -680,15 +680,15 @@ fun HomeScreen(
     if (showShareDetailModal) {
         ShareDetailModal(
             reportData = ShareReportData(
-                downloadMbps = testState.downloadMbps ?: 0.0,
-                uploadMbps = testState.uploadMbps ?: 0.0,
-                pingMs = testState.pingMs ?: selectedServer.basePingMs,
-                jitterMs = testState.jitterMs ?: 2,
-                packetLossPercent = 0.0,
+                downloadMbps = testState.downloadMbps,
+                uploadMbps = testState.uploadMbps,
+                pingMs = testState.pingMs,
+                jitterMs = testState.jitterMs,
+                packetLossPercent = testState.packetLossPercent,
                 serverName = selectedServer.name,
-                networkType = if (isPrecisionMode) "Precision Anycast" else "Standard Anycast",
-                publicIp = ipInfo.publicIp ?: "--",
-                ispName = ipInfo.ispName ?: "--"
+                networkType = null,
+                publicIp = ipInfo.publicIp,
+                ispName = ipInfo.ispName
             ),
             speedUnit = speedUnit,
             language = language,
