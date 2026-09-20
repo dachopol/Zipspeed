@@ -105,7 +105,7 @@ fun ServerSelectionModal(
                         fontWeight = FontWeight.SemiBold // 600
                     )
                     Text(
-                        text = if (isTh) "เลือกเซิร์ฟเวอร์ Edge ที่ใกล้คุณที่สุด" else "Choose an Edge server near your location",
+                        text = if (isTh) "ใช้ Anycast และตรวจ PoP จริงระหว่างทดสอบ" else "Anycast; actual PoP is detected during the test",
                         color = TextMuted,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Normal // 400
@@ -138,7 +138,7 @@ fun ServerSelectionModal(
                 onValueChange = { searchQuery = it },
                 placeholder = {
                     Text(
-                        text = if (isTh) "ค้นหาตามชื่อเมือง หรือประเทศ..." else "Search city or country...",
+                        text = if (isTh) "ค้นหา endpoint..." else "Search endpoint...",
                         color = TextMuted,
                         fontSize = 13.sp
                     )
@@ -188,7 +188,7 @@ fun ServerSelectionModal(
             ) {
                 items(filteredServers, key = { it.id }) { server ->
                     val isSelected = server.id == selectedServer.id
-                    val isAuto = server.id == "auto_best"
+                    val isAuto = server.id == "cf_auto"
                     val cardBg = if (isSelected) ChampagneGold.copy(alpha = 0.14f) else ElevatedSurface
                     val borderCol = if (isSelected) ChampagneGold else Color(0x18FFFFFF)
 
@@ -268,7 +268,7 @@ fun ServerSelectionModal(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                text = if (isAuto) "Best" else "${server.basePingMs}ms",
+                                text = if (isTh) "วัดจริง" else "Live",
                                 color = StatusGreen,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold
