@@ -152,12 +152,16 @@ class NetworkSpeedTester {
             delay(if (batterySaver) 60L else 30L)
         }
 
-        // กรณีออฟไลน์หรือไม่สามารถติดต่อเซิร์ฟเวอร์ได้
-        if (pingResults.isEmpty()) {
-            val fallbackBase = max(6L, server.basePingMs.toLong())
-            for (k in 1..pingCount) {
-                pingResults.add(fallbackBase + (k % 3))
+        // Real-data rule: never fabricate latency when the endpoint is unreachable.
+        if (pingResults.size < 2) {
+            _state.update {
+                it.copy(
+                    phase = TestPhase.ERROR,
+                    liveSpeed = 0.0,
+                    errorMessage = "ไม่สามารถวัด Latency จริงจากเซิร์ฟเวอร์ได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่"
+                )
             }
+            return@supervisorScope _state.value
         }
 
         val sortedPings = pingResults.sorted()
