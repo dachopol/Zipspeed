@@ -202,23 +202,23 @@ fun AdFreeScreen(
                     val perks = listOf(
                         Triple(
                             Icons.Default.Security,
-                            if (isTh) "ไร้โฆษณา 100% (Ad-Free)" else "100% Ad-Free Experience",
-                            if (isTh) "ไม่มีแบนเนอร์หรือโฆษณาวิดีโอคั่นระหว่างการทดสอบ" else "Zero banner or interstitial ads during tests"
+                            if (isTh) "โหมด Ad-Free" else "Ad-Free Mode",
+                            if (isTh) "เปิดเมื่อสิทธิ์ซื้อจาก Google Play ได้รับการยืนยัน" else "Enabled only after Google Play purchase verification"
                         ),
                         Triple(
                             Icons.Default.Speed,
-                            if (isTh) "โหมดความแม่นยำสูง (Precision Mode)" else "Unlimited Precision Mode",
-                            if (isTh) "ทดสอบ Throughput สูงสุดด้วยขนาดข้อมูลและเธรดเต็มพิกัด" else "Multi-stream throughput test with full payload"
+                            if (isTh) "ค่าทดสอบจริง" else "Measured Results",
+                            if (isTh) "ไม่เติมค่าแบบสุ่มเมื่อเซิร์ฟเวอร์หรือเครือข่ายล้มเหลว" else "No random fallback when a server or network request fails"
                         ),
                         Triple(
                             Icons.Default.Diamond,
-                            if (isTh) "ลำดับความสำคัญเซิร์ฟเวอร์ (Priority CDN)" else "Priority Edge Server Routing",
-                            if (isTh) "เชื่อมต่อไปยังโหนด CDN ใดก็ได้โดยไม่ต้องรอคิว" else "Fastest routing to Cloudflare & AWS edge nodes"
+                            if (isTh) "Anycast จริง" else "Real Anycast",
+                            if (isTh) "แสดง PoP เฉพาะเมื่อ endpoint ตรวจพบจริง" else "Shows a PoP only when it is actually detected"
                         ),
                         Triple(
                             Icons.Default.Star,
-                            if (isTh) "ส่งออกรายงานผลระดับพรีเมียม (HD Export)" else "HD Vector & PDF Export",
-                            if (isTh) "บันทึกและแชร์ผลทดสอบพร้อมตราประทับ Zipspeed VIP" else "Share custom branded speed test report cards"
+                            if (isTh) "ราคาตามภูมิภาค" else "Regional Pricing",
+                            if (isTh) "ราคาและสกุลเงินต้องมาจาก Google Play ตามประเทศ" else "Price and currency come from Google Play for the user country"
                         )
                     )
 

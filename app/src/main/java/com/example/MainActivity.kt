@@ -13,6 +13,8 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -36,6 +38,7 @@ import java.util.Locale
 import com.example.model.NavTab
 import com.example.ui.ZipspeedViewModel
 import com.example.ui.components.BottomNavBar
+import com.example.ui.components.AdaptiveSideNavigation
 import com.example.ui.components.ServerSelectionModal
 import com.example.ui.components.SecurityShieldModal
 import com.example.ui.components.VipAdFreeModal
@@ -151,26 +154,46 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
                     }
 
                     AppScreen.MAIN -> {
+                        val screenWidthDp = LocalConfiguration.current.screenWidthDp
+                        val isPhoneLayout = screenWidthDp < 600
+                        val isDesktopLayout = screenWidthDp > 1200
+
                         Scaffold(
                             containerColor = Color.Transparent,
                             contentWindowInsets = WindowInsets.statusBars,
                             modifier = Modifier.fillMaxSize(),
                             bottomBar = {
-                                BottomNavBar(
-                                    activeTab = activeTab,
-                                    language = language,
-                                    onTabSelected = { viewModel.selectTab(it) },
-                                    isSecurityShieldActive = isSecurityShieldActive,
-                                    onToggleSecurityShield = { viewModel.toggleSecurityShield(it) },
-                                    onSecurityClick = { viewModel.openSecurityModal() }
-                                )
+                                if (isPhoneLayout) {
+                                    BottomNavBar(
+                                        activeTab = activeTab,
+                                        language = language,
+                                        onTabSelected = { viewModel.selectTab(it) },
+                                        isSecurityShieldActive = isSecurityShieldActive,
+                                        onToggleSecurityShield = { viewModel.toggleSecurityShield(it) },
+                                        onSecurityClick = { viewModel.openSecurityModal() }
+                                    )
+                                }
                             }
                         ) { innerPadding ->
-                            Column(
+                            Row(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(innerPadding)
                             ) {
+                                if (!isPhoneLayout) {
+                                    AdaptiveSideNavigation(
+                                        activeTab = activeTab,
+                                        language = language,
+                                        expanded = isDesktopLayout,
+                                        onTabSelected = { viewModel.selectTab(it) }
+                                    )
+                                }
+
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxSize()
+                                ) {
                                 // Header Bar with Dark/Light mode, VIP button, and GPS
                                 TopHeader(
                                     language = language,

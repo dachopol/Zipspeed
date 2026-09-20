@@ -160,7 +160,7 @@ fun SecurityShieldModal(
                         Spacer(modifier = Modifier.height(3.dp))
                         Text(
                             text = if (isShieldEnabled)
-                                "กำลังปกป้อง: ป้องกันเครื่องมือปลดล็อคเถื่อนและ Lucky Patcher"
+                                "กำลังตรวจจับสัญญาณ Root / Patcher / Debugger แบบภายในเครื่อง"
                             else
                                 "ปิดเกราะป้องกันอยู่ (ความปลอดภัยระดับพื้นฐาน)",
                             color = if (isShieldEnabled) Color(0xFF34D399) else theme.colors.textMuted,
@@ -202,7 +202,7 @@ fun SecurityShieldModal(
 
             SecurityCheckRow(
                 title = "ตรวจจับ Lucky Patcher / Cracker",
-                status = if (securityReport.isPatcherInstalled) "พบเครื่องมือต้องสงสัย" else "ปลอดภัย 100%",
+                status = if (securityReport.isPatcherInstalled) "พบเครื่องมือต้องสงสัย" else "ไม่พบจากการตรวจพื้นฐาน",
                 isPassed = !securityReport.isPatcherInstalled,
                 themeTextMain = theme.colors.textMain,
                 themeTextMuted = theme.colors.textMuted
@@ -210,16 +210,16 @@ fun SecurityShieldModal(
 
             SecurityCheckRow(
                 title = "ตรวจจับ Memory Hook / Debugger",
-                status = if (securityReport.isDebuggerAttached) "ตรวจพบ Debugger" else "ป้องกัน Hook สำเร็จ",
+                status = if (securityReport.isDebuggerAttached) "ตรวจพบ Debugger" else "ไม่พบ Debugger จากการตรวจพื้นฐาน",
                 isPassed = !securityReport.isDebuggerAttached,
                 themeTextMain = theme.colors.textMain,
                 themeTextMuted = theme.colors.textMuted
             )
 
             SecurityCheckRow(
-                title = "การเข้ารหัสใบอนุญาต (SHA-256 HMAC)",
-                status = "เข้ารหัสความปลอดภัยระดับธนาคาร",
-                isPassed = true,
+                title = "การตรวจความสมบูรณ์จาก Google Play",
+                status = if (securityReport.isIntegrityVerified) "ยืนยันแล้ว" else "ยังไม่ได้ยืนยันด้วย Play Integrity",
+                isPassed = securityReport.isIntegrityVerified,
                 themeTextMain = theme.colors.textMain,
                 themeTextMuted = theme.colors.textMuted
             )

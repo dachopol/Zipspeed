@@ -18,9 +18,7 @@ import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.concurrent.TimeUnit
-import kotlin.math.max
 import kotlin.math.min
-import kotlin.random.Random
 
 class VideoPerformanceTester {
 
@@ -73,7 +71,7 @@ class VideoPerformanceTester {
             val speedUrl = "https://speed.cloudflare.com/__down?bytes=$targetBytes"
 
             var bytesRead = 0L
-            var bufferTime = Random.nextInt(16, 28)
+            var bufferTime = 0
             val resolutionStartTime = System.currentTimeMillis()
 
             // Safe bounded execution with instant call cancellation on timeout
@@ -139,37 +137,19 @@ class VideoPerformanceTester {
                 }
             }
 
-            // If real network was blocked or unreachable, smoothly compute realistic high-performance streaming throughput
-            if (bytesRead <= 0L && isActive && _state.value.isTesting) {
-                val simSteps = 6
-                val stepDelay = (baseStepDurationMs / simSteps).coerceAtLeast(30L)
-                val targetSimMbps = when (res) {
-                    VideoResolution.SD_480P -> Random.nextDouble(18.0, 35.0)
-                    VideoResolution.HD_720P -> Random.nextDouble(32.0, 55.0)
-                    VideoResolution.FHD_1080P -> Random.nextDouble(45.0, 75.0)
-                    VideoResolution.QHD_1440P -> Random.nextDouble(60.0, 95.0)
-                    VideoResolution.UHD_4K -> Random.nextDouble(75.0, 120.0)
+            // Real-data rule: no simulated fallback. A blocked/unreachable endpoint remains 0 Mbps.
+            if (bytesRead <= 0L) {
+                _state.update {
+                    it.copy(
+                        streamBitrateMbps = 0.0,
+                        bufferTimeMs = bufferTime
+                    )
                 }
-                for (s in 1..simSteps) {
-                    if (!isActive || !_state.value.isTesting) break
-                    delay(stepDelay)
-                    val factor = s.toFloat() / simSteps
-                    val liveSimMbps = targetSimMbps * (0.6f + 0.4f * factor) + Random.nextDouble(-1.5, 1.5)
-                    val simProgress = (index.toFloat() + (factor * 0.9f)) / testResolutions.size
-                    _state.update {
-                        it.copy(
-                            streamBitrateMbps = max(1.0, liveSimMbps),
-                            progress = simProgress,
-                            bufferTimeMs = bufferTime
-                        )
-                    }
-                }
-                bytesRead = (targetSimMbps * 125_000 * 0.6).toLong()
             }
 
             totalBufferTimeMs += bufferTime
             val elapsedSec = ((System.currentTimeMillis() - resolutionStartTime) / 1000.0).coerceAtLeast(0.4)
-            val measuredMbps = if (bytesRead > 0) (bytesRead * 8.0) / (elapsedSec * 1_000_000.0) else 15.0
+            val measuredMbps = if (bytesRead > 0) (bytesRead * 8.0) / (elapsedSec * 1_000_000.0) else 0.0
             lastAchievedBitrate = min(measuredMbps, 180.0)
             totalLoadTimeMs += (elapsedSec * 1000).toInt()
 
@@ -205,7 +185,7 @@ class VideoPerformanceTester {
             isTesting = false,
             progress = 1.0f,
             isCompleted = true,
-            maxResolutionPassed = maxPassed ?: VideoResolution.HD_720P,
+            maxResolutionPassed = maxPassed,
             qualityScore = qualityScore
         )
         _state.value = finalState

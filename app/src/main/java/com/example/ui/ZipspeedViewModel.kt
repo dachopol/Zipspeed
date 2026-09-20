@@ -36,6 +36,7 @@ import com.example.engine.ScannerScheduleEvaluator
 import com.example.engine.SignalAlertNotificationManager
 import com.example.engine.VideoPerformanceTester
 import com.example.engine.WebPerformanceTester
+import com.example.engine.WifiSignalReader
 import com.example.model.DowndetectorService
 import com.example.model.IspComparisonBenchmark
 import com.example.model.MobilePerformanceState
@@ -49,7 +50,6 @@ import com.example.model.SignalScannerState
 import com.example.model.SubTestMode
 import com.example.model.VideoTestState
 import com.example.model.WebTestState
-import kotlin.random.Random
 
 class ZipspeedViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -87,116 +87,30 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
     val mobileState: StateFlow<MobilePerformanceState> = _mobileState.asStateFlow()
 
     // Downdetector Services
-    private val initialOutageServices = listOf(
-        DowndetectorService(
-            id = "ais",
-            name = "AIS (Fibre & 5G)",
-            serviceType = "ผู้ให้บริการโทรคมนาคม (ISP/Mobile)",
-            status = OutageLevel.NORMAL,
-            incidentCount24h = 8,
-            reportsTimeline = listOf(2, 1, 0, 3, 5, 8, 4),
-            lastUpdatedText = "เมื่อสักครู่"
-        ),
-        DowndetectorService(
-            id = "true",
-            name = "True (5G & Online)",
-            serviceType = "ผู้ให้บริการโทรคมนาคม (ISP/Mobile)",
-            status = OutageLevel.NORMAL,
-            incidentCount24h = 12,
-            reportsTimeline = listOf(1, 3, 2, 8, 12, 6, 2),
-            lastUpdatedText = "1 นาทีที่แล้ว"
-        ),
-        DowndetectorService(
-            id = "3bb",
-            name = "3BB Fibre",
-            serviceType = "อินเทอร์เน็ตบ้าน (Broadband)",
-            status = OutageLevel.DEGRADED,
-            incidentCount24h = 24,
-            reportsTimeline = listOf(4, 6, 12, 18, 24, 15, 10),
-            lastUpdatedText = "3 นาทีที่แล้ว"
-        ),
-        DowndetectorService(
-            id = "nt",
-            name = "NT Broadband (National Telecom)",
-            serviceType = "อินเทอร์เน็ตความเร็วสูง",
-            status = OutageLevel.NORMAL,
-            incidentCount24h = 5,
-            reportsTimeline = listOf(0, 1, 2, 2, 5, 3, 1),
-            lastUpdatedText = "5 นาทีที่แล้ว"
-        ),
-        DowndetectorService(
-            id = "line",
-            name = "LINE Application",
-            serviceType = "แชท & วิดีโอคอล",
-            status = OutageLevel.NORMAL,
-            incidentCount24h = 3,
-            reportsTimeline = listOf(1, 0, 1, 2, 3, 1, 0),
-            lastUpdatedText = "เมื่อสักครู่"
-        ),
-        DowndetectorService(
-            id = "facebook",
-            name = "Facebook & Instagram",
-            serviceType = "โซเชียลมีเดีย",
-            status = OutageLevel.NORMAL,
-            incidentCount24h = 14,
-            reportsTimeline = listOf(3, 4, 8, 10, 14, 9, 5),
-            lastUpdatedText = "2 นาทีที่แล้ว"
-        ),
-        DowndetectorService(
-            id = "youtube",
-            name = "YouTube & Google",
-            serviceType = "สตรีมมิ่ง & ค้นหา",
-            status = OutageLevel.NORMAL,
-            incidentCount24h = 6,
-            reportsTimeline = listOf(1, 1, 2, 4, 6, 3, 2),
-            lastUpdatedText = "เมื่อสักครู่"
-        )
-    )
+    private val initialOutageServices = emptyList<DowndetectorService>()
 
     private val _downdetectorServices = MutableStateFlow(initialOutageServices)
     val downdetectorServices: StateFlow<List<DowndetectorService>> = _downdetectorServices.asStateFlow()
 
-    // Regional ISP Comparison Benchmarks
-    private val _selectedRegion = MutableStateFlow("กรุงเทพฯ และปริมณฑล")
+    // Regional benchmark data must come from a real source before display.
+    private val _selectedRegion = MutableStateFlow("ไม่ระบุ")
     val selectedRegion: StateFlow<String> = _selectedRegion.asStateFlow()
 
-    private val _ispBenchmarks = MutableStateFlow(
-        listOf(
-            IspComparisonBenchmark("AIS Fibre", "กรุงเทพฯ และปริมณฑล", 265.4, 112.8, 11, 99.2, "อันดับ 1"),
-            IspComparisonBenchmark("True Online", "กรุงเทพฯ และปริมณฑล", 248.0, 105.2, 13, 98.4, "อันดับ 2"),
-            IspComparisonBenchmark("3BB Fibre", "กรุงเทพฯ และปริมณฑล", 225.6, 95.0, 15, 96.8, "อันดับ 3"),
-            IspComparisonBenchmark("NT Broadband", "กรุงเทพฯ และปริมณฑล", 195.2, 82.5, 17, 95.5, "อันดับ 4")
-        )
-    )
+    private val _ispBenchmarks = MutableStateFlow(emptyList<IspComparisonBenchmark>())
     val ispBenchmarks: StateFlow<List<IspComparisonBenchmark>> = _ispBenchmarks.asStateFlow()
 
-    // Initial default spatial scan points gathered during previous user walk
-    private val initialMovementPoints = listOf(
-        SignalMapPoint(x = 48.0, y = 42.0, dbm = -42, zoneName = "Living Room (Router AP)", linkSpeedMbps = 866, stepIndex = 1),
-        SignalMapPoint(x = 42.0, y = 34.0, dbm = -49, zoneName = "Dining Area", linkSpeedMbps = 866, stepIndex = 2),
-        SignalMapPoint(x = 28.0, y = 26.0, dbm = -58, zoneName = "Kitchen Room", linkSpeedMbps = 780, stepIndex = 3),
-        SignalMapPoint(x = 16.0, y = 18.0, dbm = -73, zoneName = "Kitchen Balcony (Wall attenuation)", linkSpeedMbps = 433, stepIndex = 4),
-        SignalMapPoint(x = 36.0, y = 48.0, dbm = -47, zoneName = "Central Corridor", linkSpeedMbps = 866, stepIndex = 5),
-        SignalMapPoint(x = 64.0, y = 30.0, dbm = -54, zoneName = "Hallway to Study", linkSpeedMbps = 866, stepIndex = 6),
-        SignalMapPoint(x = 78.0, y = 22.0, dbm = -66, zoneName = "Working Desk", linkSpeedMbps = 650, stepIndex = 7),
-        SignalMapPoint(x = 88.0, y = 14.0, dbm = -83, zoneName = "Office Far Corner", linkSpeedMbps = 280, stepIndex = 8),
-        SignalMapPoint(x = 66.0, y = 60.0, dbm = -57, zoneName = "Master Bedroom Entrance", linkSpeedMbps = 780, stepIndex = 9),
-        SignalMapPoint(x = 78.0, y = 74.0, dbm = -68, zoneName = "Master Bedside", linkSpeedMbps = 520, stepIndex = 10),
-        SignalMapPoint(x = 89.0, y = 85.0, dbm = -89, zoneName = "En-Suite Bathroom (Deadzone)", linkSpeedMbps = 150, stepIndex = 11),
-        SignalMapPoint(x = 24.0, y = 70.0, dbm = -64, zoneName = "Guest Lounge", linkSpeedMbps = 600, stepIndex = 12)
-    )
+    // No synthetic heatmap points: spatial points are empty until a real measurement source exists.
+    private val initialMovementPoints = emptyList<SignalMapPoint>()
 
-    // Signal Scanner State
     private val _signalScannerState = MutableStateFlow(
         SignalScannerState(
-            currentDbm = -65,
-            channelWidthMhz = 80,
-            channel = 44,
-            band = "5 GHz (Wi-Fi 6 802.11ax)",
-            linkSpeedMbps = 866,
-            routerX = 48.0,
-            routerY = 42.0,
-            movementPoints = initialMovementPoints
+            currentDbm = 0,
+            channelWidthMhz = 0,
+            channel = 0,
+            band = "ไม่มีข้อมูล",
+            linkSpeedMbps = 0,
+            movementPoints = initialMovementPoints,
+            activeZone = "ไม่มีข้อมูล Wi-Fi จริง"
         )
     )
     val signalScannerState: StateFlow<SignalScannerState> = _signalScannerState.asStateFlow()
@@ -208,105 +122,22 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
             activeWalkJob?.cancel()
             activeWalkJob = null
             _signalScannerState.update { it.copy(isRecordingMovement = false) }
-        } else {
-            _signalScannerState.update { it.copy(isRecordingMovement = true) }
-            activeWalkJob = viewModelScope.launch {
-                val waypoints = listOf(
-                    Pair(50.0, 44.0) to ("Living Room (ใกล้เราเตอร์)" to -43),
-                    Pair(62.0, 36.0) to ("ทางเดินฝั่งขวา" to -52),
-                    Pair(76.0, 24.0) to ("ห้องทำงาน" to -64),
-                    Pair(88.0, 16.0) to ("มุมห้องทำงาน (ขอบผนัง)" to -81),
-                    Pair(70.0, 48.0) to ("โถงทางเดินหลัก" to -55),
-                    Pair(82.0, 72.0) to ("ห้องนอนใหญ่" to -68),
-                    Pair(90.0, 86.0) to ("ห้องน้ำในตัว (จุดอับ)" to -90),
-                    Pair(56.0, 54.0) to ("จุดศูนย์กลางบ้าน" to -47),
-                    Pair(34.0, 38.0) to ("โซนทานอาหาร" to -53),
-                    Pair(22.0, 26.0) to ("ห้องครัว" to -64),
-                    Pair(14.0, 18.0) to ("ระเบียงหลังบ้าน" to -85),
-                    Pair(30.0, 68.0) to ("มุมพักผ่อนย่อย" to -62)
-                )
+            return
+        }
 
-                var step = _signalScannerState.value.movementPoints.size + 1
-                var idx = 0
-                while (_signalScannerState.value.isRecordingMovement) {
-                    delay(1500)
-                    val (coord, data) = waypoints[idx % waypoints.size]
-                    val (zone, baseDbm) = data
-                    val jitter = Random.nextInt(-3, 4)
-                    val finalDbm = baseDbm + jitter
-                    val speed = when {
-                        finalDbm > -55 -> 866
-                        finalDbm > -65 -> 780
-                        finalDbm > -75 -> 520
-                        finalDbm > -85 -> 300
-                        else -> 120
-                    }
-
-                    val newPoint = SignalMapPoint(
-                        x = (coord.first + (Random.nextDouble() * 3.0 - 1.5)).coerceIn(5.0, 95.0),
-                        y = (coord.second + (Random.nextDouble() * 3.0 - 1.5)).coerceIn(5.0, 95.0),
-                        dbm = finalDbm,
-                        zoneName = zone,
-                        linkSpeedMbps = speed,
-                        stepIndex = step
-                    )
-
-                    _signalScannerState.update { state ->
-                        state.copy(
-                            currentDbm = finalDbm,
-                            linkSpeedMbps = speed,
-                            activeZone = zone,
-                            movementPoints = state.movementPoints + newPoint
-                        )
-                    }
-
-                    // Check if entered an area with poor signal strength
-                    val currentState = _signalScannerState.value
-                    if (currentState.alertNotificationsEnabled && finalDbm <= currentState.alertThresholdDbm) {
-                        SignalAlertNotificationManager.checkAndNotifyPoorSignal(
-                            context = getApplication(),
-                            dbm = finalDbm,
-                            zoneName = zone,
-                            thresholdDbm = currentState.alertThresholdDbm
-                        )
-                        val alertEvent = SignalAlertEvent(
-                            dbm = finalDbm,
-                            zoneName = zone,
-                            threshold = currentState.alertThresholdDbm
-                        )
-                        _signalScannerState.update { s ->
-                            s.copy(
-                                lastAlertEvent = alertEvent,
-                                alertHistory = (listOf(alertEvent) + s.alertHistory).take(20)
-                            )
-                        }
-                    }
-
-                    step++
-                    idx++
-                }
+        _signalScannerState.update { it.copy(isRecordingMovement = true) }
+        activeWalkJob = viewModelScope.launch {
+            while (_signalScannerState.value.isRecordingMovement) {
+                refreshSignalScan()
+                delay(1500)
             }
         }
     }
 
     fun pinCurrentLocation() {
-        val state = _signalScannerState.value
-        val newStep = state.movementPoints.size + 1
-        val lastPt = state.movementPoints.lastOrNull()
-        val px = lastPt?.let { (it.x + Random.nextDouble() * 8.0 - 4.0).coerceIn(10.0, 90.0) } ?: (state.routerX + 5.0)
-        val py = lastPt?.let { (it.y + Random.nextDouble() * 8.0 - 4.0).coerceIn(10.0, 90.0) } ?: (state.routerY + 5.0)
-
-        val newPoint = SignalMapPoint(
-            x = px,
-            y = py,
-            dbm = state.currentDbm,
-            zoneName = state.activeZone.ifEmpty { "จุดปักหมุดผู้ใช้ #$newStep" },
-            linkSpeedMbps = state.linkSpeedMbps,
-            stepIndex = newStep
-        )
-        _signalScannerState.update {
-            it.copy(movementPoints = it.movementPoints + newPoint)
-        }
+        // Indoor X/Y cannot be inferred reliably from Android network APIs.
+        // Refresh the real radio reading instead of generating a fake map coordinate.
+        refreshSignalScan()
     }
 
     fun resetMovementMap() {
@@ -425,17 +256,11 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setSimulatedBatteryLevel(percent: Int) {
-        _signalScannerState.update {
-            it.copy(currentBatteryPercent = percent.coerceIn(0, 100))
-        }
-        updateExecutionStatus()
+        refreshBatteryStatus()
     }
 
     fun toggleSimulatedCharging() {
-        _signalScannerState.update {
-            it.copy(isDeviceCharging = !it.isDeviceCharging)
-        }
-        updateExecutionStatus()
+        refreshBatteryStatus()
     }
 
     fun refreshBatteryStatus() {
@@ -483,20 +308,7 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
 
     fun selectRegion(region: String) {
         _selectedRegion.value = region
-        // Adjust regional benchmarks slightly for realistic area variance
-        val multiplier = when (region) {
-            "กรุงเทพฯ และปริมณฑล" -> 1.0
-            "ภาคกลาง" -> 0.95
-            "ภาคเหนือ" -> 0.91
-            "ภาคอีสาน" -> 0.88
-            else -> 0.90
-        }
-        _ispBenchmarks.value = listOf(
-            IspComparisonBenchmark("AIS Fibre", region, 265.4 * multiplier, 112.8 * multiplier, 11, 99.2, "อันดับ 1"),
-            IspComparisonBenchmark("True Online", region, 248.0 * multiplier, 105.2 * multiplier, 13, 98.4, "อันดับ 2"),
-            IspComparisonBenchmark("3BB Fibre", region, 225.6 * multiplier, 95.0 * multiplier, 15, 96.8, "อันดับ 3"),
-            IspComparisonBenchmark("NT Broadband", region, 195.2 * multiplier, 82.5 * multiplier, 17, 95.5, "อันดับ 4")
-        )
+        _ispBenchmarks.value = emptyList()
     }
 
     private var activeBackgroundScanJob: Job? = null
@@ -512,77 +324,53 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
         if (willEnable) {
             activeBackgroundScanJob = viewModelScope.launch {
                 while (_signalScannerState.value.backgroundScanEnabled) {
-                    delay(3500)
-
-                    // Refresh battery level from system if not simulating
-                    val battery = ScannerScheduleEvaluator.getDeviceBatteryStatus(getApplication())
-                    // If device is plugged in or changed, keep in sync
-                    if (battery.isCharging != _signalScannerState.value.isDeviceCharging) {
-                        _signalScannerState.update { it.copy(isDeviceCharging = battery.isCharging) }
-                    }
+                    refreshBatteryStatus()
                     updateExecutionStatus()
-
-                    val state = _signalScannerState.value
-                    // Only perform the scan sampling and deadzone detection if execution status is RUNNING
-                    if (state.executionStatus == ScannerExecutionStatus.RUNNING) {
-                        val pts = state.movementPoints
-                        val randomSample = if (pts.isNotEmpty()) pts.random() else null
-                        val sampledDbm = randomSample?.dbm ?: Random.nextInt(-88, -55)
-                        val sampledZone = randomSample?.zoneName ?: "พื้นที่ตรวจจับพื้นหลัง"
-
-                        _signalScannerState.update {
-                            it.copy(
-                                currentDbm = sampledDbm,
-                                activeZone = sampledZone,
-                                linkSpeedMbps = if (sampledDbm > -65) 866 else (if (sampledDbm > -80) 433 else 150)
-                            )
-                        }
-
-                        if (state.alertNotificationsEnabled && sampledDbm <= state.alertThresholdDbm) {
-                            SignalAlertNotificationManager.checkAndNotifyPoorSignal(
-                                context = getApplication(),
-                                dbm = sampledDbm,
-                                zoneName = sampledZone,
-                                thresholdDbm = state.alertThresholdDbm
-                            )
-                            val alertEvent = SignalAlertEvent(
-                                dbm = sampledDbm,
-                                zoneName = sampledZone,
-                                threshold = state.alertThresholdDbm
-                            )
-                            _signalScannerState.update { s ->
-                                s.copy(
-                                    lastAlertEvent = alertEvent,
-                                    alertHistory = (listOf(alertEvent) + s.alertHistory).take(20)
-                                )
-                            }
-                        }
+                    if (_signalScannerState.value.executionStatus == ScannerExecutionStatus.RUNNING) {
+                        refreshSignalScan()
                     }
+                    delay(3500)
                 }
             }
         }
     }
 
     fun refreshSignalScan() {
-        val newDbm = Random.nextInt(-88, -52)
-        val zone = if (newDbm < -80) "ห้องน้ำในตัว (จุดอับ)" else "ห้องนั่งเล่น (จุดกระจายหลัก)"
+        val snapshot = WifiSignalReader.read(getApplication())
+        if (snapshot == null) {
+            _signalScannerState.update {
+                it.copy(
+                    currentDbm = 0,
+                    channelWidthMhz = 0,
+                    channel = 0,
+                    band = "ไม่มีข้อมูล",
+                    linkSpeedMbps = 0,
+                    activeZone = "ไม่มีข้อมูล Wi-Fi จริง"
+                )
+            }
+            return
+        }
+
+        val zone = "Wi-Fi ปัจจุบัน"
         _signalScannerState.update {
             it.copy(
-                currentDbm = newDbm,
-                activeZone = zone,
-                linkSpeedMbps = if (newDbm > -65) 866 else 540
+                currentDbm = snapshot.rssiDbm,
+                band = snapshot.band,
+                linkSpeedMbps = snapshot.linkSpeedMbps,
+                activeZone = zone
             )
         }
+
         val state = _signalScannerState.value
-        if (state.alertNotificationsEnabled && newDbm <= state.alertThresholdDbm) {
+        if (state.alertNotificationsEnabled && snapshot.rssiDbm <= state.alertThresholdDbm) {
             SignalAlertNotificationManager.checkAndNotifyPoorSignal(
                 context = getApplication(),
-                dbm = newDbm,
+                dbm = snapshot.rssiDbm,
                 zoneName = zone,
                 thresholdDbm = state.alertThresholdDbm
             )
             val alertEvent = SignalAlertEvent(
-                dbm = newDbm,
+                dbm = snapshot.rssiDbm,
                 zoneName = zone,
                 threshold = state.alertThresholdDbm
             )
@@ -628,11 +416,16 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun refreshMobileScan() {
+        val wifi = WifiSignalReader.read(getApplication())
+        val battery = ScannerScheduleEvaluator.getDeviceBatteryStatus(getApplication())
         _mobileState.update {
             it.copy(
-                signalDbm = Random.nextInt(-74, -62),
-                deviceTemperatureC = 31.0 + (Random.nextDouble() * 2.0),
-                bufferbloatMs = Random.nextInt(8, 22)
+                batteryLevel = battery.levelPercent,
+                signalStrengthDbm = wifi?.rssiDbm ?: 0,
+                signalDbm = wifi?.rssiDbm ?: 0,
+                networkType = wifi?.band ?: "ไม่มีข้อมูล",
+                deviceTemperatureC = 0.0,
+                bufferbloatMs = 0
             )
         }
     }
@@ -763,11 +556,17 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun toggleProPlan() {
-        _isProPlan.update { !it }
+        // Premium entitlement must never be toggled locally.
+        _showVipModal.value = true
     }
 
     fun setProPlan(isPro: Boolean) {
-        _isProPlan.value = isPro
+        if (!isPro) {
+            _isProPlan.value = false
+            prefs.edit().putBoolean("is_vip_ad_free", false).apply()
+        } else {
+            _showVipModal.value = true
+        }
     }
 
     // GPS & ISP Region Tagging Integration
@@ -867,25 +666,19 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun purchaseVipAdFree(planName: String) {
-        // Authenticate purchase and generate anti-tamper signature
-        val validSig = AntiTamperSecurityEngine.generateVipSignature("DEVICE_OWNER_ID", true)
-        prefs.edit().putString("vip_signature", validSig).putBoolean("is_vip_ad_free", true).apply()
-        _isProPlan.value = true
-        _rewardAdsEnabled.value = false
+        // Entitlement is never granted locally. Real Google Play Billing must verify a purchase first.
+        _showVipModal.value = true
     }
 
     fun activateVipAdFree() {
-        if (_isProPlan.value) {
-            _isProPlan.value = false
-            prefs.edit().putBoolean("is_vip_ad_free", false).apply()
-        } else {
-            purchaseVipAdFree("LIFETIME")
+        if (!_isProPlan.value) {
+            _showVipModal.value = true
         }
     }
 
     fun watchAdForTempVip() {
-        // Unlock 1 hour VIP temporary pass
-        _isProPlan.value = true
+        // Rewarded entitlement must only be granted from a real rewarded-ad completion callback.
+        _showVipModal.value = true
     }
 
     fun toggleDarkLightMode() {
@@ -965,9 +758,9 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
         cancelVideoTest()
         cancelWebTest()
 
-        // เวลาวัดค่าเปิดโหมด GPS อัตโนมัติและดึงพิกัดจริง
-        _isGpsModeEnabled.value = true
-        fetchGpsCoordinates()
+        if (_isGpsModeEnabled.value) {
+            fetchGpsCoordinates()
+        }
 
         activeTestJob?.cancel()
         activeTestJob = viewModelScope.launch {
@@ -1002,17 +795,24 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
                 prefs.edit().putInt("used_test_count", newCount).apply()
 
                 if (_autoSaveHistory.value) {
-                    val record = SpeedTestRecord(
-                        downloadMbps = result.downloadMbps ?: 0.0,
-                        uploadMbps = result.uploadMbps ?: 0.0,
-                        pingMs = result.pingMs ?: 0,
-                        jitterMs = result.jitterMs ?: 0,
-                        packetLossPercent = 0.0,
-                        serverName = server.name,
-                        serverLocation = result.detectedColo?.let { "Cloudflare $it PoP" } ?: server.location,
-                        networkType = if (isPro) "5G Pro (Precision)" else "Wi-Fi / Cellular"
-                    )
-                    repository.insertRecord(record)
+                    val download = result.downloadMbps
+                    val upload = result.uploadMbps
+                    val ping = result.pingMs
+                    val jitter = result.jitterMs
+                    if (download != null && upload != null && ping != null && jitter != null) {
+                        val wifi = WifiSignalReader.read(getApplication())
+                        val record = SpeedTestRecord(
+                            downloadMbps = download,
+                            uploadMbps = upload,
+                            pingMs = ping,
+                            jitterMs = jitter,
+                            packetLossPercent = result.packetLossPercent,
+                            serverName = server.name,
+                            serverLocation = result.detectedColo?.let { "Cloudflare $it PoP" } ?: "Anycast (PoP ไม่ทราบ)",
+                            networkType = wifi?.band ?: "ไม่ทราบ"
+                        )
+                        repository.insertRecord(record)
+                    }
                 }
             }
         }

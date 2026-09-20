@@ -17,7 +17,6 @@ import okhttp3.Call
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.concurrent.TimeUnit
-import kotlin.random.Random
 
 class WebPerformanceTester {
 
@@ -60,7 +59,7 @@ class WebPerformanceTester {
 
             var measuredLatency = 0
             var measuredTtfb = 0
-            var statusCode = 200
+            var statusCode = 0
             var isSuccess = false
             val startTime = System.currentTimeMillis()
 
@@ -84,9 +83,11 @@ class WebPerformanceTester {
                     try {
                         withContext(Dispatchers.IO) {
                             call.execute().use { response ->
-                                val elapsed = (System.currentTimeMillis() - startTime).toInt()
-                                measuredLatency = elapsed.coerceIn(12, 450)
-                                measuredTtfb = (measuredLatency * 0.75).toInt().coerceAtLeast(8)
+                                val elapsed = (System.currentTimeMillis() - startTime).toInt().coerceAtLeast(1)
+                                measuredLatency = elapsed
+                                // execute() returns after response headers are available; use that measured time
+                                // rather than inventing a synthetic TTFB percentage.
+                                measuredTtfb = elapsed
                                 statusCode = response.code
                                 isSuccess = response.isSuccessful || statusCode in 200..399
                             }
@@ -100,27 +101,13 @@ class WebPerformanceTester {
                 }
             }
 
-            // If external call failed due to firewall/offline, calculate realistic performance metric
-            if (measuredLatency <= 0 || !isSuccess) {
-                val baseline = when (site.id) {
-                    "google" -> Random.nextInt(18, 34)
-                    "cloudflare" -> Random.nextInt(14, 28)
-                    "youtube" -> Random.nextInt(22, 42)
-                    "wikipedia" -> Random.nextInt(45, 78)
-                    "pantip" -> Random.nextInt(28, 55)
-                    "sanook" -> Random.nextInt(32, 60)
-                    else -> Random.nextInt(25, 65)
-                }
-                measuredLatency = baseline
-                measuredTtfb = (baseline * 0.72).toInt()
-                isSuccess = true
-                statusCode = 200
+            if (isSuccess && measuredLatency > 0) {
+                totalLatency += measuredLatency
+                successCount++
             }
 
-            totalLatency += measuredLatency
-            successCount++
-
             val statusText = when {
+                !isSuccess || measuredLatency <= 0 -> "ไม่พร้อมใช้งาน (Unavailable)"
                 measuredLatency < 45 -> "เร็วมาก (Fast)"
                 measuredLatency < 120 -> "ดีมาก (Good)"
                 measuredLatency < 250 -> "ปานกลาง (Fair)"
@@ -146,8 +133,12 @@ class WebPerformanceTester {
             delay(60L)
         }
 
-        val avgLatency = if (successCount > 0) totalLatency / successCount else 45
-        val baseScore = (100 - (avgLatency * 0.18).toInt()).coerceIn(65, 99)
+        val avgLatency = if (successCount > 0) totalLatency / successCount else 0
+        val baseScore = if (successCount > 0) {
+            (100 - (avgLatency * 0.18).toInt()).coerceIn(0, 99)
+        } else {
+            0
+        }
 
         val finalState = _state.value.copy(
             isTesting = false,

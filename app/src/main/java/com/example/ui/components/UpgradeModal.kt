@@ -118,15 +118,15 @@ fun UpgradeModal(
 
             // Pro Benefits list
             val benefits = if (language == Language.TH) listOf(
-                "รองรับ Multi-Thread Bandwidth Test สูงสุด 10 Gbps",
-                "วิเคราะห์ค่า Jitter & Packet Loss อย่างละเอียด",
-                "เลือกระบบทดสอบเซิร์ฟเวอร์อัตโนมัติ (Auto Latency Routing)",
-                "ส่งออกประวัติการทดสอบเป็นไฟล์ CSV/JSON"
+                "ปิดโฆษณาหลัง Google Play ยืนยันสิทธิ์",
+                "ใช้ค่าทดสอบจริงเท่านั้น ไม่มีค่าจำลอง",
+                "ราคาตามประเทศและสกุลเงินจาก Google Play",
+                "คงประวัติผลการทดสอบที่วัดสำเร็จ"
             ) else listOf(
-                "Multi-Thread Bandwidth Engine up to 10 Gbps",
-                "Detailed Jitter & Packet Loss Diagnostics",
-                "Smart Server Latency Routing",
-                "Export Test History to CSV/JSON"
+                "Ad-free after Google Play entitlement verification",
+                "Measured values only; no simulated results",
+                "Country/local-currency pricing from Google Play",
+                "Keep successfully measured test history"
             )
 
             benefits.forEach { item ->

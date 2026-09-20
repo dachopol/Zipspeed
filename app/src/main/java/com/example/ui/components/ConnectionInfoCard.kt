@@ -64,7 +64,7 @@ fun ConnectionInfoCard(
     var connectionMode by remember { mutableStateOf(ConnectionMode.MULTI) }
 
     val providerName = remember(ipInfo.ispName) {
-        if (!ipInfo.ispName.isNullOrBlank()) ipInfo.ispName else "AIS Fibre"
+        if (!ipInfo.ispName.isNullOrBlank()) ipInfo.ispName else if (language == Language.TH) "ไม่ทราบ" else "Unknown"
     }
 
     Column(
@@ -249,7 +249,7 @@ fun ConnectionInfoCard(
                         maxLines = 1
                     )
                     Text(
-                        text = "${server.subLocation} (${server.distanceKm} km) • ${server.basePingMs}ms",
+                        text = server.subLocation,
                         color = Color(0xFFA9C6FF),
                         fontSize = 10.sp
                     )

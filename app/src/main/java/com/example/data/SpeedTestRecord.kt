@@ -11,7 +11,7 @@ data class SpeedTestRecord(
     val uploadMbps: Double,
     val pingMs: Int,
     val jitterMs: Int,
-    val packetLossPercent: Double,
+    val packetLossPercent: Double?,
     val serverName: String,
     val serverLocation: String,
     val networkType: String

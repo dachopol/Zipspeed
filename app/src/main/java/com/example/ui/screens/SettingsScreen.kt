@@ -1,5 +1,7 @@
 package com.example.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -43,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -82,7 +85,7 @@ fun SettingsScreen(
     val theme = LocalAppTheme.current
     val scrollState = rememberScrollState()
     var expandedFaqIndex by remember { mutableStateOf<Int?>(null) }
-    var showFeedbackNotice by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val isTh = language == Language.TH
 
     Column(
@@ -355,7 +358,7 @@ fun SettingsScreen(
             // Server Selection row
             SettingsRow(
                 title = if (isTh) "เซิร์ฟเวอร์ทดสอบ" else "Test Server",
-                subtitle = "${selectedServer.name} (${selectedServer.basePingMs}ms)",
+                subtitle = selectedServer.name,
                 onClick = onOpenServerModal,
                 trailing = {
                     Icon(
@@ -467,7 +470,7 @@ fun SettingsScreen(
             val faqs = if (isTh) {
                 listOf(
                     "การทดสอบวัดจากเซิร์ฟเวอร์จริงหรือไม่?" to
-                            "ใช่แล้ว แอปพลิเคชันเชื่อมต่อไปยัง Cloudflare CDN Edge nodes จริง โดยวัดความเร็วการรับส่งข้อมูลผ่าน HTTP Streaming จริง 100%",
+                            "แอปวัดผ่าน HTTP ไปยัง endpoint ที่กำหนด และแสดงเฉพาะค่าที่วัดได้จริง หากวัดไม่ได้จะแสดงข้อผิดพลาดแทนการสร้างค่า",
                     "Ping, Jitter และ Packet Loss ต่างกันอย่างไร?" to
                             "Ping คือเวลาในการเดินทางของข้อมูลไปกลับ (ms), Jitter คือความผันผวนของค่า Ping ยิ่งน้อยยิ่งเสถียร, ส่วน Packet Loss คือข้อมูลที่สูญหายระหว่างทาง",
                     "ทำไมความเร็วบน Wi-Fi จึงต่างจาก 4G/5G?" to
@@ -551,7 +554,15 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color(0x0EFFFFFF))
-                    .clickable { showFeedbackNotice = true }
+                    .clickable {
+                        val emailIntent = Intent(
+                            Intent.ACTION_SENDTO,
+                            Uri.parse("mailto:215334638+AnakinYoo@users.noreply.github.com")
+                        ).apply {
+                            putExtra(Intent.EXTRA_SUBJECT, "Zipspeed Support")
+                        }
+                        runCatching { context.startActivity(emailIntent) }
+                    }
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -574,14 +585,14 @@ fun SettingsScreen(
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            text = "support@zipspeed.app",
+                            text = if (isTh) "เขียนอีเมลถึง AnakinYoo" else "Write an email to AnakinYoo",
                             color = theme.colors.textMuted,
                             fontSize = 11.sp
                         )
                     }
                 }
                 Text(
-                    text = if (showFeedbackNotice) (if (isTh) "บันทึกแล้ว" else "Sent") else (if (isTh) "ติดต่อ" else "Contact"),
+                    text = if (isTh) "เขียนจดหมาย" else "Email",
                     color = StatusGreen,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold

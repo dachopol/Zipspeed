@@ -35,7 +35,7 @@ data class WebSiteTest(
     val category: String,
     val latencyMs: Int = 0,
     val ttfbMs: Int = 0,
-    val statusCode: Int = 200,
+    val statusCode: Int = 0,
     val statusText: String = "Pending",
     val isSuccess: Boolean = false
 )
@@ -49,14 +49,14 @@ data class WebTestState(
 
 // Mobile Performance & Device Info
 data class MobilePerformanceState(
-    val batteryLevel: Int = 85,
-    val cpuTempC: Double = 34.2,
-    val ramUsagePercent: Int = 62,
-    val signalStrengthDbm: Int = -68,
-    val signalDbm: Int = -65,
-    val deviceTemperatureC: Double = 32.5,
-    val bufferbloatMs: Int = 12,
-    val networkType: String = "5G / Wi-Fi 6",
+    val batteryLevel: Int = 0,
+    val cpuTempC: Double = 0.0,
+    val ramUsagePercent: Int = 0,
+    val signalStrengthDbm: Int = 0,
+    val signalDbm: Int = 0,
+    val deviceTemperatureC: Double = 0.0,
+    val bufferbloatMs: Int = 0,
+    val networkType: String = "ไม่มีข้อมูล",
     val isRoaming: Boolean = false
 )
 
@@ -140,15 +140,15 @@ data class ScannerScheduleConfig(
 )
 
 data class SignalScannerState(
-    val currentDbm: Int = -65,
-    val channelWidthMhz: Int = 80,
-    val channel: Int = 44,
-    val band: String = "5 GHz",
-    val linkSpeedMbps: Int = 866,
+    val currentDbm: Int = 0,
+    val channelWidthMhz: Int = 0,
+    val channel: Int = 0,
+    val band: String = "ไม่มีข้อมูล",
+    val linkSpeedMbps: Int = 0,
     val routerX: Double = 50.0,
     val routerY: Double = 50.0,
     val movementPoints: List<SignalMapPoint> = emptyList(),
-    val activeZone: String = "Main Area",
+    val activeZone: String = "ไม่มีข้อมูล",
     val isRecordingMovement: Boolean = false,
     val alertNotificationsEnabled: Boolean = true,
     val alertThresholdDbm: Int = -80,

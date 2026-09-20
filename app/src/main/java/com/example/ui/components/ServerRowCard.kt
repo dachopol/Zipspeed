@@ -103,7 +103,7 @@ fun ServerRowCard(
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                text = "${server.basePingMs}ms",
+                text = if (language == Language.TH) "วัดจริงเมื่อทดสอบ" else "Measured on test",
                 color = Color(0xFFA9C6FF),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.ExtraBold

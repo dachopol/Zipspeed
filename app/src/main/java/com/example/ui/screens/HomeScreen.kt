@@ -80,7 +80,6 @@ import com.example.model.WebTestState
 import com.example.ui.components.AdMobBannerView
 import com.example.ui.components.ExperienceAssessmentView
 import com.example.ui.components.MetricsGrid
-import com.example.ui.components.ShareAdCountdownModal
 import com.example.ui.components.ShareDetailModal
 import com.example.ui.components.ShareReportData
 import com.example.ui.components.SpeedGauge
@@ -133,7 +132,6 @@ fun HomeScreen(
             testState.phase == TestPhase.TESTING_DOWNLOAD ||
             testState.phase == TestPhase.TESTING_UPLOAD
 
-    var showShareAdCountdownModal by remember { mutableStateOf(false) }
     var showShareDetailModal by remember { mutableStateOf(false) }
     var isNetworkDetailsExpanded by remember { mutableStateOf(false) }
 
@@ -179,11 +177,9 @@ fun HomeScreen(
     }
 
     val handleInitiateShare = {
-        if (isVipAdFree) {
-            showShareDetailModal = true
-        } else {
-            showShareAdCountdownModal = true
-        }
+        // No simulated ad gate. A real interstitial can be inserted here only after
+        // AdMob consent + ad-load success are wired with production IDs.
+        showShareDetailModal = true
     }
 
     Column(
@@ -662,33 +658,18 @@ fun HomeScreen(
     }
 
     // Modal Overlays
-    if (showShareAdCountdownModal) {
-        ShareAdCountdownModal(
-            language = language,
-            onAdCompletedOrSkipped = {
-                showShareAdCountdownModal = false
-                showShareDetailModal = true
-            },
-            onOpenVipModal = {
-                showShareAdCountdownModal = false
-                onOpenVipModal()
-            },
-            onDismiss = { showShareAdCountdownModal = false }
-        )
-    }
-
     if (showShareDetailModal) {
         ShareDetailModal(
             reportData = ShareReportData(
-                downloadMbps = testState.downloadMbps ?: 0.0,
-                uploadMbps = testState.uploadMbps ?: 0.0,
-                pingMs = testState.pingMs ?: selectedServer.basePingMs,
-                jitterMs = testState.jitterMs ?: 2,
-                packetLossPercent = 0.0,
+                downloadMbps = testState.downloadMbps,
+                uploadMbps = testState.uploadMbps,
+                pingMs = testState.pingMs,
+                jitterMs = testState.jitterMs,
+                packetLossPercent = testState.packetLossPercent,
                 serverName = selectedServer.name,
-                networkType = if (isPrecisionMode) "Precision Anycast" else "Standard Anycast",
-                publicIp = ipInfo.publicIp ?: "--",
-                ispName = ipInfo.ispName ?: "--"
+                networkType = null,
+                publicIp = ipInfo.publicIp,
+                ispName = ipInfo.ispName
             ),
             speedUnit = speedUnit,
             language = language,
