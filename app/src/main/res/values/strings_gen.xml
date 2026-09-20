@@ -78,9 +78,9 @@
     <string name="str_start_speed_test_76">START SPEED TEST</string>
     <string name="str_precision_test_clear_cache_fir_77">Precision Test (Clear Cache First)</string>
     <string name="str_share_test_details_78">Share Test Details</string>
-    <string name="str_wifi_5ghz_ais_fibre_5g_79">WiFi 5GHz • AIS Fibre 5G</string>
+    <string name="str_wifi_5ghz_ais_fibre_5g_79">เครือข่ายปัจจุบัน</string>
     <string name="str_optimal_link_80">Optimal Link</string>
-    <string name="str_routing_nearest_selectedserver_81">Routing: Nearest %1$dkm (%2$s)</string>
+    <string name="str_routing_nearest_selectedserver_81">Routing: %2$s</string>
     <string name="str_accurate_speed_test_anytime_an_82">Accurate Speed Test Anytime, Anywhere</string>
     <string name="str_get_started_83">GET STARTED</string>
     <string name="str_export_zipspeed_test_history_84">Export Zipspeed Test History</string>
