@@ -11,11 +11,11 @@ data class SecurityThreatReport(
     val isRooted: Boolean = false,
     val isPatcherInstalled: Boolean = false,
     val isDebuggerAttached: Boolean = false,
-    val isIntegrityVerified: Boolean = true,
+    val isIntegrityVerified: Boolean = false,
     val isShieldActive: Boolean = true,
     val securityScore: Int = 100,
     val detectedThreats: List<String> = emptyList(),
-    val statusSummary: String = "ระบบปลอดภัย 100% • ป้องกันเครื่องมือปลดล็อค"
+    val statusSummary: String = "ยังไม่ได้ยืนยันด้วย Play Integrity"
 )
 
 object AntiTamperSecurityEngine {
@@ -115,7 +115,7 @@ object AntiTamperSecurityEngine {
         score = score.coerceIn(0, 100)
 
         val summary = when {
-            allThreats.isEmpty() && shieldActive -> "ความปลอดภัยระดับสูงสุด: ป้องกันการปลดล็อคเถื่อน 100%"
+            allThreats.isEmpty() && shieldActive -> "ไม่พบสัญญาณผิดปกติจากการตรวจพื้นฐาน • ยังไม่ได้ยืนยันด้วย Play Integrity"
             allThreats.isEmpty() && !shieldActive -> "ระบบปกติ (เกราะป้องกันปิดอยู่)"
             else -> "แจ้งเตือนความปลอดภัย: ตรวจพบ ${allThreats.size} รายการต้องสงสัย"
         }
@@ -124,7 +124,7 @@ object AntiTamperSecurityEngine {
             isRooted = isRoot,
             isPatcherInstalled = threats.isNotEmpty(),
             isDebuggerAttached = isDebug,
-            isIntegrityVerified = allThreats.isEmpty(),
+            isIntegrityVerified = false,
             isShieldActive = shieldActive,
             securityScore = score,
             detectedThreats = allThreats,
