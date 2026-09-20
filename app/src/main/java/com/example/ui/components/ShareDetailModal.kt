@@ -67,13 +67,13 @@ import java.util.Date
 import java.util.Locale
 
 data class ShareReportData(
-    val downloadMbps: Double,
-    val uploadMbps: Double,
-    val pingMs: Int,
-    val jitterMs: Int? = 2,
-    val packetLossPercent: Double? = 0.0,
+    val downloadMbps: Double?,
+    val uploadMbps: Double?,
+    val pingMs: Int?,
+    val jitterMs: Int? = null,
+    val packetLossPercent: Double? = null,
     val serverName: String,
-    val networkType: String = "WiFi 5GHz",
+    val networkType: String? = null,
     val publicIp: String? = null,
     val ispName: String? = null,
     val timestamp: Long = System.currentTimeMillis()
@@ -93,15 +93,18 @@ fun ShareDetailModal(
     val dateFormat = SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
     val formattedDate = dateFormat.format(Date(reportData.timestamp))
 
-    val dlVal = if (speedUnit == SpeedUnit.MB_S) reportData.downloadMbps / 8.0 else reportData.downloadMbps
-    val ulVal = if (speedUnit == SpeedUnit.MB_S) reportData.uploadMbps / 8.0 else reportData.uploadMbps
-    val dlStr = String.format(Locale.US, "%.1f", dlVal)
-    val ulStr = String.format(Locale.US, "%.1f", ulVal)
+    val dlVal = reportData.downloadMbps?.let { if (speedUnit == SpeedUnit.MB_S) it / 8.0 else it }
+    val ulVal = reportData.uploadMbps?.let { if (speedUnit == SpeedUnit.MB_S) it / 8.0 else it }
+    val dlStr = dlVal?.let { String.format(Locale.US, "%.1f", it) } ?: "--"
+    val ulStr = ulVal?.let { String.format(Locale.US, "%.1f", it) } ?: "--"
 
-    val networkRating = when {
-        reportData.downloadMbps >= 500 -> stringResource(R.string.str_ultra_fast_5g_fiber_29)
-        reportData.downloadMbps >= 100 -> stringResource(R.string.str_high_speed_performance_30)
-        else -> stringResource(R.string.str_standard_broadband_31)
+    val networkRating = when (val measured = reportData.downloadMbps) {
+        null -> if (language == Language.TH) "ไม่มีข้อมูล" else "No data"
+        else -> when {
+            measured >= 500 -> stringResource(R.string.str_ultra_fast_5g_fiber_29)
+            measured >= 100 -> stringResource(R.string.str_high_speed_performance_30)
+            else -> stringResource(R.string.str_standard_broadband_31)
+        }
     }
 
     val shareTextSummary = remember(reportData, speedUnit, language) {
@@ -110,13 +113,13 @@ fun ShareDetailModal(
             append("----------------------------------\n")
             append("Download: $dlStr ${speedUnit.label}\n")
             append("Upload: $ulStr ${speedUnit.label}\n")
-            append("Ping: ${reportData.pingMs} ms")
+            append("Ping: ${reportData.pingMs?.let { "$it ms" } ?: "--"}")
             if (reportData.jitterMs != null) append(" | Jitter: ${reportData.jitterMs} ms")
             append("\n")
             append("Server: ${reportData.serverName}\n")
             if (!reportData.ispName.isNullOrBlank()) {
                 append("Network: ${reportData.ispName}\n")
-            } else {
+            } else if (!reportData.networkType.isNullOrBlank()) {
                 append("Network: ${reportData.networkType}\n")
             }
             if (!reportData.publicIp.isNullOrBlank()) {
@@ -124,7 +127,7 @@ fun ShareDetailModal(
             }
             append("Date: $formattedDate\n")
             append("----------------------------------\n")
-            append("Result Verified by Zipspeed v${com.example.BuildConfig.VERSION_NAME} Pro\n")
+            append("Measured by Zipspeed v${com.example.BuildConfig.VERSION_NAME}\n")
         }
     }
 
@@ -365,7 +368,7 @@ fun ShareDetailModal(
                 ) {
                     MetricDetailItem(
                         label = "PING",
-                        value = "${reportData.pingMs} ms",
+                        value = reportData.pingMs?.let { "$it ms" } ?: "--",
                         valueColor = NeonBlue
                     )
                     MetricDetailItem(
@@ -375,7 +378,7 @@ fun ShareDetailModal(
                     )
                     MetricDetailItem(
                         label = "PACKET LOSS",
-                        value = "${reportData.packetLossPercent ?: 0.0}%",
+                        value = reportData.packetLossPercent?.let { String.format(Locale.US, "%.1f%%", it) } ?: "--",
                         valueColor = Color(0xFF64B5F6)
                     )
                 }
