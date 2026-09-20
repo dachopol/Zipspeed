@@ -121,7 +121,7 @@ fun VideoScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = if (isTh) "วัดความละเอียดสูงสุด บัฟเฟอร์ และการกระตุกจริง" else "Measures max resolution, buffer & stall rate",
+                            text = if (isTh) "ประเมินความละเอียดจาก throughput HTTP ที่วัดได้" else "Estimates resolution from measured HTTP throughput",
                             color = theme.colors.textMuted,
                             fontSize = 12.sp
                         )
@@ -161,17 +161,15 @@ fun VideoScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     val resolutions = listOf(
-                        Triple(VideoResolution.UHD_4K, "4K Ultra HD (2160p)", "25+ Mbps"),
-                        Triple(VideoResolution.QHD_1440P, "2K Quad HD (1440p)", "15+ Mbps"),
-                        Triple(VideoResolution.FHD_1080P, "Full HD (1080p)", "8+ Mbps"),
-                        Triple(VideoResolution.HD_720P, "HD Ready (720p)", "4+ Mbps"),
-                        Triple(VideoResolution.SD_480P, "SD (480p)", "2+ Mbps")
+                        VideoResolution.UHD_4K to "4K Ultra HD (2160p)",
+                        VideoResolution.QHD_1440P to "2K Quad HD (1440p)",
+                        VideoResolution.FHD_1080P to "Full HD (1080p)",
+                        VideoResolution.HD_720P to "HD Ready (720p)",
+                        VideoResolution.SD_480P to "SD (480p)"
                     )
 
-                    resolutions.forEach { item: Triple<VideoResolution, String, String> ->
-                        val res = item.first
-                        val label = item.second
-                        val reqBandwidth = item.third
+                    resolutions.forEach { (res, label) ->
+                        val reqBandwidth = "${res.minMbps} Mbps+"
                         val isCurrent = videoState.isTesting && videoState.currentResolution == res
                         val isPassed = videoState.isCompleted && (videoState.maxResolutionPassed?.let { it.ordinal >= res.ordinal } ?: false)
                         val isFailed = videoState.isCompleted && !isPassed
@@ -229,7 +227,7 @@ fun VideoScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Streaming App Suitability Card
+            // Method note: this is a throughput-based estimate, not a platform certification.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -238,51 +236,35 @@ fun VideoScreen(
                     .border(1.dp, theme.colors.border, RoundedCornerShape(20.dp))
                     .padding(16.dp)
             ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Text(
-                        text = if (isTh) "ความเหมาะสมสำหรับแอปสตรีมมิ่งยอดนิยม" else "Streaming Platform Suitability",
+                        text = if (isTh) "วิธีประเมิน" else "Method",
                         color = theme.colors.textMain,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    val platforms = listOf(
-                        Pair("YouTube", "4K 60fps HDR"),
-                        Pair("Netflix", "Ultra HD Premium"),
-                        Pair("Disney+ Hotstar", "Dolby Vision Full HD"),
-                        Pair("Twitch", "Source 1080p60 Low-Latency"),
-                        Pair("TikTok / Reels", "Smooth instant playback")
+                    Text(
+                        text = if (isTh)
+                            "ผลนี้อิง throughput HTTP ที่ Zipspeed วัดได้และเกณฑ์ภายในของแอป ไม่ใช่การเล่นวิดีโอจริง และไม่ใช่การรับรองจาก YouTube, Netflix หรือแพลตฟอร์มอื่น"
+                        else
+                            "This result is based on measured HTTP throughput and Zipspeed's internal thresholds. It is not real video playback and is not certification from YouTube, Netflix, or any other platform.",
+                        color = theme.colors.textMuted,
+                        fontSize = 11.sp,
+                        lineHeight = 16.sp
                     )
-
-                    platforms.forEach { (name, quality) ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = name,
-                                color = theme.colors.textMain,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    tint = if (videoState.isCompleted) StatusGreen else ChampagneGold,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Text(
-                                    text = quality,
-                                    color = theme.colors.textMuted,
-                                    fontSize = 11.sp
-                                )
-                            }
-                        }
+                    if (videoState.isCompleted) {
+                        Text(
+                            text = if (isTh)
+                                "Throughput ล่าสุด: ${String.format("%.1f", videoState.streamBitrateMbps)} Mbps"
+                            else
+                                "Latest throughput: ${String.format("%.1f", videoState.streamBitrateMbps)} Mbps",
+                            color = ChampagneGold,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }
