@@ -90,6 +90,9 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
     val videoTestState by viewModel.videoTestState.collectAsStateWithLifecycle()
     val webTestState by viewModel.webTestState.collectAsStateWithLifecycle()
 
+    val endpointHealth by viewModel.endpointHealth.collectAsStateWithLifecycle()
+    val isEndpointChecking by viewModel.isEndpointChecking.collectAsStateWithLifecycle()
+
     val isProPlan by viewModel.isProPlan.collectAsStateWithLifecycle()
     val isGpsModeEnabled by viewModel.isGpsModeEnabled.collectAsStateWithLifecycle()
     val isSecurityShieldActive by viewModel.isSecurityShieldActive.collectAsStateWithLifecycle()
@@ -270,8 +273,13 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
                                         NavTab.STATUS -> {
                                             StatusScreen(
                                                 ipInfo = ipInfo,
+                                                endpointHealth = endpointHealth,
+                                                isEndpointChecking = isEndpointChecking,
                                                 language = language,
-                                                onRefreshIp = { viewModel.refreshIpInfo() }
+                                                onRefresh = {
+                                                    viewModel.refreshIpInfo()
+                                                    viewModel.refreshEndpointHealth()
+                                                }
                                             )
                                         }
 
