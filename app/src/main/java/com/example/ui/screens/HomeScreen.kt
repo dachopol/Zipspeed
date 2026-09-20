@@ -152,28 +152,35 @@ fun HomeScreen(
         }
     }
 
-    val triggerStartTestWithGps = {
-        val hasFine = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        val hasCoarse = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (!hasFine && !hasCoarse) {
-            locationPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
-        } else if (!isGpsActive) {
-            onToggleGpsMode()
-        }
-
+    val triggerStartTest = {
+        // Speed testing does not require location permission.
         if (isPrecisionMode) onStartPrecisionTest() else onStartTest()
+    }
+
+    val requestGpsOrToggle = {
+        if (isGpsActive) {
+            onToggleGpsMode()
+        } else {
+            val hasFine = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+            val hasCoarse = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (hasFine || hasCoarse) {
+                onToggleGpsMode()
+            } else {
+                locationPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            }
+        }
     }
 
     val handleInitiateShare = {
@@ -356,14 +363,7 @@ fun HomeScreen(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(8.dp))
                                             .background(if (isGpsActive) StatusGreen.copy(alpha = 0.15f) else Color(0x10FFFFFF))
-                                            .clickable {
-                                                locationPermissionLauncher.launch(
-                                                    arrayOf(
-                                                        Manifest.permission.ACCESS_FINE_LOCATION,
-                                                        Manifest.permission.ACCESS_COARSE_LOCATION
-                                                    )
-                                                )
-                                            }
+                                            .clickable { requestGpsOrToggle() }
                                             .padding(horizontal = 8.dp, vertical = 3.dp)
                                     ) {
                                         Text(
@@ -410,7 +410,7 @@ fun HomeScreen(
                 isVipAdFree = isVipAdFree,
                 onOpenVipModal = onOpenVipModal,
                 onToggleUnit = onToggleSpeedUnit,
-                onStartTest = triggerStartTestWithGps,
+                onStartTest = triggerStartTest,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
 
