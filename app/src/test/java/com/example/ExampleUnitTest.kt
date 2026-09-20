@@ -6,10 +6,43 @@ import com.example.model.ScannerScheduleConfig
 import com.example.model.SchedulePreset
 import com.example.model.SignalMapPoint
 import com.example.model.SignalScannerState
+import com.example.model.DEFAULT_SERVERS
+import com.example.model.SpeedTestState
+import com.example.model.MobilePerformanceState
 import org.junit.Assert.*
 import org.junit.Test
 
 class ExampleUnitTest {
+
+  @Test
+  fun productionDefaults_doNotInventNetworkMeasurements() {
+    val speed = SpeedTestState()
+    assertNull(speed.pingMs)
+    assertNull(speed.jitterMs)
+    assertNull(speed.packetLossPercent)
+    assertNull(speed.downloadMbps)
+    assertNull(speed.uploadMbps)
+
+    val mobile = MobilePerformanceState()
+    assertEquals(0, mobile.signalDbm)
+    assertEquals(0, mobile.signalStrengthDbm)
+    assertEquals(0.0, mobile.deviceTemperatureC, 0.0)
+    assertEquals(0, mobile.bufferbloatMs)
+  }
+
+  @Test
+  fun defaultServerDirectory_usesTruthfulAnycastEndpoint() {
+    assertTrue(DEFAULT_SERVERS.isNotEmpty())
+    val server = DEFAULT_SERVERS.first()
+    assertTrue(server.isAnycast)
+    assertTrue(server.downloadUrl.startsWith("https://"))
+    assertTrue(server.uploadUrl.startsWith("https://"))
+    assertEquals(0, server.basePingMs)
+    assertEquals(0, server.distanceKm)
+    assertEquals(0.0, server.latitude, 0.0)
+    assertEquals(0.0, server.longitude, 0.0)
+  }
+
   @Test
   fun addition_isCorrect() {
     assertEquals(4, 2 + 2)
