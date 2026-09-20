@@ -37,6 +37,8 @@ import com.example.engine.SignalAlertNotificationManager
 import com.example.engine.VideoPerformanceTester
 import com.example.engine.WebPerformanceTester
 import com.example.engine.WifiSignalReader
+import com.example.engine.EndpointHealthChecker
+import com.example.engine.EndpointHealthResult
 import com.example.model.DowndetectorService
 import com.example.model.IspComparisonBenchmark
 import com.example.model.MobilePerformanceState
@@ -81,6 +83,13 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
     private val webTester = WebPerformanceTester()
     val webTestState: StateFlow<WebTestState> = webTester.state
     private var activeWebJob: Job? = null
+
+    // Measured endpoint health checks for Status.
+    private val endpointHealthChecker = EndpointHealthChecker()
+    private val _endpointHealth = MutableStateFlow<List<EndpointHealthResult>>(emptyList())
+    val endpointHealth: StateFlow<List<EndpointHealthResult>> = _endpointHealth.asStateFlow()
+    private val _isEndpointChecking = MutableStateFlow(false)
+    val isEndpointChecking: StateFlow<Boolean> = _isEndpointChecking.asStateFlow()
 
     // Mobile Device & Connection Health State
     private val _mobileState = MutableStateFlow(MobilePerformanceState())
@@ -514,6 +523,7 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
             initialValue = null
         )
         refreshIpInfo()
+        refreshEndpointHealth()
         refreshBatteryStatus()
     }
 
@@ -531,6 +541,18 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
                 } else if (!info.countryCode.equals("TH", ignoreCase = true)) {
                     _language.value = Language.EN
                 }
+            }
+        }
+    }
+
+    fun refreshEndpointHealth() {
+        if (_isEndpointChecking.value) return
+        viewModelScope.launch {
+            _isEndpointChecking.value = true
+            try {
+                _endpointHealth.value = endpointHealthChecker.checkAll()
+            } finally {
+                _isEndpointChecking.value = false
             }
         }
     }
