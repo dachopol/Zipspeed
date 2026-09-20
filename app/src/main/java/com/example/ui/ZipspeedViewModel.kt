@@ -556,11 +556,17 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun toggleProPlan() {
-        _isProPlan.update { !it }
+        // Premium entitlement must never be toggled locally.
+        _showVipModal.value = true
     }
 
     fun setProPlan(isPro: Boolean) {
-        _isProPlan.value = isPro
+        if (!isPro) {
+            _isProPlan.value = false
+            prefs.edit().putBoolean("is_vip_ad_free", false).apply()
+        } else {
+            _showVipModal.value = true
+        }
     }
 
     // GPS & ISP Region Tagging Integration
