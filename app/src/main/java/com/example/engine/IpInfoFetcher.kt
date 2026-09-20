@@ -71,7 +71,8 @@ class IpInfoFetcher {
 
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
-                    publicIp = response.header("cf-meta-ip") ?: response.header("cf-ray")?.substringAfter("-")
+                    // cf-ray is a request identifier, not a client IP address.
+                    publicIp = response.header("cf-meta-ip")
                     val asn = response.header("asn") ?: response.header("cf-meta-asn")
                     city = response.header("city") ?: response.header("cf-meta-city")
                     countryCode = response.header("country") ?: response.header("cf-meta-country")

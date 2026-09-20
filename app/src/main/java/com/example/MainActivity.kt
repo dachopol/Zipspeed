@@ -14,7 +14,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -90,6 +89,9 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
 
     val videoTestState by viewModel.videoTestState.collectAsStateWithLifecycle()
     val webTestState by viewModel.webTestState.collectAsStateWithLifecycle()
+
+    val endpointHealth by viewModel.endpointHealth.collectAsStateWithLifecycle()
+    val isEndpointChecking by viewModel.isEndpointChecking.collectAsStateWithLifecycle()
 
     val isProPlan by viewModel.isProPlan.collectAsStateWithLifecycle()
     val isGpsModeEnabled by viewModel.isGpsModeEnabled.collectAsStateWithLifecycle()
@@ -271,8 +273,13 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
                                         NavTab.STATUS -> {
                                             StatusScreen(
                                                 ipInfo = ipInfo,
+                                                endpointHealth = endpointHealth,
+                                                isEndpointChecking = isEndpointChecking,
                                                 language = language,
-                                                onRefreshIp = { viewModel.refreshIpInfo() }
+                                                onRefresh = {
+                                                    viewModel.refreshIpInfo()
+                                                    viewModel.refreshEndpointHealth()
+                                                }
                                             )
                                         }
 
@@ -350,4 +357,5 @@ fun ZipspeedMainApp(viewModel: ZipspeedViewModel) {
             }
         }
     }
+}
 }

@@ -140,6 +140,9 @@ fun HomeScreen(
     val isTh = language == Language.TH
     val context = LocalContext.current
 
+    val hasObservedNetwork = !ipInfo.publicIp.isNullOrBlank() || !ipInfo.localIp.isNullOrBlank()
+    val networkStatusColor = if (hasObservedNetwork) StatusGreen else theme.colors.textMuted
+
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -152,28 +155,35 @@ fun HomeScreen(
         }
     }
 
-    val triggerStartTestWithGps = {
-        val hasFine = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        val hasCoarse = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (!hasFine && !hasCoarse) {
-            locationPermissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
-        } else if (!isGpsActive) {
-            onToggleGpsMode()
-        }
-
+    val triggerStartTest = {
+        // Speed testing does not require location permission.
         if (isPrecisionMode) onStartPrecisionTest() else onStartTest()
+    }
+
+    val requestGpsOrToggle = {
+        if (isGpsActive) {
+            onToggleGpsMode()
+        } else {
+            val hasFine = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+            val hasCoarse = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (hasFine || hasCoarse) {
+                onToggleGpsMode()
+            } else {
+                locationPermissionLauncher.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    )
+                )
+            }
+        }
     }
 
     val handleInitiateShare = {
@@ -225,11 +235,11 @@ fun HomeScreen(
                                 modifier = Modifier
                                     .size(8.dp)
                                     .clip(CircleShape)
-                                    .background(StatusGreen)
+                                    .background(networkStatusColor)
                             )
                             Column {
                                 Text(
-                                    text = if (!ipInfo.ispName.isNullOrBlank()) ipInfo.ispName!! else "Edge CDN Network",
+                                    text = if (!ipInfo.ispName.isNullOrBlank()) ipInfo.ispName!! else if (isTh) "ไม่ทราบผู้ให้บริการ" else "Provider unknown",
                                     color = theme.colors.textMain,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.SemiBold,
@@ -237,8 +247,16 @@ fun HomeScreen(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = if (isTh) "เชื่อมต่อแล้ว" else "Connected",
-                                    color = StatusGreen,
+                                    text = if (hasObservedNetwork) {
+                                        if (isTh) "ตรวจพบการเชื่อมต่อ" else "Network detected"
+                                    } else {
+                                        if (ipInfo.isFetching) {
+                                            if (isTh) "กำลังตรวจสอบ..." else "Checking..."
+                                        } else {
+                                            if (isTh) "ยังยืนยันการเชื่อมต่อไม่ได้" else "Connection not verified"
+                                        }
+                                    },
+                                    color = networkStatusColor,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Normal
                                 )
@@ -356,14 +374,7 @@ fun HomeScreen(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(8.dp))
                                             .background(if (isGpsActive) StatusGreen.copy(alpha = 0.15f) else Color(0x10FFFFFF))
-                                            .clickable {
-                                                locationPermissionLauncher.launch(
-                                                    arrayOf(
-                                                        Manifest.permission.ACCESS_FINE_LOCATION,
-                                                        Manifest.permission.ACCESS_COARSE_LOCATION
-                                                    )
-                                                )
-                                            }
+                                            .clickable { requestGpsOrToggle() }
                                             .padding(horizontal = 8.dp, vertical = 3.dp)
                                     ) {
                                         Text(
@@ -410,7 +421,7 @@ fun HomeScreen(
                 isVipAdFree = isVipAdFree,
                 onOpenVipModal = onOpenVipModal,
                 onToggleUnit = onToggleSpeedUnit,
-                onStartTest = triggerStartTestWithGps,
+                onStartTest = triggerStartTest,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
 

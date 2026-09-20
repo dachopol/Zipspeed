@@ -11,9 +11,9 @@ data class ServerInfo(
     val downloadUrl: String = "https://speed.cloudflare.com/__down",
     val uploadUrl: String = "https://speed.cloudflare.com/__up",
     val distanceKm: Int = 0,
-    val basePingMs: Int = 10,
-    val latitude: Double = 13.7563,
-    val longitude: Double = 100.5018
+    val basePingMs: Int = 0,
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0
 )
 
 val DEFAULT_SERVERS = listOf(

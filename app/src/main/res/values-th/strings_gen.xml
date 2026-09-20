@@ -26,7 +26,7 @@
     <string name="str_cancel_test_23">ยกเลิกการทดสอบ</string>
     <string name="str_start_video_test_24">เริ่มทดสอบประสิทธิภาพวิดีโอ</string>
     <string name="str_resolution_support_25">การรองรับความละเอียด (Resolution Support):</string>
-    <string name="str_pass_smooth_26">ลื่นไหล 100%</string>
+    <string name="str_pass_smooth_26">ผ่านเกณฑ์</string>
     <string name="str_web_browsing_score_27">คะแนนประสิทธิภาพเว็บ</string>
     <string name="str_tested_websites_cdns_28">ผลการทดสอบแต่ละเว็บไซต์ &amp; CDN:</string>
     <string name="str_ultra_fast_5g_fiber_29">เร็วระดับ 5G / Fiber Ultra</string>
@@ -79,9 +79,9 @@
     <string name="str_start_speed_test_76">เริ่มทดสอบความเร็ว</string>
     <string name="str_precision_test_clear_cache_fir_77">เทสแบบแม่นยำ (ปิดแอพพื้นหลังก่อน + เคลียร์ cache)</string>
     <string name="str_share_test_details_78">แชร์รายละเอียดผลการทดสอบ</string>
-    <string name="str_wifi_5ghz_ais_fibre_5g_79">WiFi 5GHz • AIS Fibre 5G</string>
+    <string name="str_wifi_5ghz_ais_fibre_5g_79">เครือข่ายปัจจุบัน</string>
     <string name="str_optimal_link_80">สถานะเสถียร</string>
-    <string name="str_routing_nearest_selectedserver_81">เราท์ติ้ง: ใกล้สุด %1$dkm (%2$s)</string>
+    <string name="str_routing_nearest_selectedserver_81">เราท์ติ้ง: %2$s</string>
     <string name="str_accurate_speed_test_anytime_an_82">วัดความเร็วเน็ตแม่นยำ ทุกที่ ทุกเวลา</string>
     <string name="str_get_started_83">เริ่มต้นใช้งาน</string>
     <string name="str_export_zipspeed_test_history_84">ส่งออกประวัติการทดสอบ Zipspeed</string>

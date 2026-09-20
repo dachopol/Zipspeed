@@ -4,9 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 /**
- * The dashboard ad is shown inside [SpeedGauge] after a completed test.
- * Keeping this component as a no-op preserves the existing call site while
- * preventing a second banner/action from competing with the gauge controls.
+ * Production ad slot.
+ *
+ * It stays empty until a real Google Mobile Ads configuration (App ID, ad-unit ID,
+ * consent flow and load callbacks) is supplied. This prevents fake ads or UI that
+ * pretends an ad was served.
  */
 @Composable
 fun AdMobBannerView(
@@ -14,5 +16,5 @@ fun AdMobBannerView(
     onRemoveAdsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Intentionally empty: the gauge owns the single dashboard ad surface.
+    // Intentionally no-op until real AdMob credentials/configuration are available.
 }
