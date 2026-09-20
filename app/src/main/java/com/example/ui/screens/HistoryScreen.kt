@@ -261,7 +261,7 @@ fun HistoryScreen(
                     uploadMbps = r.uploadMbps,
                     pingMs = r.pingMs,
                     jitterMs = r.jitterMs,
-                    packetLossPercent = 0.0,
+                    packetLossPercent = r.packetLossPercent,
                     serverName = r.serverName,
                     networkType = r.networkType,
                     timestamp = r.timestamp
