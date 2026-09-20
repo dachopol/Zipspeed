@@ -103,7 +103,7 @@ fun MapScreen(
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = if (isTh) "แผนที่โหนดเซิร์ฟเวอร์ & CDN" else "Regional Server Radar Map",
+                            text = if (isTh) "เส้นทางเซิร์ฟเวอร์ Anycast" else "Anycast Server Routing",
                             color = theme.colors.textMain,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
@@ -146,13 +146,13 @@ fun MapScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (isTh) "รายชื่อเซิร์ฟเวอร์ที่รองรับ" else "Available Regional Edge Nodes",
+                            text = if (isTh) "Endpoint ที่รองรับ" else "Available Test Endpoints",
                             color = theme.colors.textMain,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "${DEFAULT_SERVERS.size} โหนด",
+                            text = if (isTh) "${DEFAULT_SERVERS.size} endpoint" else "${DEFAULT_SERVERS.size} endpoint",
                             color = theme.colors.textMuted,
                             fontSize = 11.sp
                         )
