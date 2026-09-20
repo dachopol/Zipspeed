@@ -358,7 +358,7 @@ fun SettingsScreen(
             // Server Selection row
             SettingsRow(
                 title = if (isTh) "เซิร์ฟเวอร์ทดสอบ" else "Test Server",
-                subtitle = "${selectedServer.name} (${selectedServer.basePingMs}ms)",
+                subtitle = selectedServer.name,
                 onClick = onOpenServerModal,
                 trailing = {
                     Icon(
@@ -470,7 +470,7 @@ fun SettingsScreen(
             val faqs = if (isTh) {
                 listOf(
                     "การทดสอบวัดจากเซิร์ฟเวอร์จริงหรือไม่?" to
-                            "ใช่แล้ว แอปพลิเคชันเชื่อมต่อไปยัง Cloudflare CDN Edge nodes จริง โดยวัดความเร็วการรับส่งข้อมูลผ่าน HTTP Streaming จริง 100%",
+                            "แอปวัดผ่าน HTTP ไปยัง endpoint ที่กำหนด และแสดงเฉพาะค่าที่วัดได้จริง หากวัดไม่ได้จะแสดงข้อผิดพลาดแทนการสร้างค่า",
                     "Ping, Jitter และ Packet Loss ต่างกันอย่างไร?" to
                             "Ping คือเวลาในการเดินทางของข้อมูลไปกลับ (ms), Jitter คือความผันผวนของค่า Ping ยิ่งน้อยยิ่งเสถียร, ส่วน Packet Loss คือข้อมูลที่สูญหายระหว่างทาง",
                     "ทำไมความเร็วบน Wi-Fi จึงต่างจาก 4G/5G?" to
