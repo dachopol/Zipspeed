@@ -140,6 +140,9 @@ fun HomeScreen(
     val isTh = language == Language.TH
     val context = LocalContext.current
 
+    val hasObservedNetwork = !ipInfo.publicIp.isNullOrBlank() || !ipInfo.localIp.isNullOrBlank()
+    val networkStatusColor = if (hasObservedNetwork) StatusGreen else theme.colors.textMuted
+
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -232,11 +235,11 @@ fun HomeScreen(
                                 modifier = Modifier
                                     .size(8.dp)
                                     .clip(CircleShape)
-                                    .background(StatusGreen)
+                                    .background(networkStatusColor)
                             )
                             Column {
                                 Text(
-                                    text = if (!ipInfo.ispName.isNullOrBlank()) ipInfo.ispName!! else "Edge CDN Network",
+                                    text = if (!ipInfo.ispName.isNullOrBlank()) ipInfo.ispName!! else if (isTh) "ไม่ทราบผู้ให้บริการ" else "Provider unknown",
                                     color = theme.colors.textMain,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.SemiBold,
@@ -244,8 +247,16 @@ fun HomeScreen(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = if (isTh) "เชื่อมต่อแล้ว" else "Connected",
-                                    color = StatusGreen,
+                                    text = if (hasObservedNetwork) {
+                                        if (isTh) "ตรวจพบการเชื่อมต่อ" else "Network detected"
+                                    } else {
+                                        if (ipInfo.isFetching) {
+                                            if (isTh) "กำลังตรวจสอบ..." else "Checking..."
+                                        } else {
+                                            if (isTh) "ยังยืนยันการเชื่อมต่อไม่ได้" else "Connection not verified"
+                                        }
+                                    },
+                                    color = networkStatusColor,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Normal
                                 )
