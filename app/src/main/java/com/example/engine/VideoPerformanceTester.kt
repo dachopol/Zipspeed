@@ -95,8 +95,8 @@ class VideoPerformanceTester {
                     try {
                         withContext(Dispatchers.IO) {
                             call.execute().use { response ->
-                                bufferTime = (System.currentTimeMillis() - startReq).toInt().coerceIn(12, 180)
-                                val body = response.body
+                                bufferTime = (System.currentTimeMillis() - startReq).toInt().coerceAtLeast(1)
+                                val body = if (response.isSuccessful) response.body else null
                                 if (body != null) {
                                     val stream = body.byteStream()
                                     val buffer = ByteArray(16 * 1024)
@@ -114,7 +114,7 @@ class VideoPerformanceTester {
                                             val streamProgress = (index.toFloat() + (bytesRead.toFloat() / targetBytes).coerceIn(0.1f, 0.95f)) / testResolutions.size
                                             _state.update {
                                                 it.copy(
-                                                    streamBitrateMbps = min(liveMbps, 180.0),
+                                                    streamBitrateMbps = liveMbps,
                                                     progress = streamProgress,
                                                     bufferTimeMs = bufferTime
                                                 )
@@ -148,13 +148,13 @@ class VideoPerformanceTester {
             }
 
             totalBufferTimeMs += bufferTime
-            val elapsedSec = ((System.currentTimeMillis() - resolutionStartTime) / 1000.0).coerceAtLeast(0.4)
+            val elapsedSec = ((System.currentTimeMillis() - resolutionStartTime) / 1000.0).coerceAtLeast(0.001)
             val measuredMbps = if (bytesRead > 0) (bytesRead * 8.0) / (elapsedSec * 1_000_000.0) else 0.0
-            lastAchievedBitrate = min(measuredMbps, 180.0)
+            lastAchievedBitrate = measuredMbps
             totalLoadTimeMs += (elapsedSec * 1000).toInt()
 
-            // Pass condition: Achieved sustained bitrate >= 70% of minimum requirement for this resolution
-            if (lastAchievedBitrate >= res.minMbps * 0.70) {
+            // Pass only when the measured throughput reaches this app's published threshold.
+            if (lastAchievedBitrate >= res.minMbps) {
                 maxPassed = res
             }
 
