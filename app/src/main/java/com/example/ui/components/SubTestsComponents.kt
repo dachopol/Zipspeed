@@ -97,7 +97,7 @@ fun VideoTestView(
             .testTag("video_test_view"),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // Video Preview Simulated Screen
+        // Throughput test status panel
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -139,7 +139,7 @@ fun VideoTestView(
                 if (videoState.isTesting) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Bitrate: ${String.format("%.1f", videoState.streamBitrateMbps)} Mbps | Buffer: ${videoState.bufferTimeMs} ms",
+                        text = "Throughput: ${String.format("%.1f", videoState.streamBitrateMbps)} Mbps | Response: ${videoState.bufferTimeMs} ms",
                         color = NeonGreen,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
