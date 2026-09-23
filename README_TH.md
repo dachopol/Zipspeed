@@ -40,6 +40,13 @@ CI v71 ตรวจ unit tests, lint, debug APK, web build, UI audit และ P
 
 Signed AAB ยังต้องใช้ upload key จริงและเปิด `ENABLE_SIGNED_RELEASE=true` ก่อน จึงยังไม่ถือว่า Play Console production พร้อมจาก source gate เพียงอย่างเดียว
 
+## Workflow ถาวรของโปรเจกต์
+
+ทุกการแก้ Zipspeed ต้องทำตาม `PROJECT_WORKFLOW.md` ตามลำดับ:
+Source of Truth → GitHub Remote Check → Anti-Random / Real Data → Working App Validation → Root-Cause Error Fix → Version Consistency → UI Card-Only → Responsive / Auto Layout → Visual System → Language / Region → Security / Privacy → Build System → ZIP Delivery → Play Store / Release → Final QA Gate → Delivery Report
+
+CI ใช้ `npm run project:policy` ตรวจ Source of Truth, package/version, legacy paths และรูปแบบ fake/random/hardcoded ที่ห้ามใช้ใน runtime source ก่อนเริ่ม build ขั้นต่อไป
+
 ## หลักข้อมูลจริง
 
 ห้ามสุ่มหรือเติมค่าทดสอบเน็ต, ISP, เมืองเซิร์ฟเวอร์, outage, โฆษณา, การซื้อ หรือสถานะ security ที่ไม่มีหลักฐานจริง หากไม่มีข้อมูลให้แสดงไม่ทราบ/ไม่พร้อมใช้งาน
