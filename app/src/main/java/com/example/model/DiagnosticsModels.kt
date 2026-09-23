@@ -93,9 +93,9 @@ data class IspComparisonBenchmark(
 // Signal Scanner & Spatial Mapping
 data class SignalMapPoint(
     val id: String = java.util.UUID.randomUUID().toString(),
-    val x: Double = 0.0,
-    val y: Double = 0.0,
-    val dbm: Int = -60,
+    val x: Double,
+    val y: Double,
+    val dbm: Int,
     val zoneName: String = "",
     val linkSpeedMbps: Int = 0,
     val stepIndex: Int = 0
@@ -145,8 +145,8 @@ data class SignalScannerState(
     val channel: Int = 0,
     val band: String = "ไม่มีข้อมูล",
     val linkSpeedMbps: Int = 0,
-    val routerX: Double = 50.0,
-    val routerY: Double = 50.0,
+    val routerX: Double? = null,
+    val routerY: Double? = null,
     val movementPoints: List<SignalMapPoint> = emptyList(),
     val activeZone: String = "ไม่มีข้อมูล",
     val isRecordingMovement: Boolean = false,
