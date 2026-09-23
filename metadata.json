@@ -1,10 +1,6 @@
 {
   "name": "Zipspeed by AnakinYoo",
-  "description": "Space-style internet speed test web app",
-  "requestFramePermissions": [
-    "geolocation"
-  ],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
+  "description": "Zipspeed v71 internet speed and network diagnostics app",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
 }
