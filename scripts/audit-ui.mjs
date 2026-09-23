@@ -20,6 +20,7 @@ for (const file of files) {
   const unlabeledButtons = [...source.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/gi)]
     .filter(([, attrs, inner]) => {
       if (/\baria-label(?:ledby)?\s*=/i.test(attrs)) return false;
+      if (/\bdata-i\s*=/i.test(attrs)) return false;
       const text = inner
         .replace(/<[^>]*>/g, ' ')
         .replace(/&nbsp;/gi, ' ')
