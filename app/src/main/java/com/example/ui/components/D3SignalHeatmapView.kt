@@ -91,11 +91,10 @@ fun D3SignalHeatmapView(
     var showShareSuccess by remember { mutableStateOf(false) }
 
     // Convert data to JSON string for D3 consumption
-    val pointsJson = remember(signalState.movementPoints, signalState.routerX, signalState.routerY) {
+    val pointsJson = remember(signalState.movementPoints) {
         val root = JSONObject()
-        root.put("routerX", signalState.routerX)
-        root.put("routerY", signalState.routerY)
-        root.put("currentDbm", signalState.currentDbm)
+        // Router coordinates are unknown until a verified spatial source exists.
+        root.put("routerVerified", false)
 
         val ptsArray = JSONArray()
         signalState.movementPoints.forEachIndexed { idx, pt ->
@@ -126,7 +125,11 @@ fun D3SignalHeatmapView(
     val totalPoints = signalState.movementPoints.size
     val peakPoint = signalState.movementPoints.maxByOrNull { it.dbm }
     val deadzonePoint = signalState.movementPoints.minByOrNull { it.dbm }
-    val avgDbm = if (totalPoints > 0) signalState.movementPoints.map { it.dbm }.average().toInt() else signalState.currentDbm
+    val avgDbm = signalState.movementPoints
+        .takeIf { it.isNotEmpty() }
+        ?.map { it.dbm }
+        ?.average()
+        ?.toInt()
 
     Column(
         modifier = modifier
@@ -247,7 +250,7 @@ fun D3SignalHeatmapView(
                     fontSize = 10.sp
                 )
                 Text(
-                    text = "${peakPoint?.dbm ?: signalState.currentDbm} dBm",
+                    text = peakPoint?.dbm?.let { "$it dBm" } ?: "--",
                     color = NeonGreen,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.ExtraBold
@@ -263,8 +266,12 @@ fun D3SignalHeatmapView(
                     fontSize = 10.sp
                 )
                 Text(
-                    text = "${deadzonePoint?.dbm ?: "-88"} dBm",
-                    color = if ((deadzonePoint?.dbm ?: -88) < -80) Color(0xFFEF4444) else NeonAmber,
+                    text = deadzonePoint?.dbm?.let { "$it dBm" } ?: "--",
+                    color = when {
+                        deadzonePoint == null -> CyberMuted
+                        deadzonePoint.dbm < -80 -> Color(0xFFEF4444)
+                        else -> NeonAmber
+                    },
                     fontSize = 14.sp,
                     fontWeight = FontWeight.ExtraBold
                 )
@@ -279,7 +286,7 @@ fun D3SignalHeatmapView(
                     fontSize = 10.sp
                 )
                 Text(
-                    text = "$avgDbm dBm",
+                    text = avgDbm?.let { "$it dBm" } ?: "--",
                     color = GoldPro,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.ExtraBold
@@ -289,82 +296,122 @@ fun D3SignalHeatmapView(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // D3 Webview Canvas/SVG Render Window
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(Color(0xFF0F141C))
-                .border(1.dp, Color(0x2E5B9BF3), RoundedCornerShape(14.dp))
-                .testTag("d3_webview_viewport")
-        ) {
-            AndroidView(
-                factory = { context ->
-                    createD3HeatmapWebView(
-                        context = context,
-                        initialPointsJson = pointsJson,
-                        initialPalette = selectedPalette,
-                        showContours = showContours,
-                        showPath = showPathTrail,
-                        showNodes = showNodePoints,
-                        onPointClicked = { pointDetails ->
-                            inspectedPointInfo = pointDetails
-                        }
-                    ).also {
-                        webViewRef = it
-                    }
-                },
-                update = {
-                    // State updates are handled reactively by LaunchedEffect to prevent UI thread freezes
-                },
-                modifier = Modifier.fillMaxWidth().height(300.dp)
-            )
-
-            // Overlaid Router Badge
+        // Spatial visualization is shown only when verified spatial points exist.
+        if (totalPoints == 0) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(8.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xD9101622))
-                    .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(8.dp))
-                    .padding(horizontal = 6.dp, vertical = 4.dp)
+                    .fillMaxWidth()
+                    .height(300.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFF0F141C))
+                    .border(1.dp, Color(0x2E5B9BF3), RoundedCornerShape(14.dp))
+                    .testTag("d3_webview_empty"),
+                contentAlignment = Alignment.Center
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(20.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Router,
+                        imageVector = Icons.Default.Map,
                         contentDescription = null,
-                        tint = NeonGreen,
-                        modifier = Modifier.size(12.dp)
+                        tint = CyberMuted,
+                        modifier = Modifier.size(32.dp)
                     )
                     Text(
-                        text = "AP: ${signalState.band}",
-                        color = Color.White,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.SemiBold
+                        text = "--",
+                        color = CyberInk,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = if (language == Language.TH)
+                            "ยังไม่มีข้อมูลตำแหน่งจริงสำหรับสร้าง Heatmap"
+                        else
+                            "No verified spatial measurements available",
+                        color = CyberMuted,
+                        fontSize = 12.sp
                     )
                 }
             }
-
-            // D3 Engine Badge
+        } else {
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(Color(0xB3273344))
-                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                    .fillMaxWidth()
+                    .height(300.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFF0F141C))
+                    .border(1.dp, Color(0x2E5B9BF3), RoundedCornerShape(14.dp))
+                    .testTag("d3_webview_viewport")
             ) {
-                Text(
-                    text = "D3.js v7 Core",
-                    color = NeonBlue,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold
+                AndroidView(
+                    factory = { context ->
+                        createD3HeatmapWebView(
+                            context = context,
+                            initialPointsJson = pointsJson,
+                            initialPalette = selectedPalette,
+                            showContours = showContours,
+                            showPath = showPathTrail,
+                            showNodes = showNodePoints,
+                            onPointClicked = { pointDetails ->
+                                inspectedPointInfo = pointDetails
+                            }
+                        ).also {
+                            webViewRef = it
+                        }
+                    },
+                    update = {
+                        // State updates are handled reactively by LaunchedEffect.
+                    },
+                    modifier = Modifier.fillMaxWidth().height(300.dp)
                 )
+
+                if (signalState.band != "ไม่มีข้อมูล") {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(8.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xD9101622))
+                            .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 6.dp, vertical = 4.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Router,
+                                contentDescription = null,
+                                tint = NeonGreen,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Text(
+                                text = "AP: ${signalState.band}",
+                                color = Color.White,
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xB3273344))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "D3.js v7 Core",
+                        color = NeonBlue,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
 
@@ -611,7 +658,8 @@ private fun createD3HeatmapWebView(
             object {
                 @JavascriptInterface
                 fun onPointSelected(zone: String, dbm: Int, speed: Int, step: Int) {
-                    val info = "จุดที่ #$step: $zone | $dbm dBm (${speed} Mbps)"
+                    val speedText = if (speed > 0) "$speed Mbps" else "--"
+                    val info = "จุดที่ #$step: $zone | $dbm dBm ($speedText)"
                     android.os.Handler(android.os.Looper.getMainLooper()).post {
                         onPointClicked(info)
                     }
@@ -778,15 +826,10 @@ private fun generateD3HeatmapHtml(): String {
         const MAP_HEIGHT = 420;
 
         // Room/Zone Blueprint Definitions
-        const ZONES = [
-            { name: "Living Room (Router)", x: 230, y: 120, w: 180, h: 160 },
-            { name: "Kitchen & Dining", x: 40, y: 40, w: 170, h: 160 },
-            { name: "Kitchen Balcony", x: 40, y: 220, w: 170, h: 150 },
-            { name: "Working Study Room", x: 430, y: 40, w: 130, h: 170 },
-            { name: "Master Bedroom", x: 430, y: 230, w: 130, h: 140 }
-        ];
+        // No synthetic floorplan. Spatial geometry must come from verified user data.
+        const ZONES = [];
 
-        let currentData = { routerX: 50, routerY: 45, points: [] };
+        let currentData = { routerVerified: false, points: [] };
         let currentPalette = 'turbo';
         let showContoursOption = true;
         let showPathOption = true;
@@ -868,7 +911,8 @@ private fun generateD3HeatmapHtml(): String {
                         sumVal += w * pt.dbm;
                     }
 
-                    const dbmVal = sumW > 0 ? (sumVal / sumW) : -85;
+                    if (sumW <= 0) continue;
+                    const dbmVal = sumVal / sumW;
                     ctx.fillStyle = colorScale(dbmVal);
                     ctx.fillRect(px, py, gridStep, gridStep);
                 }
@@ -881,8 +925,12 @@ private fun generateD3HeatmapHtml(): String {
 
             const points = currentData.points || [];
             const colorScale = getColorScale(currentPalette);
+            const hasVerifiedRouter =
+                currentData.routerVerified === true &&
+                Number.isFinite(currentData.routerX) &&
+                Number.isFinite(currentData.routerY);
 
-            // 1. Draw Architectural Floorplan Rooms
+            // 1. Draw floorplan only when verified geometry is supplied
             const roomsGroup = svg.append('g').attr('class', 'rooms-layer');
             ZONES.forEach(z => {
                 roomsGroup.append('rect')
@@ -901,7 +949,7 @@ private fun generateD3HeatmapHtml(): String {
             });
 
             // 2. Draw D3 Equipotential Contour Rings
-            if (showContoursOption && points.length > 0) {
+            if (showContoursOption && points.length > 0 && hasVerifiedRouter) {
                 const contourGroup = svg.append('g').attr('class', 'contours-layer');
                 const rx = (currentData.routerX / 100) * MAP_WIDTH;
                 const ry = (currentData.routerY / 100) * MAP_HEIGHT;
@@ -943,7 +991,8 @@ private fun generateD3HeatmapHtml(): String {
                     .attr('d', lineGenerator);
             }
 
-            // 4. Draw Router / AP Location Marker
+            // 4. Draw Router / AP marker only with verified router coordinates.
+            if (hasVerifiedRouter) {
             const rX = (currentData.routerX / 100) * MAP_WIDTH;
             const rY = (currentData.routerY / 100) * MAP_HEIGHT;
 
@@ -972,7 +1021,8 @@ private fun generateD3HeatmapHtml(): String {
                 .attr('fill', '#34D399')
                 .attr('font-size', '10px')
                 .attr('font-weight', 'bold')
-                .text("Wi-Fi 6 Router");
+                .text("Router / AP");
+            }
 
             // 5. Draw Interactive Scanned Nodes
             if (showNodesOption && points.length > 0) {
@@ -988,7 +1038,8 @@ private fun generateD3HeatmapHtml(): String {
                         .on('click', function(event) {
                             showTooltip(event, pt, px, py);
                             if (window.AndroidBridge && window.AndroidBridge.onPointSelected) {
-                                window.AndroidBridge.onPointSelected(pt.zone, pt.dbm, pt.speed || 866, pt.step || (idx + 1));
+                                const verifiedSpeed = Number.isFinite(pt.speed) && pt.speed > 0 ? pt.speed : 0;
+                                window.AndroidBridge.onPointSelected(pt.zone, pt.dbm, verifiedSpeed, pt.step || (idx + 1));
                             }
                         });
 
@@ -1099,7 +1150,8 @@ private fun generateD3HeatmapHtml(): String {
             tooltip.style.left = Math.min(px + 10, MAP_WIDTH - 140) + 'px';
             tooltip.style.top = Math.max(py - 40, 10) + 'px';
             tooltip.innerHTML = '<strong>' + (pt.zone || 'ตำแหน่งสแกน') + '</strong><br/>' +
-                                pt.dbm + ' dBm &bull; ' + (pt.speed || 866) + ' Mbps';
+                                pt.dbm + ' dBm &bull; ' +
+                                ((Number.isFinite(pt.speed) && pt.speed > 0) ? (pt.speed + ' Mbps') : '--');
 
             setTimeout(() => {
                 tooltip.style.display = 'none';
