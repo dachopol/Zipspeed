@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 
-const files = ['public/index.html', 'index.html'];
+const files = ['public/index.html', 'app/src/main/assets/index.html'];
 const failures = [];
 
 for (const file of files) {
@@ -27,5 +27,5 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`);
   process.exitCode = 1;
 } else {
-  console.log(`UI audit passed for ${files.length} entry point(s).`);
+  console.log(`UI audit passed for ${files.length} canonical entry point(s).`);
 }
