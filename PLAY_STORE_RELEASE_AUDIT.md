@@ -1,6 +1,6 @@
 # Zipspeed — Play Store Release Audit
 
-Audit date: 2026-09-20  
+Audit date: 2026-09-23  
 Project: Zipspeed by AnakinYoo  
 Application ID: `com.aistudio.zipspeed.zskt`
 
@@ -12,9 +12,9 @@ This checklist is based on the current Android source in this repository. It doe
 |---|---|---|
 | Android target API | PASS | `targetSdk = 36` |
 | Compile API | PASS | Android API 36 configuration |
-| Versioning | PASS | `versionCode = 42`, `versionName = 42.0` |
-| Debug build | CI CHECK | GitHub Actions runs unit tests + `:app:assembleDebug` |
-| Release signing | USER ACTION | Requires the real upload keystore and secret environment variables |
+| Versioning | PASS | `versionCode = 71`, `versionName = 71.0.0` |
+| Debug build | CI CHECK | GitHub Actions runs unit tests + `:app:lintDebug` + `:app:assembleDebug` and uploads the debug APK |
+| Play test gate | CI CHECK | `npm run play:check` verifies v71/API/package/CI source invariants and uploads evidence |\n| Release signing | USER ACTION | Signed `bundleRelease` runs only when the real upload keystore secrets are configured and `ENABLE_SIGNED_RELEASE=true` |
 | Core speed flow | IMPLEMENTED | HTTP latency/jitter + Download/Upload payload measurement |
 | Fake network values | HARDENED | Unknown/unavailable is used instead of invented fallback values |
 | Optional GPS | PASS | Normal speed test does not require GPS; GPS is user-selected |
