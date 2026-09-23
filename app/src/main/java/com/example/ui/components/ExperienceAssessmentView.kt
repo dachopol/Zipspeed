@@ -60,34 +60,43 @@ fun ExperienceAssessmentView(
     val theme = LocalAppTheme.current
     val isDark = theme.isDark
 
-    val dl = testState.downloadMbps ?: 193.0
-    val ul = testState.uploadMbps ?: 68.4
-    val ping = testState.pingMs ?: 39
+    val dl = testState.downloadMbps
+    val ul = testState.uploadMbps
+    val ping = testState.pingMs
 
-    // Calculate ratings based on metrics
-    val browsingRating = when {
-        dl >= 50.0 && ping <= 50 -> ExperienceRating.GOOD
-        dl >= 20.0 -> ExperienceRating.GOOD
-        else -> ExperienceRating.FAIR
-    }
+    // Never invent an experience rating. A rating exists only when its required
+    // measured inputs are available from the current test.
+    val browsingRating = if (dl != null && ping != null) {
+        when {
+            dl >= 50.0 && ping <= 50 -> ExperienceRating.GOOD
+            dl >= 20.0 -> ExperienceRating.GOOD
+            else -> ExperienceRating.FAIR
+        }
+    } else null
 
-    val gamingRating = when {
-        ping <= 40 && dl >= 30.0 -> ExperienceRating.EXCELLENT
-        ping <= 70 -> ExperienceRating.VERY_GOOD
-        else -> ExperienceRating.GOOD
-    }
+    val gamingRating = if (dl != null && ping != null) {
+        when {
+            ping <= 40 && dl >= 30.0 -> ExperienceRating.EXCELLENT
+            ping <= 70 -> ExperienceRating.VERY_GOOD
+            else -> ExperienceRating.GOOD
+        }
+    } else null
 
-    val videoRating = when {
-        dl >= 100.0 -> ExperienceRating.VERY_GOOD
-        dl >= 30.0 -> ExperienceRating.GOOD
-        else -> ExperienceRating.FAIR
-    }
+    val videoRating = if (dl != null) {
+        when {
+            dl >= 100.0 -> ExperienceRating.VERY_GOOD
+            dl >= 30.0 -> ExperienceRating.GOOD
+            else -> ExperienceRating.FAIR
+        }
+    } else null
 
-    val videoCallRating = when {
-        ul >= 20.0 && dl >= 20.0 && ping <= 60 -> ExperienceRating.GOOD
-        ul >= 10.0 -> ExperienceRating.GOOD
-        else -> ExperienceRating.FAIR
-    }
+    val videoCallRating = if (ul != null && dl != null && ping != null) {
+        when {
+            ul >= 20.0 && dl >= 20.0 && ping <= 60 -> ExperienceRating.GOOD
+            ul >= 10.0 -> ExperienceRating.GOOD
+            else -> ExperienceRating.FAIR
+        }
+    } else null
 
     Column(
         modifier = modifier
@@ -156,7 +165,7 @@ fun ExperienceAssessmentView(
 private fun AssessmentCard(
     name: String,
     icon: ImageVector,
-    rating: ExperienceRating,
+    rating: ExperienceRating?,
     iconTint: Color,
     modifier: Modifier = Modifier
 ) {
@@ -201,36 +210,44 @@ private fun AssessmentCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Stars Rating Row
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                for (i in 1..5) {
-                    val isFilled = i <= rating.stars
+            if (rating == null) {
+                Text(
+                    text = "--",
+                    color = theme.colors.textMuted,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            } else {
+                // Stars are rendered only from measured results.
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    for (i in 1..5) {
+                        val isFilled = i <= rating.stars
+                        Text(
+                            text = "★",
+                            color = if (isFilled) Color(0xFFFBBF24) else Color(0x44FFFFFF),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(rating.badgeColor.copy(alpha = 0.16f))
+                        .border(1.dp, rating.badgeColor.copy(alpha = 0.40f), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 7.dp, vertical = 2.dp)
+                ) {
                     Text(
-                        text = "★",
-                        color = if (isFilled) Color(0xFFFBBF24) else Color(0x44FFFFFF),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
+                        text = rating.label,
+                        color = rating.badgeColor,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 0.5.sp
                     )
                 }
-            }
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Status Badge (GOOD, EXCELLENT, VERY GOOD)
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(rating.badgeColor.copy(alpha = 0.16f))
-                    .border(1.dp, rating.badgeColor.copy(alpha = 0.40f), RoundedCornerShape(6.dp))
-                    .padding(horizontal = 7.dp, vertical = 2.dp)
-            ) {
-                Text(
-                    text = rating.label,
-                    color = rating.badgeColor,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 0.5.sp
-                )
             }
         }
     }
