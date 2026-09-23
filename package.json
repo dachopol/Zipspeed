@@ -1,12 +1,13 @@
 {
   "name": "zipspeed-space",
-  "version": "3.0.1",
+  "version": "71.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
     "build": "node build.mjs",
-    "preview": "node server.mjs --production"
+    "preview": "node server.mjs --production",
+    "play:check": "node play-console-check.mjs"
   }
 }
