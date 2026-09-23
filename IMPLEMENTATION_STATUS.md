@@ -1,8 +1,48 @@
-# Current state — dial/controls rebuild
-Completed: native gauge controls replaced by a single GO/STOP Button with cancel callback; duplicate Home action removed; ad overlay removed from gauge; finite speed guarding; active-job duplicate-start guard; advanced settings collapsed; branded assets applied. HTML gauge rebuilt with metallic SVG dial, measured-speed needle and single start/cancel action, reduced motion, and folded diagnostics. All four HTML entrypoints updated.
+# Zipspeed v71 — Current implementation status
 
-Verified: real Chromium automated UI run using controlled network fixtures: 14 requests per complete test, needle responds to received sample values, successful history insert, cancellation avoids history insert and clears metrics, failed request recovery, GO returns, dark/light/language switching, 390px and 320px layout, no page errors. Native changes only inspected, not compiled. Screenshots visually inspected. No live-network accuracy test, Android emulator/device test, APK/AAB build or backend deployment performed.
+Updated: 2026-09-23  
+Version: **71.0.0** (`versionCode 71`)  
+Application ID: `com.aistudio.zipspeed.zskt`
 
-Original requirements still pending: Flutter migration; authorized server/backend deployment and remote directory/health/limits/failover; server-confirmed uploads; idle/loaded HTTP latency and supported packet-loss methods; controlled-network validation, network switching and byte caps; full metadata history/compare/export/IP-redacted sharing; monitoring lifecycle/incidents/recovery/cooldowns; real licensed video measurement and branded clip export; maps without unnecessary GPS; production-safe ads/billing backend verification/restore/entitlement lifecycle; privacy policy and Data Safety audit; operating and per-successful-test bandwidth costs; release screenshots and artifacts. Existing legacy code may not meet these requirements; this rebuild does not certify it.
+## Verified in repository CI
 
-Next: restore Gradle wrapper/build environment, compile native project and validate touch/needle/cancel on an Android device. Then engine/API stages. Web still uses the existing Cloudflare endpoint implementation; fixtures prove UI behavior only, not authorization or benchmark accuracy. No commercial 3D assets or Blender model are included.
+- Web build: PASS.
+- Canonical UI audit: PASS when current entry points satisfy the audit.
+- Play/source gate: PASS when version/package/API/CI/source-hygiene checks pass.
+- Android unit tests: PASS in the v71 CI workflow.
+- Android `lintDebug`: PASS in the v71 CI workflow.
+- Android `assembleDebug`: PASS in the v71 CI workflow.
+- Debug APK artifact generation: PASS in the v71 CI workflow.
+
+## Current source structure
+
+- Web/AI Studio source: `public/index.html`.
+- Android native source: `app/src/main/`.
+- Android bundled web asset: `app/src/main/assets/index.html`.
+- Legacy alternate project copies and generated IDE/Gradle caches are removed.
+
+## Implemented behavior
+
+- Single GO/STOP speed-test control and active-job duplicate-start protection.
+- Gauge/needle follows measured values rather than fabricated values.
+- HTTP Download/Upload throughput.
+- HTTP latency and jitter.
+- Unknown metrics remain unknown instead of receiving fake defaults.
+- Cloudflare Anycast routing without invented city selection.
+- Local history/share/export.
+- Thai/English, dark/light and responsive layouts.
+- Optional Android GPS flow; normal speed tests do not require GPS.
+- Web build does not require Gemini API access.
+
+## Still TO VERIFY
+
+- Real Android device behavior: GO/STOP touch, gauge animation, network switching, offline/error recovery, rotation/safe areas, Thai rendering and accessibility.
+- Accuracy/behavior under real networks beyond CI fixtures/build checks.
+- Play App Signing and upload-key ownership.
+- Signed release AAB generation with the real key.
+- Acceptance of the signed AAB by the live Play Console app.
+- Privacy Policy, Data Safety and Play Console declarations against the final artifact.
+- Production AdMob and Play Billing configuration/entitlement flow if monetization is enabled.
+- Closed-test/account requirements and package-registration state in the live Play Console.
+
+A green repository CI run is evidence for source/build checks only; it is not a substitute for live-device and live-Play-Console evidence.
