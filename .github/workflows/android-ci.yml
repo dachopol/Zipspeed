@@ -107,13 +107,16 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - name: Upload verified clean source package
         uses: actions/upload-artifact@v4
         with:
           name: Zipspeed-v71-source
           path: |
             .env.example
-            .github
+            .github/workflows/android-ci.yml
             PROJECT_WORKFLOW.md
             ใช้แชทสร้างแอพอัปโหลดอัตโนมัติ.txt
             README.md
@@ -138,7 +141,35 @@ jobs:
             metadata.json
             play-console-check.mjs
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 30
+      - name: Download uploaded source for delivery verification
+        uses: actions/download-artifact@v4
+        with:
+          name: Zipspeed-v71-source
+          path: ${{ runner.temp }}/zipspeed-source-verify
+      - name: Verify delivered source bytes and rerun source gates
+        env:
+          SOURCE_PACKAGE: ${{ runner.temp }}/zipspeed-source-verify
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          source = Path(os.environ['GITHUB_WORKSPACE'])
+          delivered = Path(os.environ['SOURCE_PACKAGE'])
+          for required in ['.env.example', '.github/workflows/android-ci.yml']:
+              assert (delivered / required).is_file(), f'Missing delivery file: {required}'
+          for file in delivered.rglob('*'):
+              if file.is_file():
+                  relative = file.relative_to(delivered)
+                  assert file.read_bytes() == (source / relative).read_bytes(), f'Delivery mismatch: {relative}'
+          print('Uploaded source matches checkout, including required hidden files.')
+          PY
+          cd "$SOURCE_PACKAGE"
+          npm run project:policy
+          npm run ui:audit
+          npm run build
+          npm run play:check
 
   android-signed-release:
     name: Signed release AAB

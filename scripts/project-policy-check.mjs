@@ -108,6 +108,15 @@ add(
   pkg.version
 );
 
+const publicVersion = JSON.parse(await read("public/version.json"));
+add("public version aligned", publicVersion.version === EXPECTED.versionName, publicVersion.version);
+for (const entry of ["public/index.html", "app/src/main/assets/index.html"]) {
+  const html = await read(entry);
+  add(`entry version aligned: ${entry}`, html.includes(`<meta name="application-version" content="${EXPECTED.versionName}">`), EXPECTED.versionName);
+}
+const serviceWorker = await read("public/sw.js");
+add("service worker version aligned", serviceWorker.includes(`const CACHE='zipspeed-v${EXPECTED.versionName}'`), EXPECTED.versionName);
+
 const runtimeFiles = [
   ...await collectTextFiles("app/src/main"),
   ...await collectTextFiles("public")
