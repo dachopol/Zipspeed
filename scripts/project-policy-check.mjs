@@ -142,6 +142,26 @@ const patterns = [
   {
     label: "hardcoded server location presented as runtime value",
     regex: /\bserverLocation\s*=\s*"(?!(?:Unknown|ไม่ทราบ|--|Error))[^"]+"/
+  },
+  {
+    label: "synthetic heatmap deadzone fallback",
+    regex: /deadzonePoint\?\.dbm\s*\?\:\s*["']?-?\d/
+  },
+  {
+    label: "synthetic point speed fallback",
+    regex: /pt\.speed\s*\|\|\s*\d+/
+  },
+  {
+    label: "synthetic router coordinate default",
+    regex: /router[XY]\s*:\s*Double\s*=\s*-?\d/
+  },
+  {
+    label: "synthetic room blueprint",
+    regex: /Living Room \(Router\)|Kitchen Balcony|Working Study Room|Master Bedroom/
+  },
+  {
+    label: "local fake premium entitlement",
+    regex: /_isProPlan\.value\s*=\s*true/
   }
 ];
 
