@@ -8,6 +8,7 @@
     "start": "node server.mjs",
     "build": "node build.mjs",
     "preview": "node server.mjs --production",
+    "ui:audit": "node scripts/audit-ui.mjs",
     "play:check": "node play-console-check.mjs"
   }
 }
