@@ -21,6 +21,13 @@ Application ID: `com.aistudio.zipspeed.zskt`
 - Android bundled web asset: `app/src/main/assets/index.html`.
 - Legacy alternate project copies and generated IDE/Gradle caches are removed.
 
+## Permanent project policy
+
+- `PROJECT_WORKFLOW.md` is the required Zipspeed work order.
+- `npm run project:policy` blocks legacy sources, package/version drift and prohibited fake/random/hardcoded runtime measurement patterns.
+- Clean source ZIP delivery runs only after policy, web, Play/source and Android debug gates pass.
+- Experience Assessment no longer substitutes fabricated Download/Upload/Latency values when a test has no measurements; unavailable ratings remain `--`.
+
 ## Implemented behavior
 
 - Single GO/STOP speed-test control and active-job duplicate-start protection.

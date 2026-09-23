@@ -1,0 +1,36 @@
+ZIPSPEED PERMANENT APP-BUILD RULES
+
+ORDER:
+Source of Truth
+→ GitHub Remote Check
+→ Anti-Random / Real Data
+→ Working App Validation
+→ Root-Cause Error Fix
+→ Version Consistency
+→ UI Card-Only
+→ Responsive / Auto Layout
+→ Visual System
+→ Language / Region
+→ Security / Privacy
+→ Build System
+→ ZIP Delivery
+→ Play Store / Release
+→ Final QA Gate
+→ Delivery Report
+
+CORE:
+- GitHub dachopol/Zipspeed main is Source of Truth.
+- Never Fake / Random / Hardcode data claimed as real.
+- Missing/unverified data = ไม่ทราบ / Unknown / -- / Error.
+- Do not prefill speed, latency, jitter, packet loss, ISP/server/location, quality ratings, stars, ads, purchases, security or entitlement.
+- Do not remove core features to fix UI. Fix with Responsive / Adaptive Layout.
+- Primary UI: Header → Status Card when needed → Vertical Card List.
+- Card: label/name left, current status/value right. Error may show concise cause/fix.
+- Thai/English must be complete and switch for real.
+- Small phone/tablet/landscape + Safe Area + touch targets about 44×44 minimum.
+- If compile passes but Preview hangs: inspect emulator/runtime/dev server/assets/routes/WebView/service worker first. Do not randomly edit source.
+- Package must remain com.aistudio.zipspeed.zskt.
+- Current release line: versionCode 71, versionName 71.0.0.
+- No simulated Ads/Billing/Ad-Free/security state as real.
+- ZIP must come from verified source and exclude cache/secrets/legacy files.
+- Build PASS is not Play Console PASS. Live release evidence remains TO VERIFY until verified.

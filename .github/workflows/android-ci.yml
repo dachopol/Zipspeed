@@ -14,8 +14,28 @@ permissions:
   contents: read
 
 jobs:
+  project-policy:
+    name: Project policy / source of truth
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Enforce Zipspeed permanent rules
+        run: npm run project:policy
+      - name: Upload project policy evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zipspeed-project-policy
+          path: artifacts/zipspeed-project-policy
+          if-no-files-found: error
+
   web-build:
     name: Web build
+    needs: project-policy
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -36,6 +56,7 @@ jobs:
 
   play-console-test-check:
     name: Play Console test gate
+    needs: project-policy
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -54,6 +75,7 @@ jobs:
 
   android-debug:
     name: Android unit + lint + debug APK
+    needs: project-policy
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -74,9 +96,54 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
+  source-zip:
+    name: Clean source ZIP
+    needs:
+      - project-policy
+      - web-build
+      - play-console-test-check
+      - android-debug
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload verified clean source package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zipspeed-v71-source
+          path: |
+            .env.example
+            .github
+            PROJECT_WORKFLOW.md
+            ใช้แชทสร้างแอพอัปโหลดอัตโนมัติ.txt
+            README.md
+            README_TH.md
+            IMPLEMENTATION_STATUS.md
+            PLAY_CONSOLE_TEST_GATE.md
+            PLAY_STORE_FEATURES.md
+            PLAY_STORE_RELEASE_AUDIT.md
+            QUALITY_AUDIT_TH.md
+            UI_REDESIGN_NOTES.md
+            DATA_SAFETY_WORKSHEET.md
+            app
+            public
+            scripts
+            build.gradle.kts
+            settings.gradle.kts
+            gradle.properties
+            gradle
+            build.mjs
+            server.mjs
+            package.json
+            metadata.json
+            play-console-check.mjs
+          if-no-files-found: error
+          retention-days: 30
+
   android-signed-release:
     name: Signed release AAB
     if: ${{ vars.ENABLE_SIGNED_RELEASE == 'true' }}
+    needs: project-policy
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
