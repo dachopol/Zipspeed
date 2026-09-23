@@ -34,6 +34,41 @@ jobs:
           path: dist
           if-no-files-found: error
 
+  ai-studio-source-package:
+    name: AI Studio source ZIP
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload clean v71 source package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zipspeed-v71-AIStudio-source
+          path: |
+            .env.example
+            README.md
+            README_TH.md
+            IMPLEMENTATION_STATUS.md
+            PLAY_CONSOLE_TEST_GATE.md
+            PLAY_STORE_FEATURES.md
+            PLAY_STORE_RELEASE_AUDIT.md
+            QUALITY_AUDIT_TH.md
+            UI_REDESIGN_NOTES.md
+            app
+            public
+            scripts
+            build.gradle.kts
+            settings.gradle.kts
+            gradle.properties
+            gradle
+            build.mjs
+            server.mjs
+            package.json
+            metadata.json
+            play-console-check.mjs
+          if-no-files-found: error
+          retention-days: 30
+
   play-console-test-check:
     name: Play Console test gate
     runs-on: ubuntu-latest
