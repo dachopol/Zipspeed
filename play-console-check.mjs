@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 
 const EXPECTED = {
   applicationId: "com.aistudio.zipspeed.zskt",
@@ -8,7 +8,30 @@ const EXPECTED = {
   compileSdk: 36
 };
 
+const LEGACY_PATHS = [
+  ".gradle",
+  ".idea",
+  "Zipspeed_Space_v3",
+  "index.html",
+  "zipspeed_ai_studio.zip",
+  "redesign.patch",
+  "CHANGED_FILES.txt",
+  "START_HERE_TH.md",
+  "untitled.tsx",
+  "update.sh",
+  "update_webtest.sh"
+];
+
 const read = (p) => readFile(p, "utf8");
+const exists = async (p) => {
+  try {
+    await access(p);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const gradle = await read("app/build.gradle.kts");
 const manifest = await read("app/src/main/AndroidManifest.xml");
 const pkg = JSON.parse(await read("package.json"));
@@ -44,12 +67,18 @@ add("versionName",
 add("web project version",
   pkg.version === EXPECTED.versionName,
   pkg.version);
+add("UI audit script",
+  pkg.scripts?.["ui:audit"] === "node scripts/audit-ui.mjs",
+  pkg.scripts?.["ui:audit"] ?? "missing");
 add("INTERNET permission",
   manifest.includes("android.permission.INTERNET"),
   "required for network tests");
 add("ACCESS_NETWORK_STATE permission",
   manifest.includes("android.permission.ACCESS_NETWORK_STATE"),
   "required for network status");
+add("CI UI audit",
+  workflow.includes("npm run ui:audit"),
+  "npm run ui:audit");
 add("CI unit tests",
   workflow.includes(":app:testDebugUnitTest"),
   ":app:testDebugUnitTest");
@@ -68,6 +97,10 @@ add("CI evidence artifact",
 add("Signed release is explicitly gated",
   workflow.includes("ENABLE_SIGNED_RELEASE") && workflow.includes(":app:bundleRelease"),
   "bundleRelease only when release signing is enabled");
+
+for (const path of LEGACY_PATHS) {
+  add(`legacy path removed: ${path}`, !(await exists(path)), "must be absent");
+}
 
 const failed = checks.filter((c) => c.status === "FAIL");
 const now = new Date().toISOString();
@@ -119,4 +152,4 @@ if (failed.length) {
   process.exit(1);
 }
 
-console.log("Play Console Test Gate PASS (repository/CI source scope only).");
+console.log("Play Console Test Gate PASS (repository/CI source + hygiene scope only).");
