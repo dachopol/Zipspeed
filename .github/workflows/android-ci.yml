@@ -26,6 +26,7 @@ jobs:
       - name: Enforce Zipspeed permanent rules
         run: npm run project:policy
       - name: Upload project policy evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: zipspeed-project-policy
