@@ -892,7 +892,9 @@ class ZipspeedViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun claimAdReward() {
-        _isProPlan.value = true
+        // Never grant paid/ad-free entitlement locally. A real rewarded-ad callback
+        // may unlock only the explicitly supported reward after SDK verification.
         _showAdModal.value = false
+        _showVipModal.value = true
     }
 }
