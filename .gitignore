@@ -2,3 +2,11 @@ node_modules/
 dist/
 .env
 .env.*
+.gradle/
+.idea/
+local.properties
+**/build/
+*.apk
+*.aab
+*.jks
+*.keystore

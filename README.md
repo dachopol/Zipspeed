@@ -1,76 +1,85 @@
 # Zipspeed by AnakinYoo
 
-Zipspeed is an Android-first network measurement and diagnostics app built with Kotlin + Jetpack Compose.
+Current test-build version: **71.0.0** (`versionCode 71`)  
+Android application ID: `com.aistudio.zipspeed.zskt`
+
+Zipspeed is an Android-first network measurement and diagnostics app with a web build that can also be imported into Google AI Studio.
+
+## Canonical project sources
+
+- Android native source: `app/src/main/`
+- Android bundled web asset: `app/src/main/assets/index.html`
+- Web / AI Studio source: `public/index.html`
+- Web build output: `dist/` (generated; not committed)
+- Play/source gate: `play-console-check.mjs`
+
+Old root HTML copies, `Zipspeed_Space_v3`, IDE/Gradle caches, temporary patch scripts, screenshots and archived ZIP imports are intentionally removed. Do not restore them as alternate app sources.
 
 ## Current implementation
 
-The Android app currently includes:
+The Android app includes:
 
 - HTTP-based Download / Upload throughput measurement.
 - HTTP latency and jitter measurement.
-- A single GO control with live gauge/needle updates and cancel/retry flow.
-- Cloudflare Anycast endpoint routing; the app does not pretend that a specific city/PoP was selected unless verifiable endpoint metadata is returned.
+- Single GO/STOP control with live gauge/needle updates and cancel/retry flow.
+- Cloudflare Anycast endpoint routing without inventing a city/PoP when metadata is unavailable.
 - Public/local IP information where available.
-- Video-suitability testing based on measured HTTP payload throughput. It is not a real video player.
-- Website/CDN HTTP checks with measured response-header timing.
-- Local Room history, record sharing, CSV/JSON history export.
+- Video suitability based on measured HTTP throughput; it is not a licensed playback benchmark.
+- Website/CDN HTTP checks.
+- Local Room history, sharing and CSV/JSON export.
 - Thai/English UI, dark/light theme and reduced-motion support.
-- Responsive navigation for phone, tablet and larger screens.
-- Optional GPS mode. Starting a speed test does not require GPS permission.
-- External outage-status links. Zipspeed does not fabricate outage counts or live service status.
+- Responsive phone/tablet layouts.
+- Optional Android GPS mode; normal speed tests do not require GPS.
 
 ## Real-data rule
 
-Production UI must not invent network measurements, ISP names, geographic server locations, outage counts, ad impressions, purchase entitlements or security verification. If data cannot be measured or verified, the UI should show an unavailable/unknown state.
+Production UI must not invent network measurements, ISP names, geographic server locations, outage counts, ad impressions, purchase entitlements or security verification. Unknown data must remain unknown/unavailable.
+
+## Web / Google AI Studio
+
+The web project does not require a Gemini API key and the current AI Studio metadata requests no frame permissions or Gemini server capability.
+
+Run locally:
+
+```bash
+npm start
+```
+
+Build:
+
+```bash
+npm run ui:audit
+npm run build
+npm run play:check
+```
+
+For Google AI Studio, import/sync **the `main` branch of `dachopol/Zipspeed`**. Do not continue from an older local AI Studio copy containing removed legacy paths.
+
+## Android build
+
+CI uses JDK 17 and Gradle 9.3.1:
+
+```bash
+gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+```
+
+The project targets/compiles Android API 36.
+
+Release signing is intentionally conditional. It requires real upload-key secrets and `ENABLE_SIGNED_RELEASE=true` before `:app:bundleRelease` is run.
 
 ## Ads and paid Ad-Free
 
-The UI keeps integration points for ads and Ad-Free, but production AdMob and Google Play Billing are intentionally not enabled until real account configuration is supplied.
+Production AdMob and Google Play Billing are not treated as active until real account configuration and entitlement verification are implemented. Do not ship simulated ads, fixed fake prices or local-only entitlement toggles.
 
-Do not ship simulated ads, fixed prices, local entitlement toggles or fake reward callbacks. Prices/currency must come from Google Play, and Ad-Free must be granted only after verified purchase entitlement. Rewarded access must only be granted from a real rewarded-ad callback.
+## Release status
 
-## Build
+Repository/CI source gates can pass without proving live Play Console readiness. Play App Signing, signed-AAB upload acceptance, Privacy Policy, Data Safety, declarations, tester/account requirements and real-device validation remain separate release checks.
 
-Prerequisites:
+See:
 
-- Android Studio / Android SDK
-- JDK 17
-
-CI uses:
-
-```bash
-gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
-```
-
-The project targets Android API 36 and uses application ID:
-
-```text
-com.aistudio.zipspeed.zskt
-```
-
-Debug builds use Android's normal debug signing. Release signing expects these environment variables:
-
-```text
-KEYSTORE_PATH
-STORE_PASSWORD
-KEY_PASSWORD
-```
-
-The release key alias is currently `upload`.
-
-`.env.example` contains safe placeholder values only. Do not commit real API keys, signing files or passwords.
-
-## Play Store release checks
-
-Before a production release:
-
-1. Run unit tests and build the debug/release artifacts.
-2. Test GO/STOP, gauge motion, Download/Upload, latency/jitter, offline/error handling and history on real Android devices.
-3. Verify every permission is necessary. GPS must remain optional.
-4. Re-check Privacy Policy and Data Safety against the actual code and SDKs used in that release.
-5. Configure real AdMob/consent and Google Play Billing before advertising those features.
-6. Build a signed AAB, test it in Play Console testing tracks, then verify the installed build.
-7. Increase `versionCode` for each Play release.
+- `PLAY_CONSOLE_TEST_GATE.md`
+- `PLAY_STORE_RELEASE_AUDIT.md`
+- `DATA_SAFETY_WORKSHEET.md`
 
 ## Branding
 

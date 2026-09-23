@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 
-const files = ['public/index.html', 'index.html'];
+const files = ['public/index.html', 'app/src/main/assets/index.html'];
 const failures = [];
 
 for (const file of files) {
@@ -17,9 +17,23 @@ for (const file of files) {
   if (!/<meta[^>]+name=["']viewport["']/i.test(source)) failures.push(`${file}: missing viewport meta`);
   if (/target=["']_blank["'](?![^>]*rel=["'][^"']*noopener)/i.test(source)) failures.push(`${file}: target=_blank should include rel=noopener`);
 
-  const unlabeledButtons = [...source.matchAll(/<button\b([^>]*)>/gi)]
-    .filter(([, attrs]) => !/\baria-label\s*=|\bdata-i\s*=|>\s*[^<\s]/i.test(attrs));
-  if (unlabeledButtons.length) failures.push(`${file}: ${unlabeledButtons.length} button(s) may lack an accessible name`);
+  const unlabeledButtons = [...source.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/gi)]
+    .filter(([, attrs, inner]) => {
+      if (/\baria-label(?:ledby)?\s*=/i.test(attrs)) return false;
+      if (/\bdata-i\s*=/i.test(attrs)) return false;
+      const text = inner
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (text.length > 0) return false;
+      if (/<img\b[^>]*\balt=["'][^"']+["']/i.test(inner)) return false;
+      return true;
+    });
+
+  if (unlabeledButtons.length) {
+    failures.push(`${file}: ${unlabeledButtons.length} button(s) may lack an accessible name`);
+  }
 }
 
 if (failures.length) {
@@ -27,5 +41,5 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`);
   process.exitCode = 1;
 } else {
-  console.log(`UI audit passed for ${files.length} entry point(s).`);
+  console.log(`UI audit passed for ${files.length} canonical entry point(s).`);
 }
