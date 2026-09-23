@@ -13,8 +13,8 @@ android {
     applicationId = "com.aistudio.zipspeed.zskt"
     minSdk = 24
     targetSdk = 36
-    versionCode = 42
-    versionName = "42.0"
+    versionCode = 71
+    versionName = "71.0.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
