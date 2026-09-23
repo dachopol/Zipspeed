@@ -23,6 +23,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Audit canonical UI entry points
+        run: npm run ui:audit
       - name: Build web app
         run: npm run build
       - name: Upload web build
